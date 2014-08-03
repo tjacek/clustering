@@ -5,12 +5,11 @@ def pca(points):
     return pca_algorithm(data)
 
 class PcaConverter(object):
-    def __init__(self,eigen):
+    def __init__(self,eigen,k=2):
         self.sort(eigen[0],eigen[1])
+        self.get_projection_matrix(k)
 
     def sort(self,eigenvalues,eigenvectors):
-        print(eigenvalues)
-        print(eigenvectors)
 	indexes={}
         for i,eigen in enumerate(eigenvalues):
 	    indexes[eigen]=i
@@ -20,6 +19,22 @@ class PcaConverter(object):
         for i,eigen in enumerate(eigenvalues):
             j=indexes[eigen]
 	    self.eigenvectors[i]=eigenvectors[j]
+
+    def get_projection_matrix(self,k):
+        major_axsis=[]
+        for eigen in self.eigenvectors[0:k]:
+            major_axsis.append(eigen)
+        self.matrix=np.asmatrix(major_axsis)
+        return self.matrix
+
+    def projection(self,point):
+        return self.matrix*point
+
+    def list_projection(self,points):
+        projected_list=[]
+        for point in points:
+            projected_list.append(self.projection(point))
+        return projected_list
 
 def pca_algorithm(data):
     cov_matrix=get_cov_matrix(data)
@@ -45,7 +60,9 @@ def pca_test():
             [0.0,3.0,0.0,0.0],
             [4.0,0.0,0.0,0.0]]
     result=pca(points)
-    print(result.eigenvalues)
-    print(result.eigenvectors)
+    #print(result.eigenvalues)
+    #print(result.eigenvectors)
+    result.projection([0.1,0.1,0.1,1.0])
+
 
 pca_test()
