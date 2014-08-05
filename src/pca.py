@@ -83,5 +83,5 @@ def pca_test():
     point=np.array([0.1,0.1,0.1,1.0])
     print(result.projection(point))
 
-
-pca_test()
+if __name__ == "__main__":
+    pca_test()
