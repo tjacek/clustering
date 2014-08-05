@@ -1,5 +1,5 @@
 import math,random,numpy as np
-import cluster_generator
+import cluster_generator,visualization as plot
 
 def kmeans(points,k=2,dim=2,maxIterations=1000):
     clusters=[Cluster(dim) for i in range(k)]
@@ -9,7 +9,6 @@ def kmeans(points,k=2,dim=2,maxIterations=1000):
     while(assig_changed and iterations<maxIterations):
     	assig_changed=new_assigment(points,clusters,assig)
         iterations+=1
-    print(iterations)
     return clusters
 
 class Cluster(object):
@@ -26,6 +25,14 @@ class Cluster(object):
 
     def reset(self):
         self.points=[]
+
+    def as_cordinates(self):
+        return [self.get_cord(i) for i in range(self.dim)]
+
+    def get_cord(self,i):
+        extract=lambda x:x[i]
+        cord=map(extract,self.points)
+        return cord    
 
     def compute_mean(self):
         for i in range(self.dim):
@@ -75,4 +82,5 @@ def euclidean_metric(x,y):
 
 if __name__ == "__main__":
     points=cluster_generator.four_clusters()
-    kmeans(points)
+    clusters=kmeans(points)
+    plot.visualize_clusters(clusters)
