@@ -27,12 +27,7 @@ class Cluster(object):
         self.points=[]
 
     def as_cordinates(self):
-        return [self.get_cord(i) for i in range(self.dim)]
-
-    def get_cord(self,i):
-        extract=lambda x:x[i]
-        cord=map(extract,self.points)
-        return cord    
+        return as_cordinates(self.points)   
 
     def compute_mean(self):
         for i in range(self.dim):
@@ -42,6 +37,15 @@ class Cluster(object):
                break
             self.means[i]=sum(dim_i)/self.size()
         return self.means
+
+def as_cordinates(points):
+    n=len(points[0])
+    return [get_cord(i,points) for i in range(n)]    
+
+def get_cord(i,points):
+    extract=lambda x:x[i]
+    cord=map(extract,points)
+    return cord
 
 def init_assigment(points,clusters):
     k=len(clusters)
@@ -82,5 +86,6 @@ def euclidean_metric(x,y):
 
 if __name__ == "__main__":
     points=cluster_generator.four_clusters()
-    clusters=kmeans(points)
-    plot.visualize_clusters(clusters)
+    plot.visualize_points(points)
+    #clusters=kmeans(points)
+    #plot.visualize_clusters(clusters)
