@@ -19,6 +19,9 @@ class Cluster(object):
 
     def size(self):
         return float(len(self.points))
+    
+    def empty(self):    
+        return len(self.points)==0
 
     def add_point(self,point):
         self.points.append(point)
@@ -27,7 +30,9 @@ class Cluster(object):
         self.points=[]
 
     def as_cordinates(self):
-        return as_cordinates(self.points)   
+        if(not self.empty()):
+            return as_cordinates(self.points)   
+        return [[],[]]
 
     def compute_mean(self):
         for i in range(self.dim):
@@ -64,7 +69,7 @@ def new_assigment(points,clusters,old_assigment):
         if(old_assigment[i]!=cls_index):
             assigment_changed=True
             old_assigment[i]=cls_index
-            clusters[cls_index].add_point(point)
+        clusters[cls_index].add_point(point)
     return assigment_changed
 
 def compute_means(clusters):
@@ -86,6 +91,6 @@ def euclidean_metric(x,y):
 
 if __name__ == "__main__":
     points=cluster_generator.four_clusters()
-    plot.visualize_points(points)
-    #clusters=kmeans(points)
-    #plot.visualize_clusters(clusters)
+    #plot.visualize_points(points)
+    clusters=kmeans(points,4)
+    plot.visualize_clusters(clusters)
