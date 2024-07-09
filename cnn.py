@@ -1,12 +1,20 @@
 import tensorflow as tf
-
+import numpy as np
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Conv2D,Dense,Dropout,Flatten,BatchNormalization,MaxPooling2D
 
 class Dataset(object):
     def __init__(self,x_train, y_train,x_test, y_test):
         self.x_train=x_train
-        self.y_train=y_train	
+        self.y_train=tf.one_hot(y_train.astype(np.int32), depth=10)
         self.x_test=x_test
-        self.y_test=y_test
+        self.y_test=tf.one_hot(y_test.astype(np.int32), depth=10)
+
+class SimpleCallback(tf.keras.callbacks.Callback):
+    def on_epoch_end(self, epoch, logs={}):
+        if(logs.get('acc')>0.995):
+            print("\nReached 99.5% accuracy so cancelling training!")
+        self.model.stop_training = True
 
 def get_minst_dataset():
     mnist = tf.keras.datasets.mnist
@@ -53,7 +61,7 @@ def make_cnn(params):
 	model.add(Dense(1024, activation='relu'))
 	model.add(BatchNormalization())
 	model.add(Dropout(0.5))
-	model.add(Dense(params['n_cata'], activation='softmax'))
+	model.add(Dense(params['n_cats'], activation='softmax'))
 	return model
 
 def default_params():
@@ -62,4 +70,20 @@ def default_params():
             'n_kern3':64, "kern_size3":(3,3),  
             "n_cats":10}
 
-get_minst_dataset()
+def simple_exp(epochs=50,batch_size = 64):
+    data=get_minst_dataset()
+    params=default_params()
+    model=make_cnn(params)
+    model.compile(optimizer=tf.keras.optimizers.RMSprop(epsilon=1e-08), 
+    	          loss='categorical_crossentropy', 
+    	          metrics=['acc'])
+    callbacks=SimpleCallback()
+    history = model.fit(data.x_train, data.y_train,
+                        batch_size=batch_size,
+                        epochs=epochs,
+                        validation_split=0.1,
+                        callbacks=[callbacks])
+    return model
+
+
+simple_exp()
