@@ -1,3 +1,18 @@
+import tensorflow as tf
+
+
+class Dataset(object):
+    def __init__(self,x_train, y_train,x_test, y_test):
+        self.x_train=x_train
+        self.y_train=y_train	
+        self.x_test=x_test
+        self.y_test=y_test
+
+def get_minst_dataset():
+    mnist = tf.keras.datasets.mnist
+    (x_train, y_train), (x_test, y_test) = mnist.load_data()
+    return Dataset(x_train, y_train,x_test, y_test)
+
 def make_cnn(params):
 	model = Sequential()
 
@@ -46,3 +61,5 @@ def default_params():
             'n_kern2':32, "kern_size2":(3,3),
             'n_kern3':64, "kern_size3":(3,3),  
             "n_cats":10}
+
+get_minst_dataset()
