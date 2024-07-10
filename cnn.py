@@ -70,7 +70,7 @@ def default_params():
             'n_kern3':64, "kern_size3":(3,3),  
             "n_cats":10}
 
-def simple_exp(epochs=50,batch_size = 64):
+def simple_exp(epochs=50,batch_size = 64,out_path=None):
     data=get_minst_dataset()
     params=default_params()
     model=make_cnn(params)
@@ -83,6 +83,8 @@ def simple_exp(epochs=50,batch_size = 64):
                         epochs=epochs,
                         validation_split=0.1,
                         callbacks=[callbacks])
+    if(not out_path is None):
+        model.save(out_path)
     return model
 
 
