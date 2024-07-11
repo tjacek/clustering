@@ -3,6 +3,14 @@ import numpy as np
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D,Dense,Dropout,Flatten,BatchNormalization,MaxPooling2D
 
+class Experiment(object):
+    def __init__(self,dataset,model):
+         self.dataset=dataset
+         self.model=model
+
+    def make_extractor(self):
+        names= [ layer.name for layer in self.model.layers]
+
 class Dataset(object):
     def __init__(self,x_train, y_train,x_test, y_test):
         self.x_train=x_train
