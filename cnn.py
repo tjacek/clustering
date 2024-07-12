@@ -2,14 +2,25 @@ import tensorflow as tf
 import numpy as np
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D,Dense,Dropout,Flatten,BatchNormalization,MaxPooling2D
+from tensorflow.keras import Input, Model
 
 class Experiment(object):
     def __init__(self,dataset,model):
          self.dataset=dataset
          self.model=model
+    
+    def get_features(self,name_i='dense_1'):
+        ext=self.make_extractor(name_i)
+        x_trans=ext.predict(self.dataset.x_train)
+        print(x_trans.shape)
 
-    def make_extractor(self):
-        names= [ layer.name for layer in self.model.layers]
+    def all_names(self):
+        return [layer.name for layer in self.model.layers]
+
+    def make_extractor(self,name_i='dense_1'):
+        output= self.model.get_layer(name_i).output 
+        return Model(inputs=self.model.input,
+                     outputs=output)
 
 class Dataset(object):
     def __init__(self,x_train, y_train,x_test, y_test):
@@ -93,7 +104,10 @@ def simple_exp(epochs=50,batch_size = 64,out_path=None):
                         callbacks=[callbacks])
     if(not out_path is None):
         model.save(out_path)
-    return model
+    return Experiment(dataset=data,
+    	              model=model)
 
 
-simple_exp()
+exp=simple_exp()
+ext=exp.get_features()
+#ext.summary()
