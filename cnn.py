@@ -11,8 +11,10 @@ class Experiment(object):
     
     def get_features(self,name_i='dense_1'):
         ext=self.make_extractor(name_i)
-        x_trans=ext.predict(self.dataset.x_train)
-        print(x_trans.shape)
+        def helper(x):
+            return ext.predict(x)
+        return self.dataset.transform(helper)
+#        print(x_trans.shape)
 
     def all_names(self):
         return [layer.name for layer in self.model.layers]
@@ -28,6 +30,12 @@ class Dataset(object):
         self.y_train=tf.one_hot(y_train.astype(np.int32), depth=10)
         self.x_test=x_test
         self.y_test=tf.one_hot(y_test.astype(np.int32), depth=10)
+
+    def transform(self,fun):
+    	return Dataset(x_train=fun(self.x_train), 
+    		           y_train=self.y_train,
+    		           x_test=fun(self.x_test), 
+    		           y_test=self.y_test)
 
 class SimpleCallback(tf.keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs={}):
