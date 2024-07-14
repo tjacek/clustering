@@ -3,7 +3,7 @@ import numpy as np
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D,Dense,Dropout,Flatten,BatchNormalization,MaxPooling2D
 from tensorflow.keras import Input, Model
-import keras.saving
+from tensorflow.keras.models import load_model 
 
 class Experiment(object):
     def __init__(self,dataset,model):
@@ -13,7 +13,7 @@ class Experiment(object):
     def get_features(self,name_i='dense_1'):
         ext=self.make_extractor(name_i)
         def helper(x):
-            return ext.predict(x)
+            return ext.predict(x,batch_size=128)
         return self.dataset.transform(helper)
 #        print(x_trans.shape)
 
@@ -27,10 +27,14 @@ class Experiment(object):
 
 class Dataset(object):
     def __init__(self,x_train, y_train,x_test, y_test):
+        if(type(y_train)==list):
+             y_train=tf.one_hot(y_train.astype(np.int32), depth=10)
+        if(type(y_test)==list):
+             y_test=tf.one_hot(y_test.astype(np.int32), depth=10)
         self.x_train=x_train
-        self.y_train=tf.one_hot(y_train.astype(np.int32), depth=10)
+        self.y_train=y_train
         self.x_test=x_test
-        self.y_test=tf.one_hot(y_test.astype(np.int32), depth=10)
+        self.y_test=y_test
 
     def transform(self,fun):
     	return Dataset(x_train=fun(self.x_train), 
@@ -105,7 +109,7 @@ def read_exp(in_path,
 	         read_dataset=None):
     if(read_dataset is None):
         read_dataset=get_minst_dataset	
-    model=keras.saving.load_model("model.keras")
+    model=load_model(in_path)
     return Experiment(dataset=read_dataset(),
     	              model=model)
 
@@ -130,5 +134,5 @@ def simple_exp(epochs=50,batch_size = 64,out_path=None):
 
 #exp=simple_exp(out_path="simple_cnn")
 exp=read_exp("simple_cnn")
-#ext=exp.get_features()
-print(ext.dim())
+feat=exp.get_features()
+print(feat.dim())
