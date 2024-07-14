@@ -3,6 +3,7 @@ import numpy as np
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D,Dense,Dropout,Flatten,BatchNormalization,MaxPooling2D
 from tensorflow.keras import Input, Model
+import keras.saving
 
 class Experiment(object):
     def __init__(self,dataset,model):
@@ -36,6 +37,9 @@ class Dataset(object):
     		           y_train=self.y_train,
     		           x_test=fun(self.x_test), 
     		           y_test=self.y_test)
+
+    def dim(self):
+    	return self.x_train.shape
 
 class SimpleCallback(tf.keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs={}):
@@ -97,6 +101,14 @@ def default_params():
             'n_kern3':64, "kern_size3":(3,3),  
             "n_cats":10}
 
+def read_exp(in_path,
+	         read_dataset=None):
+    if(read_dataset is None):
+        read_dataset=get_minst_dataset	
+    model=keras.saving.load_model("model.keras")
+    return Experiment(dataset=read_dataset(),
+    	              model=model)
+
 def simple_exp(epochs=50,batch_size = 64,out_path=None):
     data=get_minst_dataset()
     params=default_params()
@@ -116,6 +128,7 @@ def simple_exp(epochs=50,batch_size = 64,out_path=None):
     	              model=model)
 
 
-exp=simple_exp()
-ext=exp.get_features()
-#ext.summary()
+#exp=simple_exp(out_path="simple_cnn")
+exp=read_exp("simple_cnn")
+#ext=exp.get_features()
+print(ext.dim())
