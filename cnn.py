@@ -10,12 +10,11 @@ class Experiment(object):
          self.dataset=dataset
          self.model=model
     
-    def get_features(self,name_i='dense_1'):
+    def get_features(self,name_i='dense_1',batch_size=1024):
         ext=self.make_extractor(name_i)
         def helper(x):
-            return ext.predict(x,batch_size=128)
+            return ext.predict(x,batch_size=batch_size)
         return self.dataset.transform(helper)
-#        print(x_trans.shape)
 
     def all_names(self):
         return [layer.name for layer in self.model.layers]
@@ -27,10 +26,10 @@ class Experiment(object):
 
 class Dataset(object):
     def __init__(self,x_train, y_train,x_test, y_test):
-        if(type(y_train)==list):
-             y_train=tf.one_hot(y_train.astype(np.int32), depth=10)
-        if(type(y_test)==list):
-             y_test=tf.one_hot(y_test.astype(np.int32), depth=10)
+#        if(type(y_train)==list):
+#             y_train=tf.one_hot(y_train.astype(np.int32), depth=10)
+#        if(type(y_test)==list):
+#             y_test=tf.one_hot(y_test.astype(np.int32), depth=10)
         self.x_train=x_train
         self.y_train=y_train
         self.x_test=x_test
@@ -44,6 +43,11 @@ class Dataset(object):
 
     def dim(self):
     	return self.x_train.shape
+
+    def get_cat(self,i):
+        indices=(self.y_train==i)#[:,i]==1)
+        x_i=self.x_train[indices]
+        return x_i
 
 class SimpleCallback(tf.keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs={}):
@@ -134,5 +138,5 @@ def simple_exp(epochs=50,batch_size = 64,out_path=None):
 
 #exp=simple_exp(out_path="simple_cnn")
 exp=read_exp("simple_cnn")
-feat=exp.get_features()
-print(feat.dim())
+feat=exp.get_features('dense')
+print(feat.get_cat(1).shape)
