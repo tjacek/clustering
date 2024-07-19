@@ -46,18 +46,6 @@ class Dataset(object):
         x_i=self.x_train[indices]
         return x_i
 
-def centroid_distance(dataset):
-    groups=[ dataset.get_cat(i)
-             for i in range(dataset.n_cats())]
-    centroids=[ np.mean(group_i,axis=0)  
-               for group_i in groups]
-    distances=[[np.linalg.norm(centroid_i-point_j) 
-                    for point_j in groups[i]]
-                for i,centroid_i in enumerate(centroids)]
-    dist_i=distances[0]
-    dist_i.sort()
-    print(dist_i)
-    return distances  
 
 def get_minst_dataset():
     mnist = tf.keras.datasets.mnist
@@ -93,7 +81,7 @@ def simple_exp(epochs=50,batch_size = 64,out_path=None):
 
 
 #exp=simple_exp(out_path="simple_cnn")
-exp=read_exp("simple_cnn")
-feat=exp.get_features('dense')
-centroid_distance(feat)
+#exp=read_exp("simple_cnn")
+#feat=exp.get_features('dense')
+#centroid_distance(feat)
 #print(feat.get_cat(1).shape)
