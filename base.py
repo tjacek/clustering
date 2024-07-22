@@ -46,6 +46,21 @@ class Dataset(object):
         x_i=self.x_train[indices]
         return x_i
 
+    def save(self,out_path):
+        args={'file':out_path,
+              'x_train':self.x_train,
+              'y_train':self.y_train,
+              'x_test':self.x_test,
+              'y_test':self.y_test}
+        np.savez_compressed(**args)
+
+def read_dataset(in_path):
+    raw_data= np.load(in_path)
+    return Dataset(x_train=raw_data['x_train'], 
+                   y_train=raw_data['y_train'],
+                   x_test=raw_data['x_test'], 
+                   y_test=raw_data['y_test'])
+
 
 def get_minst_dataset():
     mnist = tf.keras.datasets.mnist
@@ -83,5 +98,7 @@ def simple_exp(epochs=50,batch_size = 64,out_path=None):
 #exp=simple_exp(out_path="simple_cnn")
 #exp=read_exp("simple_cnn")
 #feat=exp.get_features('dense')
+#feat.save("cnn_feats")
+#read_dataset("cnn_feats.npz")
 #centroid_distance(feat)
 #print(feat.get_cat(1).shape)
