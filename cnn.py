@@ -2,6 +2,7 @@ import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D,Dense,Dropout,Flatten,BatchNormalization,MaxPooling2D
 from tensorflow.keras import Input, Model
+import base 
 
 class SimpleCallback(tf.keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs={}):
@@ -58,3 +59,26 @@ def default_params():
             'n_kern2':32, "kern_size2":(3,3),
             'n_kern3':64, "kern_size3":(3,3),  
             "n_cats":10}
+
+def simple_exp(epochs=50,batch_size = 64,out_path=None):
+    data=base.get_minst_dataset()
+    params=default_params()
+    model=make_cnn(params)
+    model.compile(optimizer=tf.keras.optimizers.RMSprop(epsilon=1e-08), 
+                  loss='categorical_crossentropy', 
+                  metrics=['acc'])
+    callbacks=SimpleCallback()
+    y_train=tf.one_hot(data.y_train,
+                       depth=10)
+    history = model.fit(data.x_train,y_train,
+                        batch_size=batch_size,
+                        epochs=epochs,
+                        validation_split=0.1,
+                        callbacks=[callbacks])
+    if(not out_path is None):
+        model.save(out_path)
+    return base.Experiment(dataset=data,
+                      model=model)
+
+if __name__ == '__main__':
+    simple_exp(out_path="simple_cnn.h5")

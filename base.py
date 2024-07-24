@@ -76,26 +76,7 @@ def read_exp(in_path,
     return Experiment(dataset=read_dataset(),
     	              model=model)
 
-def simple_exp(epochs=50,batch_size = 64,out_path=None):
-    data=get_minst_dataset()
-    params=default_params()
-    model=make_cnn(params)
-    model.compile(optimizer=tf.keras.optimizers.RMSprop(epsilon=1e-08), 
-    	          loss='categorical_crossentropy', 
-    	          metrics=['acc'])
-    callbacks=SimpleCallback()
-    history = model.fit(data.x_train, data.y_train,
-                        batch_size=batch_size,
-                        epochs=epochs,
-                        validation_split=0.1,
-                        callbacks=[callbacks])
-    if(not out_path is None):
-        model.save(out_path)
-    return Experiment(dataset=data,
-    	              model=model)
 
-
-#exp=simple_exp(out_path="simple_cnn")
 #exp=read_exp("simple_cnn")
 #feat=exp.get_features('dense')
 #feat.save("cnn_feats")
