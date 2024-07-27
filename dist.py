@@ -49,8 +49,9 @@ def centroid_pairs(dataset):
     print(distances)
     sn.heatmap(distances, annot=True)
     plt.show()
-    dis_min=np.argmin(distances,axis=0)
     dis_max=np.argmax(distances,axis=0)
+    distances[distances==0]=np.inf
+    dis_min=np.argmin(distances,axis=0)
     for i,min_i in enumerate(dis_min):
         max_i=dis_max[i]
         print(f"{i}:{min_i}:{max_i}")
