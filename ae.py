@@ -1,10 +1,11 @@
-from tensorflow.keras.layers import Conv2D,Dense,Dropout,Flatten,BatchNormalization,MaxPooling2D
+from tensorflow.keras.layers import Conv2D,Conv2DTranspose,Dense,Dropout,Flatten,BatchNormalization,MaxPooling2D
 from tensorflow.keras import Input, Model
+import base
 
 def make_ae(params):
-    input = layers.Input(shape=(28, 28, 1))
+    input =Input(shape=(28, 28, 1))
 
-    x = layers.Conv2D(32, (3, 3), 
+    x =Conv2D(32, (3, 3), 
                       activation="relu", 
                       padding="same")(input)
     x = MaxPooling2D((2, 2), 
@@ -31,4 +32,20 @@ def make_ae(params):
                padding="same")(x)
     autoencoder = Model(input, x)
     return autoencoder
-#autoencoder.compile(optimizer="adam", loss="binary_crossentropy")
+
+def simple_exp(epochs=10,batch_size = 64,out_path=None):
+    data=base.get_minst_dataset()
+    autoencoder=make_ae(params=None)
+    autoencoder.compile(optimizer="adam", 
+                        loss="binary_crossentropy")
+    autoencoder.summary()
+    history = autoencoder.fit(data.x_train,
+                              data.x_train,
+                        batch_size=batch_size,
+                        epochs=epochs)
+    if(not out_path is None):
+        autoencoder.save(out_path)
+    return base.Experiment(dataset=data,
+                      model=autoencoder)
+if __name__ == '__main__':
+    simple_exp(out_path="simple_ann.h5")
