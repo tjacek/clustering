@@ -9,7 +9,7 @@ class Experiment(object):
          self.model=model
     
     def get_features(self,name_i='dense_1',batch_size=1024):
-        ext=self.make_extractor(name_i)
+        ext=make_extractor(self.model,name_i)
         def helper(x):
             return ext.predict(x,batch_size=batch_size)
         return self.dataset.transform(helper)
@@ -17,10 +17,10 @@ class Experiment(object):
     def all_names(self):
         return [layer.name for layer in self.model.layers]
 
-    def make_extractor(self,name_i='dense_1'):
-        output= self.model.get_layer(name_i).output 
-        return Model(inputs=self.model.input,
-                     outputs=output)
+def make_extractor(model,name_i='dense_1'):
+    output= model.get_layer(name_i).output 
+    return Model(inputs=model.input,
+                 outputs=output)
 
 class Dataset(object):
     def __init__(self,x_train, y_train,x_test, y_test):

@@ -43,8 +43,11 @@ def simple_exp(epochs=10,batch_size = 64,out_path=None):
                               data.x_train,
                         batch_size=batch_size,
                         epochs=epochs)
+
     if(not out_path is None):
         autoencoder.save(out_path)
+    predict=base.make_extractor(self.model,
+                                "dense")#autoencoder.get_layer("dense")
     return base.Experiment(dataset=data,
                       model=autoencoder)
 if __name__ == '__main__':
