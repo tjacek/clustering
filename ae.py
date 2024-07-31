@@ -16,6 +16,8 @@ def make_ae(params):
                padding="same")(x)
     x = MaxPooling2D((2, 2), 
                       padding="same")(x)
+#    x=Flatten(x)
+#    x=Dense(256, activation='relu')(x)
     x = Conv2DTranspose(32, 
                         (3, 3), 
                         strides=2, 
@@ -33,7 +35,7 @@ def make_ae(params):
     autoencoder = Model(input, x)
     return autoencoder
 
-def simple_exp(epochs=10,batch_size = 64,out_path=None):
+def simple_exp(epochs=2,batch_size = 64,out_path=None):
     data=base.get_minst_dataset()
     autoencoder=make_ae(params=None)
     autoencoder.compile(optimizer="adam", 
@@ -46,8 +48,8 @@ def simple_exp(epochs=10,batch_size = 64,out_path=None):
 
     if(not out_path is None):
         autoencoder.save(out_path)
-    predict=base.make_extractor(self.model,
-                                "dense")#autoencoder.get_layer("dense")
+    predict=base.make_extractor(autoencoder,
+                                "max_pooling2d_1")#autoencoder.get_layer("dense")
     return base.Experiment(dataset=data,
                       model=autoencoder)
 if __name__ == '__main__':
