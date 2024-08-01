@@ -1,39 +1,39 @@
 from tensorflow.keras.layers import Conv2D,Conv2DTranspose,Dense,Dropout,Flatten,BatchNormalization,MaxPooling2D
 from tensorflow.keras import Input, Model
+from tensorflow.keras.models import Sequential
 import base
 
 def make_ae(params):
-    input =Input(shape=(28, 28, 1))
-
-    x =Conv2D(32, (3, 3), 
+    model = Sequential()
+    model.add(Conv2D(32, (3, 3), 
                       activation="relu", 
-                      padding="same")(input)
-    x = MaxPooling2D((2, 2), 
-                      padding="same")(x)
-    x = Conv2D(32, 
-               (3, 3), 
-               activation="relu", 
-               padding="same")(x)
-    x = MaxPooling2D((2, 2), 
-                      padding="same")(x)
-#    x=Flatten(x)
-#    x=Dense(256, activation='relu')(x)
-    x = Conv2DTranspose(32, 
-                        (3, 3), 
-                        strides=2, 
-                        activation="relu", 
-                        padding="same")(x)
-    x = Conv2DTranspose(32, 
-                        (3, 3), 
-                        strides=2, 
-                        activation="relu", 
-                        padding="same")(x)
-    x = Conv2D(1, 
-               (3, 3), 
-               activation="sigmoid", 
-               padding="same")(x)
-    autoencoder = Model(input, x)
-    return autoencoder
+                      padding="same",
+                      input_shape=(28,28,1)))
+    model.add(MaxPooling2D((2, 2), 
+                           padding="same"))
+    model.add(Conv2D(32, 
+                     (3, 3), 
+                     activation="relu", 
+                     padding="same"))
+    model.add(MaxPooling2D((2, 2), 
+                           padding="same"))
+#    model.add(Flatten())  
+#    model.add(Dense(512, activation='relu'))
+    model.add(Conv2DTranspose(32, 
+                             (3, 3), 
+                             strides=2, 
+                             activation="relu", 
+                             padding="same"))
+    model.add(Conv2DTranspose(32, 
+                             (3, 3), 
+                             strides=2, 
+                             activation="relu", 
+                             padding="same"))
+    model.add(Conv2D(1, 
+                    (3, 3), 
+                    activation="sigmoid",
+                    padding="same"))
+    return model
 
 def simple_exp(epochs=2,batch_size = 64,out_path=None):
     data=base.get_minst_dataset()
