@@ -1,4 +1,5 @@
-from tensorflow.keras.layers import Conv2D,Conv2DTranspose,Dense,Dropout,Flatten,BatchNormalization,MaxPooling2D
+from tensorflow.keras.layers import Conv2D,Conv2DTranspose,Dense,Dropout,Flatten
+from tensorflow.keras.layers import BatchNormalization,MaxPooling2D,Reshape
 from tensorflow.keras import Input, Model
 from tensorflow.keras.models import Sequential
 import base
@@ -17,8 +18,9 @@ def make_ae(params):
                      padding="same"))
     model.add(MaxPooling2D((2, 2), 
                            padding="same"))
-#    model.add(Flatten())  
-#    model.add(Dense(512, activation='relu'))
+    model.add(Flatten())  
+    model.add(Dense(1568, activation='relu'))
+    model.add(Reshape(target_shape=(7, 7, 32)))
     model.add(Conv2DTranspose(32, 
                              (3, 3), 
                              strides=2, 
@@ -49,7 +51,7 @@ def simple_exp(epochs=2,batch_size = 64,out_path=None):
     if(not out_path is None):
         autoencoder.save(out_path)
     predict=base.make_extractor(autoencoder,
-                                "max_pooling2d_1")#autoencoder.get_layer("dense")
+                                "dense")#autoencoder.get_layer("dense")
     return base.Experiment(dataset=data,
                       model=autoencoder)
 if __name__ == '__main__':
