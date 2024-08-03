@@ -10,7 +10,7 @@ def make_ae(params):
                       params['kern_size1'], 
                       activation="relu", 
                       padding="same",
-                      input_shape=(28,28,1)))
+                      input_shape=params['input_shape']))
     model.add(MaxPooling2D(params['max_pool1'], 
                            padding="same"))
     model.add(Conv2D( params['n_kern2'], 
@@ -47,6 +47,8 @@ def default_params():
 def simple_exp(epochs=2,batch_size = 64,out_path=None):
     data=base.get_minst_dataset()
     params=default_params()
+    params['input_shape']=data.dim()
+#    raise Exception(params['input_shape'])
     autoencoder=make_ae(params=params)
     autoencoder.compile(optimizer="adam", 
                         loss="binary_crossentropy")
