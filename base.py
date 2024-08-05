@@ -75,11 +75,3 @@ def read_exp(in_path,
     model=load_model(in_path)
     return Experiment(dataset=read_dataset(),
     	              model=model)
-
-
-#exp=read_exp("simple_cnn")
-#feat=exp.get_features('dense')
-#feat.save("cnn_feats")
-#read_dataset("cnn_feats.npz")
-#centroid_distance(feat)
-#print(feat.get_cat(1).shape)

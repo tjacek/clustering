@@ -48,10 +48,9 @@ def simple_exp(epochs=2,batch_size = 64,out_path=None):
     data=base.get_minst_dataset()
     params=default_params()
     params['input_shape']=data.dim()
-#    raise Exception(params['input_shape'])
     autoencoder=make_ae(params=params)
     autoencoder.compile(optimizer="adam", 
-                        loss="binary_crossentropy")
+                        loss="mean_squared_error")
     autoencoder.summary()
     history = autoencoder.fit(data.x_train,
                               data.x_train,
@@ -61,8 +60,10 @@ def simple_exp(epochs=2,batch_size = 64,out_path=None):
     if(not out_path is None):
         autoencoder.save(out_path)
     predict=base.make_extractor(autoencoder,
-                                "dense")#autoencoder.get_layer("dense")
-    return base.Experiment(dataset=data,
-                      model=autoencoder)
+                                "dense")
+   extractor=base.Experiment(dataset=data,
+                      model=predict)
+   return extractor,autoencoder
+
 if __name__ == '__main__':
     simple_exp(out_path="simple_ann.h5")
