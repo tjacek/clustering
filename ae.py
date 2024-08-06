@@ -47,6 +47,16 @@ def default_params():
 def simple_exp(epochs=2,batch_size = 64,out_path=None):
     data=base.get_minst_dataset()
     params=default_params()
+    autoencoder= train_ae(data,params)
+    if(not out_path is None):
+        autoencoder.save(out_path)
+    predict=base.make_extractor(autoencoder,
+                                "dense")
+   extractor=base.Experiment(dataset=data,
+                      model=predict)
+   return extractor,autoencoder
+
+def train_ae(data,params):
     params['input_shape']=data.dim()
     autoencoder=make_ae(params=params)
     autoencoder.compile(optimizer="adam", 
@@ -56,14 +66,7 @@ def simple_exp(epochs=2,batch_size = 64,out_path=None):
                               data.x_train,
                         batch_size=batch_size,
                         epochs=epochs)
-
-    if(not out_path is None):
-        autoencoder.save(out_path)
-    predict=base.make_extractor(autoencoder,
-                                "dense")
-   extractor=base.Experiment(dataset=data,
-                      model=predict)
-   return extractor,autoencoder
+    return autoencoder
 
 if __name__ == '__main__':
     simple_exp(out_path="simple_ann.h5")
