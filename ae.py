@@ -2,6 +2,7 @@ from tensorflow.keras.layers import Conv2D,Conv2DTranspose,Dense,Dropout,Flatten
 from tensorflow.keras.layers import BatchNormalization,MaxPooling2D,Reshape
 from tensorflow.keras import Input, Model
 from tensorflow.keras.models import Sequential
+import cv2
 import base
 
 def make_ae(params):
@@ -44,17 +45,21 @@ def default_params():
             'n_kern2':32, "kern_size2":(3,3),
             'max_pool1':(2,2),'max_pool2':(2,2) }
 
-def simple_exp(epochs=2,batch_size = 64,out_path=None):
-    data=base.get_minst_dataset()
+def simple_exp(data=None,
+               epochs=2,
+               batch_size = 64,
+               out_path=None):
+    if(data is None):
+        data=base.get_minst_dataset()
     params=default_params()
     autoencoder= train_ae(data,params)
     if(not out_path is None):
         autoencoder.save(out_path)
     predict=base.make_extractor(autoencoder,
                                 "dense")
-   extractor=base.Experiment(dataset=data,
+    extractor=base.Experiment(dataset=data,
                       model=predict)
-   return extractor,autoencoder
+    return extractor,autoencoder
 
 def train_ae(data,params):
     params['input_shape']=data.dim()
@@ -68,5 +73,13 @@ def train_ae(data,params):
                         epochs=epochs)
     return autoencoder
 
+def save_imgs(data,autoencoder,out_path):
+    print(data.x_train.shape)
+    for i,x_i in enumerate(data.x_train):
+        out_i=f"{out_path}/{i}"
+        cv2.imwrite(out_i,x_i)
+
 if __name__ == '__main__':
-    simple_exp(out_path="simple_ann.h5")
+    data=base.get_minst_dataset()
+    extractor,autoencoder=simple_exp(out_path="simple_ann.h5")
+    save_imgs(data,autoencoder)
