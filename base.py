@@ -36,7 +36,8 @@ class Dataset(object):
     		           y_test=self.y_test)
 
     def dim(self):
-    	return self.x_train.shape
+        shape= self.x_train.shape
+        return (shape[1],shape[2],1)
 
     def n_cats(self):
         return max(self.y_train)
@@ -53,6 +54,8 @@ class Dataset(object):
               'x_test':self.x_test,
               'y_test':self.y_test}
         np.savez_compressed(**args)
+
+
 
 def read_dataset(in_path):
     raw_data= np.load(in_path)

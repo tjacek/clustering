@@ -52,6 +52,8 @@ def simple_exp(data=None,
     if(data is None):
         data=base.get_minst_dataset()
     params=default_params()
+    params['batch_size']=batch_size
+    params['epochs']=epochs
     autoencoder= train_ae(data,params)
     if(not out_path is None):
         autoencoder.save(out_path)
@@ -63,13 +65,14 @@ def simple_exp(data=None,
 
 def train_ae(data,params):
     params['input_shape']=data.dim()
+
     autoencoder=make_ae(params=params)
     autoencoder.compile(optimizer="adam", 
                         loss="mean_squared_error")
     autoencoder.summary()
     history = autoencoder.fit(data.x_train,
                               data.x_train,
-                        batch_size=batch_size,
+                        batch_size=params['batch_size'],
                         epochs=epochs)
     return autoencoder
 
@@ -82,4 +85,4 @@ def save_imgs(data,autoencoder,out_path):
 if __name__ == '__main__':
     data=base.get_minst_dataset()
     extractor,autoencoder=simple_exp(out_path="simple_ann.h5")
-    save_imgs(data,autoencoder)
+    save_imgs(data,autoencoder,"test")
