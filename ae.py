@@ -3,7 +3,7 @@ from tensorflow.keras.layers import BatchNormalization,MaxPooling2D,Reshape
 from tensorflow.keras import Input, Model
 from tensorflow.keras.models import Sequential
 import cv2
-import os
+import os,os.path
 import base
 
 def make_ae(params):
@@ -48,7 +48,7 @@ def default_params():
 
 def simple_exp(data=None,
                epochs=2,
-               batch_size = 64,
+               batch_size = 256,
                out_path=None):
     if(data is None):
         data=base.get_minst_dataset()
@@ -79,10 +79,13 @@ def train_ae(data,params):
 
 def save_imgs(data,autoencoder,out_path):
     print(data.x_train.shape)
-    os.mkdir(out_path)
-    for i,x_i in enumerate(data.x_train):
+    if(os.path.exists(out_path)): 
+        os.mkdir(out_path)
+    for i,org_i in enumerate(data.x_train):
+        rec_i=autoencoder.predict(org_i)
+        diff_i=np.abs(org_i-rec_i)
         out_i=f"{out_path}/{i}.png"
-        cv2.imwrite(out_i,x_i)
+        cv2.imwrite(out_i,diff_i)
 
 if __name__ == '__main__':
     data=base.get_minst_dataset()
