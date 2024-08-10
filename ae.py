@@ -1,3 +1,4 @@
+import numpy as np
 from tensorflow.keras.layers import Conv2D,Conv2DTranspose,Dense,Dropout,Flatten
 from tensorflow.keras.layers import BatchNormalization,MaxPooling2D,Reshape
 from tensorflow.keras import Input, Model
@@ -48,7 +49,7 @@ def default_params():
 
 def simple_exp(data=None,
                epochs=2,
-               batch_size = 256,
+               batch_size = 1024,
                out_path=None):
     if(data is None):
         data=base.get_minst_dataset()
@@ -66,7 +67,7 @@ def simple_exp(data=None,
 
 def train_ae(data,params):
     params['input_shape']=data.dim()
-
+    print(params)
     autoencoder=make_ae(params=params)
     autoencoder.compile(optimizer="adam", 
                         loss="mean_squared_error")
@@ -79,11 +80,15 @@ def train_ae(data,params):
 
 def save_imgs(data,autoencoder,out_path):
     print(data.x_train.shape)
-    if(os.path.exists(out_path)): 
+    if(not os.path.exists(out_path)): 
         os.mkdir(out_path)
     for i,org_i in enumerate(data.x_train):
+        org_i=np.expand_dims(org_i,axis=0)
+        print(org_i.shape)
         rec_i=autoencoder.predict(org_i)
+        org_i=np.squeeze(org_i)
         diff_i=np.abs(org_i-rec_i)
+        
         out_i=f"{out_path}/{i}.png"
         cv2.imwrite(out_i,diff_i)
 
