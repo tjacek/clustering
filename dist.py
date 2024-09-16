@@ -34,10 +34,7 @@ def show_plot(all_dens,X_plot):
     fig, ax = plt.subplots()
     for dens_i in all_dens:
         ax.plot(X_plot[:, 0],
-                np.exp(dens_i),
-#    linestyle="-",
-#    label="0"
-        )
+                np.exp(dens_i))
     plt.show()
 
 def centroid_pairs(dataset):
@@ -56,12 +53,6 @@ def centroid_pairs(dataset):
         max_i=dis_max[i]
         print(f"{i}:{min_i}:{max_i}")
 
-feat=base.read_dataset("cnn_feats.npz")
-centroid_pairs(feat)
-
-#exp=base.read_exp("simple_cnn")
-#feat=exp.get_features('dense')
-#feat=base.read_dataset("cnn_feats.npz")
-#distances,centroids=centroid_distance(feat)
-#all_dens,X_plot=k_density(distances)
-#show_plot(all_dens,X_plot)
+if __name__ == '__main__':
+    feat=base.read_dataset("cnn_feats.npz")
+    centroid_pairs(feat)
