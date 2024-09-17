@@ -19,14 +19,20 @@ class Torus(object):
     	z= self.r*np.sin(theta)
     	return np.array([x,y,z])
 
-def show_bar(points,max_edge_length=2.7):
+def get_complex(points,max_edge_length=2.7):
     rips_complex = gd.RipsComplex(points=points, 
                                   max_edge_length=max_edge_length)
     simplex_tree = rips_complex.create_simplex_tree(max_dimension=3)
-    diag = simplex_tree.persistence(min_persistence=0.4)
-#    gd.plot_persistence_barcode(diag)
-#    plt.show()
-    ax = gd.plot_persistence_diagram(persistence_file=diag)
+    return simplex_tree.persistence(min_persistence=0.4)
+
+def show_bar(points,max_edge_length=2.7):
+    diag=get_complex(points,max_edge_length)
+    gd.plot_persistence_barcode(diag)
+    plt.show()
+
+def show_diagram(points,max_edge_length=2.7):
+    diag=get_complex(points,max_edge_length)
+    ax = gd.plot_persistence_diagram(diag)
     ax.set_title("Persistence diagram of a torus")
     ax.set_aspect("equal")  # 
     plt.show()
