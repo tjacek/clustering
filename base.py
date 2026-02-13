@@ -3,6 +3,31 @@ from tensorflow.keras import Input, Model
 import numpy as np
 from tensorflow.keras.models import load_model 
 
+class Dataset(object):
+    def __init__(self,X,y):
+        self.X=X
+        self.y=y
+
+    def fit(self,train,model):
+        if(type(train)==Split):
+            train=train.train_index
+        X_train,y_train=self.X[train],self.y[train]
+        model.fit(X_train,y_train)
+#        X_test,y_test=self.X[test],self.y[test]
+
+
+class Split(object):
+    def __init__(self,train_index,test_index):
+        self.train_index=train_index
+        self.test_index=test_index
+
+    def eval(self,data,clf):
+        return data.eval(train_index=self.train_index,
+                         test_index=self.test_index,
+                         clf=clf)
+
+
+
 class Experiment(object):
     def __init__(self,dataset,model):
          self.dataset=dataset
@@ -22,38 +47,38 @@ def make_extractor(model,name_i='dense_1'):
     return Model(inputs=model.input,
                  outputs=output)
 
-class Dataset(object):
-    def __init__(self,x_train, y_train,x_test, y_test):
-        self.x_train=x_train
-        self.y_train=y_train
-        self.x_test=x_test
-        self.y_test=y_test
+#class Dataset(object):
+#    def __init__(self,x_train, y_train,x_test, y_test):
+#        self.x_train=x_train
+#        self.y_train=y_train
+#        self.x_test=x_test
+#        self.y_test=y_test
 
-    def transform(self,fun):
-    	return Dataset(x_train=fun(self.x_train), 
-    		           y_train=self.y_train,
-    		           x_test=fun(self.x_test), 
-    		           y_test=self.y_test)
+#    def transform(self,fun):
+#    	return Dataset(x_train=fun(self.x_train), 
+#    		           y_train=self.y_train,
+#    		           x_test=fun(self.x_test), 
+#    		           y_test=self.y_test)
 
-    def dim(self):
-        shape= self.x_train.shape
-        return (shape[1],shape[2],1)
+#    def dim(self):
+#        shape= self.x_train.shape
+#        return (shape[1],shape[2],1)
 
-    def n_cats(self):
-        return max(self.y_train)
+#    def n_cats(self):
+#        return max(self.y_train)
 
-    def get_cat(self,i):
-        indices=(self.y_train==i)#[:,i]==1)
-        x_i=self.x_train[indices]
-        return x_i
+#    def get_cat(self,i):
+#        indices=(self.y_train==i)#[:,i]==1)
+#        x_i=self.x_train[indices]
+#        return x_i
 
-    def save(self,out_path):
-        args={'file':out_path,
-              'x_train':self.x_train,
-              'y_train':self.y_train,
-              'x_test':self.x_test,
-              'y_test':self.y_test}
-        np.savez_compressed(**args)
+#    def save(self,out_path):
+#        args={'file':out_path,
+#              'x_train':self.x_train,
+#              'y_train':self.y_train,
+#              'x_test':self.x_test,
+#              'y_test':self.y_test}
+#        np.savez_compressed(**args)
 
 
 
@@ -68,8 +93,7 @@ def read_dataset(in_path):
 def get_minst_dataset():
     mnist = tf.keras.datasets.mnist
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
-    return Dataset(x_train, y_train,x_test, y_test)
-
+    return Dataset(x_train,y_train),Dataset(x_test,y_test) 
 
 def read_exp(in_path,
 	         read_dataset=None):
