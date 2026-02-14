@@ -1,8 +1,35 @@
+import numpy as np
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D,Dense,Dropout,Flatten,BatchNormalization,MaxPooling2D
 from tensorflow.keras import Input, Model
 import base 
+
+class ConvNN(object):
+    def __init__(self,model):
+        self.model=model
+
+    def fit( self,
+             data,
+             epochs=50,
+             batch_size = 64):
+#        print(data.X.shape)
+#        print(self.model.input_shape)
+        optim=tf.keras.optimizers.RMSprop(epsilon=1e-08)
+        self.model.compile( optimizer=optim, 
+                            loss='categorical_crossentropy', 
+                            metrics=['acc'])
+        callbacks=SimpleCallback()
+        X=np.expand_dims(data.X,-1)
+#        raise Exception(X.shape)
+        y=tf.one_hot(data.y,
+                     depth=10)
+        self.model.fit(X,y,
+                       batch_size=batch_size,
+                       epochs=epochs,
+                       validation_split=0.1,
+                       callbacks=[callbacks])
+
 
 class SimpleCallback(tf.keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs={}):
@@ -52,7 +79,8 @@ def make_cnn(params):
     model.add(BatchNormalization())
     model.add(Dropout(0.5))
     model.add(Dense(params['n_cats'], activation='softmax'))
-    return model
+    model.summary()
+    return ConvNN(model)
 
 def default_params():
     return {'n_kern1':32, "kern_size1":(3,3),
@@ -60,25 +88,31 @@ def default_params():
             'n_kern3':64, "kern_size3":(3,3),  
             "n_cats":10}
 
-def simple_exp(epochs=50,batch_size = 64,out_path=None):
-    data=base.get_minst_dataset()
+def simple_exp():#epochs=50,batch_size = 64,out_path=None):
+    train,test=base.get_minst_dataset()
     params=default_params()
     model=make_cnn(params)
-    model.compile(optimizer=tf.keras.optimizers.RMSprop(epsilon=1e-08), 
-                  loss='categorical_crossentropy', 
-                  metrics=['acc'])
-    callbacks=SimpleCallback()
-    y_train=tf.one_hot(data.y_train,
-                       depth=10)
-    history = model.fit(data.x_train,y_train,
-                        batch_size=batch_size,
-                        epochs=epochs,
-                        validation_split=0.1,
-                        callbacks=[callbacks])
-    if(not out_path is None):
-        model.save(out_path)
-    return base.Experiment(dataset=data,
-                      model=model)
+    model.fit(train)
+
+#def simple_exp(epochs=50,batch_size = 64,out_path=None):
+#    data=base.get_minst_dataset()
+#    params=default_params()
+#    model=make_cnn(params)
+#    model.compile(optimizer=tf.keras.optimizers.RMSprop(epsilon=1e-08), 
+#                  loss='categorical_crossentropy', 
+#                  metrics=['acc'])
+#    callbacks=SimpleCallback()
+#    y_train=tf.one_hot(data.y_train,
+#                       depth=10)
+#    history = model.fit(data.x_train,y_train,
+#                        batch_size=batch_size,
+#                        epochs=epochs,
+#                        validation_split=0.1,
+#                        callbacks=[callbacks])
+#    if(not out_path is None):
+#        model.save(out_path)
+#    return base.Experiment(dataset=data,
+#                      model=model)
 
 if __name__ == '__main__':
-    simple_exp(out_path="simple_cnn.h5")
+    simple_exp()#out_path="simple_cnn.h5")
