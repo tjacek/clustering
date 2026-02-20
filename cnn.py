@@ -3,6 +3,7 @@ import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D,Dense,Dropout,Flatten,BatchNormalization,MaxPooling2D
 from tensorflow.keras import Input, Model
+from sklearn.metrics import accuracy_score
 import base 
 
 class ConvNN(object):
@@ -13,15 +14,12 @@ class ConvNN(object):
              data,
              epochs=50,
              batch_size = 64):
-#        print(data.X.shape)
-#        print(self.model.input_shape)
         optim=tf.keras.optimizers.RMSprop(epsilon=1e-08)
         self.model.compile( optimizer=optim, 
                             loss='categorical_crossentropy', 
                             metrics=['acc'])
         callbacks=SimpleCallback()
         X=np.expand_dims(data.X,-1)
-#        raise Exception(X.shape)
         y=tf.one_hot(data.y,
                      depth=10)
         self.model.fit(X,y,
@@ -30,6 +28,12 @@ class ConvNN(object):
                        validation_split=0.1,
                        callbacks=[callbacks])
 
+    def eval( self,
+              data):
+        y=self.model.predict(data.X)
+        y=np.argmax(y,axis=1)
+        acc=accuracy_score(data.y,y)
+        return acc
 
 class SimpleCallback(tf.keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs={}):
@@ -93,26 +97,8 @@ def simple_exp():#epochs=50,batch_size = 64,out_path=None):
     params=default_params()
     model=make_cnn(params)
     model.fit(train)
-
-#def simple_exp(epochs=50,batch_size = 64,out_path=None):
-#    data=base.get_minst_dataset()
-#    params=default_params()
-#    model=make_cnn(params)
-#    model.compile(optimizer=tf.keras.optimizers.RMSprop(epsilon=1e-08), 
-#                  loss='categorical_crossentropy', 
-#                  metrics=['acc'])
-#    callbacks=SimpleCallback()
-#    y_train=tf.one_hot(data.y_train,
-#                       depth=10)
-#    history = model.fit(data.x_train,y_train,
-#                        batch_size=batch_size,
-#                        epochs=epochs,
-#                        validation_split=0.1,
-#                        callbacks=[callbacks])
-#    if(not out_path is None):
-#        model.save(out_path)
-#    return base.Experiment(dataset=data,
-#                      model=model)
+    acc=model.eval(test)
+    print(f"{acc:.4f}")
 
 if __name__ == '__main__':
     simple_exp()#out_path="simple_cnn.h5")
