@@ -8,12 +8,19 @@ class Dataset(object):
         self.X=X
         self.y=y
 
-    def fit(self,train,model):
-        if(type(train)==Split):
-            train=train.train_index
-        X_train,y_train=self.X[train],self.y[train]
-        model.fit(X_train,y_train)
-#        X_test,y_test=self.X[test],self.y[test]
+class DataPair(object):
+    def __init__( self,
+                  train,
+                  test):
+        self.train=train
+        self.test=test
+
+#    def fit(self,train,model):
+#        if(type(train)==Split):
+#            train=train.train_index
+#        X_train,y_train=self.X[train],self.y[train]
+#        model.fit(X_train,y_train)
+
 
 
 class Split(object):
@@ -93,7 +100,9 @@ def read_dataset(in_path):
 def get_minst_dataset():
     mnist = tf.keras.datasets.mnist
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
-    return Dataset(x_train,y_train),Dataset(x_test,y_test) 
+    train = Dataset(x_train,y_train)
+    test = Dataset(x_test,y_test)
+    return DataPair(train,test)
 
 def read_exp(in_path,
 	         read_dataset=None):

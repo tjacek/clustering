@@ -34,6 +34,13 @@ class ConvNN(object):
         y=np.argmax(y,axis=1)
         acc=accuracy_score(data.y,y)
         return acc
+    
+    def extract(self,data,n_layer=1):
+        layer=self.model.get_layer(f"layer_{n_layer}")
+        extractor = Model( inputs=self.model.inputs,
+                           outputs=layer.output)
+        feat=extractor.predict(data.X)
+        raise Exception(feat.shape)
 
 class SimpleCallback(tf.keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs={}):
@@ -76,10 +83,10 @@ def make_cnn(params):
     model.add(Dropout(0.25))
 
     model.add(Flatten())
-    model.add(Dense(512, activation='relu'))
+    model.add(Dense(1024, activation='relu',name="layer_2"))
     model.add(BatchNormalization())
     model.add(Dropout(0.25))
-    model.add(Dense(1024, activation='relu'))
+    model.add(Dense(512, activation='relu',name="layer_1"))
     model.add(BatchNormalization())
     model.add(Dropout(0.5))
     model.add(Dense(params['n_cats'], activation='softmax'))
@@ -92,13 +99,15 @@ def default_params():
             'n_kern3':64, "kern_size3":(3,3),  
             "n_cats":10}
 
-def simple_exp():#epochs=50,batch_size = 64,out_path=None):
-    train,test=base.get_minst_dataset()
+def simple_exp():
+    data=base.get_minst_dataset()
     params=default_params()
     model=make_cnn(params)
-    model.fit(train)
-    acc=model.eval(test)
+    model.fit(data.train)
+    acc=model.eval(data.test)
     print(f"{acc:.4f}")
+    return model,data
 
 if __name__ == '__main__':
-    simple_exp()#out_path="simple_cnn.h5")
+    model,data=simple_exp()
+    model.extract(data.train)
