@@ -40,7 +40,7 @@ class ConvNN(object):
         extractor = Model( inputs=self.model.inputs,
                            outputs=layer.output)
         feat=extractor.predict(data.X)
-        raise Exception(feat.shape)
+        return feat
 
 class SimpleCallback(tf.keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs={}):
