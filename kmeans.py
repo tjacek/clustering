@@ -1,4 +1,5 @@
 from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_samples,silhouette_score
 import cnn
 
 def cluster(n_clusters=3):
@@ -7,9 +8,11 @@ def cluster(n_clusters=3):
     kmeans = KMeans(n_clusters=n_clusters, 
 	                random_state=0, 
 	                n_init="auto").fit(feat)
-    return kmeans.labels_,data.train.y
+    return kmeans.labels_,data,feat
 
 
-clust,y=cluster(n_clusters=3)
-#(clust)
-#print(y)
+clust,data,feat=cluster(n_clusters=3)
+silhouette_avg = silhouette_score(feat, clust)
+sample_silhouette_values = silhouette_samples(feat, 
+	                                          clust)
+print(silhouette_avg)
