@@ -83,18 +83,25 @@ def make_cnn(params):
     model.add(Dropout(0.25))
 
     model.add(Flatten())
-    model.add(Dense(1024, activation='relu',name="layer_2"))
+    model.add(Dense(params['n_layer1'], 
+                    activation='relu',
+                    name="layer_2"))
     model.add(BatchNormalization())
     model.add(Dropout(0.25))
-    model.add(Dense(512, activation='relu',name="layer_1"))
+    model.add(Dense( params['n_layer2'], 
+                     activation='relu',
+                     name="layer_1"))
     model.add(BatchNormalization())
     model.add(Dropout(0.5))
     model.add(Dense(params['n_cats'], activation='softmax'))
     model.summary()
     return ConvNN(model)
 
-def default_params():
-    return {'n_kern1':32, "kern_size1":(3,3),
+def default_params(n_layer1=1024,
+                   n_layer2=512):
+    return {'n_layer1':n_layer1,
+            'n_layer2':n_layer2,
+            'n_kern1':32, "kern_size1":(3,3),
             'n_kern2':32, "kern_size2":(3,3),
             'n_kern3':64, "kern_size3":(3,3),  
             "n_cats":10}
