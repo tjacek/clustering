@@ -77,7 +77,12 @@ def make_cnn(params):
                      padding='same', 
                      data_format='channels_last'))
     model.add(BatchNormalization())
-    model.add(Conv2D(filters=64, kernel_size=(3, 3), strides=1, padding='same', activation='relu', data_format='channels_last'))
+    model.add(Conv2D( filters=64, 
+                      kernel_size=(3, 3), 
+                      strides=1, 
+                      padding='same', 
+                      activation='relu', 
+                      data_format='channels_last'))
     model.add(BatchNormalization())
     model.add(MaxPooling2D(pool_size=(2, 2), padding='valid', strides=2))
     model.add(Dropout(0.25))
@@ -106,9 +111,11 @@ def default_params(n_layer1=1024,
             'n_kern3':64, "kern_size3":(3,3),  
             "n_cats":10}
 
-def simple_exp():
-    data=base.get_minst_dataset()
-    params=default_params()
+def simple_exp(data=None,
+               n_neurons=512):
+    if(data is None):
+        data=base.get_minst_dataset()
+    params=default_params(n_layer1=n_neurons)
     model=make_cnn(params)
     model.fit(data.train)
     acc=model.eval(data.test)
