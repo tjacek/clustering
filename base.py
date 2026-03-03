@@ -8,20 +8,18 @@ class Dataset(object):
         self.X=X
         self.y=y
 
+    def dim(self):
+        return self.X.shape
+
+    def n_cats(self):
+        return max(self.y)+1
+
 class DataPair(object):
     def __init__( self,
                   train,
                   test):
         self.train=train
         self.test=test
-
-#    def fit(self,train,model):
-#        if(type(train)==Split):
-#            train=train.train_index
-#        X_train,y_train=self.X[train],self.y[train]
-#        model.fit(X_train,y_train)
-
-
 
 class Split(object):
     def __init__(self,train_index,test_index):
