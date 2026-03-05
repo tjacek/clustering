@@ -19,8 +19,14 @@ def eval_cluster(n_clusters=3):
 	                                          clust)
     return silhouette_avg
 
-values=[3,5,7]
-for n_clusters in values:
-    avg_i=eval_cluster(n_clusters)
-    print(n_clusters)
-    print(avg_i)
+def xy_exp():
+    values=[4,6,8,10,12]
+    x,y=[],[]
+    for n_clusters in values:
+        avg_i=eval_cluster(n_clusters)
+        x.append(n_clusters)
+        y.append(avg_i)
+    print(x)
+    print(y)
+
+xy_exp()
