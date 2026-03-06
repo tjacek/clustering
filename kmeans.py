@@ -2,9 +2,9 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_samples,silhouette_score
 import cnn
 
-def cluster(n_clusters=3):
-    cnn
-    model,data=cnn.simple_exp()
+def cluster(n_clusters=3,
+            n_neurons=512):
+    model,data=cnn.simple_exp(n_neurons=n_neurons)
     feat=model.extract(data.train)
     kmeans = KMeans(n_clusters=n_clusters, 
 	                random_state=0, 
@@ -12,21 +12,33 @@ def cluster(n_clusters=3):
     return kmeans.labels_,data,feat
 
 
-def eval_cluster(n_clusters=3):
-    clust,data,feat=cluster(n_clusters)
+def eval_cluster(n_clusters=3,
+                 n_neurons=512):
+    clust,data,feat=cluster(n_clusters,n_neurons)
     silhouette_avg = silhouette_score(feat, clust)
     sample_silhouette_values = silhouette_samples(feat, 
 	                                          clust)
     return silhouette_avg
 
-def xy_exp():
-    values=[4,6,8,10,12]
+def xy_exp(clusters=None):
+    if(clusters is None):
+        clusters=[4,6,8,10,12]
     x,y=[],[]
-    for n_clusters in values:
+    for n_clusters in clusters:
         avg_i=eval_cluster(n_clusters)
         x.append(n_clusters)
         y.append(avg_i)
     print(x)
     print(y)
 
-xy_exp()
+def neuron_exp():
+    neurons=[128,256,512]
+    x,y=[],[]
+    for neuron_i in n_neurons:
+        avg_i=eval_cluster(n_neurons=neuron_i)
+        x.append(neuron_i)
+        y.append(avg_i)
+    print(x)
+    print(y)
+
+neuron_exp()
