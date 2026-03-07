@@ -1,5 +1,6 @@
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_samples,silhouette_score
+import matplotlib.pyplot as plt
 import cnn
 
 def cluster(n_clusters=3,
@@ -32,13 +33,20 @@ def xy_exp(clusters=None):
     print(y)
 
 def neuron_exp():
-    neurons=[128,256,512]
+    neurons=[64,128,256,512]
     x,y=[],[]
-    for neuron_i in n_neurons:
+    for neuron_i in neurons:
         avg_i=eval_cluster(n_neurons=neuron_i)
         x.append(neuron_i)
         y.append(avg_i)
     print(x)
     print(y)
+    plot_xy(x,y)
+
+def plot_xy(x,y):
+    plt.plot(x,y, 'o-r')
+    plt.ylabel("neurons")
+    plt.ylabel('silhouette')
+    plt.show()
 
 neuron_exp()
