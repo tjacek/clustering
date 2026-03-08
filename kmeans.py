@@ -1,7 +1,27 @@
+import numpy as np
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_samples,silhouette_score
 import matplotlib.pyplot as plt
 import cnn
+
+class ExpResults(object):
+    def __init__(self):
+        self.points=[]
+
+    def add( self,
+             metric,
+             cluster,
+             neurons):
+        point=[metric,cluster,neurons]
+        self.points.append(point)
+
+    def plot(self,x,y):
+        points=np.array(self.points)
+        x,y=points[x],points[y]
+        plt.plot(x,y, 'o-r')
+        plt.ylabel("neurons")
+        plt.ylabel('silhouette')
+        plt.show()
 
 def cluster(n_clusters=3,
             n_neurons=512):
@@ -20,6 +40,8 @@ def eval_cluster(n_clusters=3,
     sample_silhouette_values = silhouette_samples(feat, 
 	                                          clust)
     return silhouette_avg
+
+
 
 def xy_exp(clusters=None):
     if(clusters is None):
