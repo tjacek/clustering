@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 import cnn
 
 class ExpResults(object):
+    NAMES=["metric","cluster","neuron"]
+    COLS={"metric":0,"cluster":1,"neuron":2}
     def __init__(self):
         self.points=[]
 
