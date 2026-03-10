@@ -43,29 +43,43 @@ def eval_cluster(n_clusters=3,
 	                                          clust)
     return silhouette_avg
 
-
-
-def xy_exp(clusters=None):
+def clust_iter(cluster=None,n_neurons=512):
     if(clusters is None):
         clusters=[4,6,8,10,12]
+    for cluster_i in clusters:
+        yield cluster_i,n_neurons
+
+def neuron_iter(cluster=3,n_neurons=None):
+    if(n_neurons is None):
+        n_neurons=[4,6,8,10,12]
+    for neuron_i in n_neurons:
+        yield cluster,neuron_i
+
+def xy_exp(param_iter):
+#    if(clusters is None):
+#        clusters=[4,6,8,10,12]
+    if(param_iter=="neuron"):
+        param_iter=neuron_iter()
+    if(param_iter=="cluster"):
+        param_iter=clust_iter()
     x,y=[],[]
-    for n_clusters in clusters:
-        avg_i=eval_cluster(n_clusters)
-        x.append(n_clusters)
+    for cluster,n_neurons in param_iter:
+        avg_i=eval_cluster(cluster,n_neurons)
+        x.append(cluster)
         y.append(avg_i)
     print(x)
     print(y)
 
-def neuron_exp():
-    neurons=[64,128,256,512]
-    x,y=[],[]
-    for neuron_i in neurons:
-        avg_i=eval_cluster(n_neurons=neuron_i)
-        x.append(neuron_i)
-        y.append(avg_i)
-    print(x)
-    print(y)
-    plot_xy(x,y)
+#def neuron_exp():
+#    neurons=[64,128,256,512]
+#    x,y=[],[]
+#    for neuron_i in neurons:
+#        avg_i=eval_cluster(n_neurons=neuron_i)
+#        x.append(neuron_i)
+#        y.append(avg_i)
+#    print(x)
+#    print(y)
+#    plot_xy(x,y)
 
 def plot_xy(x,y):
     plt.plot(x,y, 'o-r')
@@ -73,4 +87,4 @@ def plot_xy(x,y):
     plt.ylabel('silhouette')
     plt.show()
 
-neuron_exp()
+xy_exp("neuron")
