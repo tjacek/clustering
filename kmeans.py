@@ -5,21 +5,25 @@ import matplotlib.pyplot as plt
 import cnn
 
 class ExpResults(object):
-    NAMES=["metric","cluster","neuron"]
-    COLS={"metric":0,"cluster":1,"neuron":2}
-    def __init__(self):
-        self.points=[]
+    def __init__( self,
+                  clusters,
+                  neurons,
+                  metric):
+        self.dict={"clusters":clusters,
+                   "neurons":neurons,
+                   "metric":metric}
 
     def add( self,
-             metric,
              cluster,
-             neurons):
-        point=[metric,cluster,neurons]
-        self.points.append(point)
+             neurons,
+             metric):
+        self.dict["clusters"].append(cluster)
+        self.dict["neurons"].append(neurons)
+        self.dict["metric"].append(metric)
 
-    def plot(self,x,y):
-        points=np.array(self.points)
-        x,y=points[x],points[y]
+    def plot(self,x="neurons",y="metric"):
+#        points=np.array(self.points)
+        x,y=self.dict[x],self.dict[y]
         plt.plot(x,y, 'o-r')
         plt.ylabel("neurons")
         plt.ylabel('silhouette')
@@ -56,35 +60,26 @@ def neuron_iter(cluster=3,n_neurons=None):
         yield cluster,neuron_i
 
 def xy_exp(param_iter):
-#    if(clusters is None):
-#        clusters=[4,6,8,10,12]
     if(param_iter=="neuron"):
         param_iter=neuron_iter()
     if(param_iter=="cluster"):
         param_iter=clust_iter()
-    x,y=[],[]
-    for cluster,n_neurons in param_iter:
-        avg_i=eval_cluster(cluster,n_neurons)
-        x.append(cluster)
-        y.append(avg_i)
-    print(x)
-    print(y)
+    clusters,neurons,metric=[],[],[]
+    for cluster_i,neurons_i in param_iter:
+        metric_i=eval_cluster( cluster_i,
+                               neurons_i)
+        clusters.append(cluster_i)
+        neurons.append(neurons_i)
+        metric.append(metric)
+    return ExpResults( clusters,
+                       neurons,
+                       metric)
 
-#def neuron_exp():
-#    neurons=[64,128,256,512]
-#    x,y=[],[]
-#    for neuron_i in neurons:
-#        avg_i=eval_cluster(n_neurons=neuron_i)
-#        x.append(neuron_i)
-#        y.append(avg_i)
-#    print(x)
-#    print(y)
-#    plot_xy(x,y)
+#def plot_xy(x,y):
+#    plt.plot(x,y, 'o-r')
+#    plt.ylabel("neurons")
+#    plt.ylabel('silhouette')
+#    plt.show()
 
-def plot_xy(x,y):
-    plt.plot(x,y, 'o-r')
-    plt.ylabel("neurons")
-    plt.ylabel('silhouette')
-    plt.show()
-
-xy_exp("neuron")
+exp=xy_exp("neuron")
+exp.plot()
