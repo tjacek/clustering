@@ -21,12 +21,13 @@ class ExpResults(object):
         self.dict["neurons"].append(neurons)
         self.dict["metric"].append(metric)
 
-    def plot(self,x="neurons",y="metric"):
-#        points=np.array(self.points)
-        x,y=self.dict[x],self.dict[y]
+    def plot( self,
+              x_name="neurons",
+              y_name="metric"):
+        x,y=self.dict[x_name],self.dict[y_name]
         plt.plot(x,y, 'o-r')
-        plt.ylabel("neurons")
-        plt.ylabel('silhouette')
+        plt.xlabel(x_name)
+        plt.xlabel(y_name)
         plt.show()
 
 def cluster(n_clusters=3,
@@ -70,7 +71,7 @@ def xy_exp(param_iter):
                                neurons_i)
         clusters.append(cluster_i)
         neurons.append(neurons_i)
-        metric.append(metric)
+        metric.append(metric_i)
     return ExpResults( clusters,
                        neurons,
                        metric)
