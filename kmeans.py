@@ -30,6 +30,20 @@ class ExpResults(object):
         plt.xlabel(y_name)
         plt.show()
 
+class ClusterAsig(object):
+    def __init__( self,
+                  labels,
+                  data,
+                  feat):
+        self.labels=labels
+        self.data=data
+        self.feat=feat
+
+    def get_cluster(self,i):
+        indexes=(self.labels==i)
+        return data.X[indexes]
+
+
 def cluster(n_clusters=3,
             n_neurons=512):
     model,data=cnn.simple_exp(n_neurons=n_neurons)
@@ -37,15 +51,17 @@ def cluster(n_clusters=3,
     kmeans = KMeans(n_clusters=n_clusters, 
 	                random_state=0, 
 	                n_init="auto").fit(feat)
-    return kmeans.labels_,data,feat
+    return ClusterAsig(labels=kmeans.labels_,
+                       data=data,
+                       feat=feat)
 
 
 def eval_cluster(n_clusters=3,
                  n_neurons=512):
-    clust,data,feat=cluster(n_clusters,n_neurons)
-    silhouette_avg = silhouette_score(feat, clust)
-    sample_silhouette_values = silhouette_samples(feat, 
-	                                          clust)
+    clustg=cluster(n_clusters,n_neurons)
+    silhouette_avg = silhouette_score(feat, clust.labels)
+    sample_silhouette_values = silhouette_samples(clust.feat, 
+	                                              clust.labels)
     return silhouette_avg
 
 def clust_iter(cluster=None,n_neurons=512):
