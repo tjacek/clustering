@@ -38,10 +38,18 @@ class ClusterAsig(object):
         self.labels=labels
         self.data=data
         self.feat=feat
+    
+    def n_clusters(self):
+        return max(self.labels)+1
 
     def get_cluster(self,i):
         indexes=(self.labels==i)
         return data.X[indexes]
+
+#    def save(self,out_path):
+#        utils.make_dir(out_path)
+#        for i,x_i in enumerate(self.data.X):
+
 
 
 def cluster(n_clusters=3,
