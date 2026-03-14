@@ -46,11 +46,15 @@ class ClusterAsig(object):
         indexes=(self.labels==i)
         return data.X[indexes]
 
-#    def save(self,out_path):
-#        utils.make_dir(out_path)
-#        for i,x_i in enumerate(self.data.X):
-
-
+    def save(self,out_path):
+        utils.make_dir(out_path)
+        n_clusters=self.n_clusters()
+        for clust_i in range(n_clusters):
+            out_i=f"{out_path}/{clust_i}"
+            utils.make_dir(out_i)
+            x_i=self.get_cluster(clust_i)
+            for j,x_j in enumerate(x_i):
+                out_ij=f"{out_i}/{j}"
 
 def cluster(n_clusters=3,
             n_neurons=512):
@@ -66,7 +70,7 @@ def cluster(n_clusters=3,
 
 def eval_cluster(n_clusters=3,
                  n_neurons=512):
-    clustg=cluster(n_clusters,n_neurons)
+    clust=cluster(n_clusters,n_neurons)
     silhouette_avg = silhouette_score(feat, clust.labels)
     sample_silhouette_values = silhouette_samples(clust.feat, 
 	                                              clust.labels)
@@ -99,12 +103,6 @@ def xy_exp(param_iter):
     return ExpResults( clusters,
                        neurons,
                        metric)
-
-#def plot_xy(x,y):
-#    plt.plot(x,y, 'o-r')
-#    plt.ylabel("neurons")
-#    plt.ylabel('silhouette')
-#    plt.show()
 
 exp=xy_exp("neuron")
 exp.plot()
