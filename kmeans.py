@@ -71,7 +71,8 @@ def cluster(n_clusters=3,
 def eval_cluster(n_clusters=3,
                  n_neurons=512):
     clust=cluster(n_clusters,n_neurons)
-    silhouette_avg = silhouette_score(feat, clust.labels)
+    silhouette_avg = silhouette_score( clust.feat, 
+                                       clust.labels)
     sample_silhouette_values = silhouette_samples(clust.feat, 
 	                                              clust.labels)
     return silhouette_avg

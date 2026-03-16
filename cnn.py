@@ -49,7 +49,7 @@ class SimpleCallback(tf.keras.callbacks.Callback):
         self.model.stop_training = True
 
 
-def make_cnn(params):
+def make_cnn(params,verbose=False):
     model = Sequential()
 
     model.add(Conv2D(filters=params['n_kern1'], 
@@ -99,7 +99,8 @@ def make_cnn(params):
     model.add(BatchNormalization())
     model.add(Dropout(0.5))
     model.add(Dense(params['n_cats'], activation='softmax'))
-    model.summary()
+    if(verbose):
+        model.summary()
     return ConvNN(model)
 
 def default_params(n_layer1=1024,
