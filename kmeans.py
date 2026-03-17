@@ -29,6 +29,15 @@ class ExpResults(object):
         plt.xlabel(x_name)
         plt.xlabel(y_name)
         plt.show()
+    
+    def plot3D( self):
+        x=self.dict["clusters"]
+        y=self.dict["neurons"]
+        z=self.dict["metric"]
+        plt.plot3D(x, y, z, 'green')
+        plt.xlabel(x_name)
+        plt.xlabel(y_name)
+        plt.show()
 
 class ClusterAsig(object):
     def __init__( self,
