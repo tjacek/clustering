@@ -2,7 +2,8 @@ import numpy as np
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_samples,silhouette_score
 import matplotlib.pyplot as plt
-import cnn
+import cv2
+import cnn,utils
 
 class ExpResults(object):
     def __init__( self,
@@ -53,7 +54,7 @@ class ClusterAsig(object):
 
     def get_cluster(self,i):
         indexes=(self.labels==i)
-        return data.X[indexes]
+        return self.data.X[indexes]
 
     def save(self,out_path):
         utils.make_dir(out_path)
@@ -63,7 +64,8 @@ class ClusterAsig(object):
             utils.make_dir(out_i)
             x_i=self.get_cluster(clust_i)
             for j,x_j in enumerate(x_i):
-                out_ij=f"{out_i}/{j}"
+                out_ij=f"{out_i}/{j}.png"
+                cv2.imwrite(out_ij,x_j)
 
 def cluster(n_clusters=3,
             n_neurons=512):
@@ -73,7 +75,7 @@ def cluster(n_clusters=3,
 	                random_state=0, 
 	                n_init="auto").fit(feat)
     return ClusterAsig(labels=kmeans.labels_,
-                       data=data,
+                       data=data.train,
                        feat=feat)
 
 
@@ -114,5 +116,11 @@ def xy_exp(param_iter):
                        neurons,
                        metric)
 
-exp=xy_exp("neuron")
-exp.plot()
+def save_cluster(out_path,
+                 n_clusters=3,
+                 n_neurons=512):
+    clust=cluster(n_clusters,n_neurons)
+    clust.save(out_path)
+#exp=xy_exp("neuron")
+#exp.plot()
+save_cluster("out")
