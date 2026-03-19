@@ -55,6 +55,18 @@ class ClusterAsig(object):
     def get_cluster(self,i):
         indexes=(self.labels==i)
         return self.data.X[indexes]
+    
+    def clust_hist(self,clusters=None):
+        if(clusters==None):
+            clusters=range(self.n_clusters())
+        if(type(clusters)==int):
+            clusters=[clusters]
+        for clust_i in clusters:
+            indexes=(self.labels==clust_i)
+            y_i=self.data.y[indexes]
+            print(np.bincount(y_i))
+            plt.hist(y_i)
+            plt.show()
 
     def save(self,out_path):
         utils.make_dir(out_path)
@@ -120,7 +132,9 @@ def save_cluster(out_path,
                  n_clusters=3,
                  n_neurons=512):
     clust=cluster(n_clusters,n_neurons)
-    clust.save(out_path)
+#    clust.save(out_path)
+    clust.clust_hist()
+
 #exp=xy_exp("neuron")
 #exp.plot()
 save_cluster("out")
