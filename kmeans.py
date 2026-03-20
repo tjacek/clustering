@@ -68,6 +68,10 @@ class ClusterAsig(object):
             plt.hist(y_i)
             plt.show()
 
+    def quality(self):
+        return silhouette_score( self.feat, 
+                                 self.labels)
+
     def save(self,out_path):
         utils.make_dir(out_path)
         n_clusters=self.n_clusters()
