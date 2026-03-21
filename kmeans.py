@@ -40,6 +40,13 @@ class ExpResults(object):
         plt.xlabel(y_name)
         plt.show()
 
+    def save(self,out_path):
+        keys=list(self.dict.keys())
+        values=[self.dict[key_i] for key_i in keys]
+        with open(out_path, 'w') as file:
+            file.write(",".join(keys))
+            
+
 class ClusterAsig(object):
     def __init__( self,
                   labels,
