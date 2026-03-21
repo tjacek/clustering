@@ -43,9 +43,14 @@ class ExpResults(object):
     def save(self,out_path):
         keys=list(self.dict.keys())
         values=[self.dict[key_i] for key_i in keys]
+        n_lines=len(values[0])
         with open(out_path, 'w') as file:
             file.write(",".join(keys))
-            
+            for i in range(n_lines):
+                raw_i=[str(value_j[i]) 
+                        for value_j in values]
+                file.write(",".join(raw_i))
+
 
 class ClusterAsig(object):
     def __init__( self,
