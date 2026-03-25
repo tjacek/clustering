@@ -8,11 +8,15 @@ import cnn,utils
 class ExpResults(object):
     def __init__( self,
                   clusters,
-                  neurons,
-                  metric):
-        self.dict={"clusters":clusters,
+                  neurons=None,
+                  metric=None):
+        if(type(clusters)==dict):
+            dict=clusters
+        else:
+            dict={"clusters":clusters,
                    "neurons":neurons,
                    "metric":metric}
+        self.dict=dict
 
     def add( self,
              cluster,
@@ -51,6 +55,19 @@ class ExpResults(object):
                         for value_j in values]
                 file.write(",".join(raw_i))
 
+   
+   @classmethod
+   def read(cls, in_path):
+        with open(in_path, 'r') as file:
+            lines = file.readlines()
+        
+            keys = lines[0].strip().split(",")
+            dict = {key: [] for key in keys}
+            for line in lines[1:]:
+                values = line.strip().split(",")
+                for key, value in zip(keys, values):
+                     dict[key].append(value)
+            return cls(dict)
 
 class ClusterAsig(object):
     def __init__( self,
