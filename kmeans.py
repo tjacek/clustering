@@ -11,12 +11,12 @@ class ExpResults(object):
                   neurons=None,
                   metric=None):
         if(type(clusters)==dict):
-            dict=clusters
+            out_dict=clusters
         else:
-            dict={"clusters":clusters,
+            out_dict={"clusters":clusters,
                    "neurons":neurons,
                    "metric":metric}
-        self.dict=dict
+        self.dict=out_dict
 
     def add( self,
              cluster,
@@ -56,8 +56,8 @@ class ExpResults(object):
                 file.write(",".join(raw_i))
 
    
-   @classmethod
-   def read(cls, in_path):
+    @classmethod
+    def read(cls, in_path):
         with open(in_path, 'r') as file:
             lines = file.readlines()
         
@@ -127,6 +127,7 @@ def cluster(n_clusters=3,
 def eval_cluster(n_clusters=3,
                  n_neurons=512):
     clust=cluster(n_clusters,n_neurons)
+    print(f"Clusters:{clust.n_clusters()}")
     silhouette_avg = silhouette_score( clust.feat, 
                                        clust.labels)
     sample_silhouette_values = silhouette_samples(clust.feat, 
@@ -168,6 +169,6 @@ def save_cluster(out_path,
 #    clust.save(out_path)
     clust.clust_hist()
 
-#exp=xy_exp("neuron")
-#exp.plot()
-save_cluster("out")
+exp=xy_exp("neuron")
+exp.plot()
+#save_cluster("out")
