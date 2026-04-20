@@ -44,9 +44,14 @@ class ExpResults(object):
         plt.xlabel(y_name)
         plt.show()
 
-    def save(self,out_path):
+    def ord_list(self):
         keys=list(self.dict.keys())
+        keys.sort()
         values=[self.dict[key_i] for key_i in keys]
+        return values
+
+    def save(self,out_path):
+        values=self.ord_list()
         n_lines=len(values[0])
         with open(out_path, 'w') as file:
             file.write(",".join(keys))
