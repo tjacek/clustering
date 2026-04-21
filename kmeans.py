@@ -89,7 +89,15 @@ class ClusterAsig(object):
     def get_cluster(self,i):
         indexes=(self.labels==i)
         return self.data.X[indexes]
-    
+
+    def clust_size(self,clusters):
+        clusters=range(self.n_clusters())
+        sizes=[]
+        for clust_i in clusters:
+            indexes=(self.labels==clust_i)
+            sizes.append(len(indexes))
+        return sizes
+
     def clust_hist(self,clusters=None):
         if(clusters==None):
             clusters=range(self.n_clusters())
