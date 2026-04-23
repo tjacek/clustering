@@ -90,6 +90,10 @@ class ClusterAsig(object):
         indexes=(self.labels==i)
         return self.data.X[indexes]
 
+    def centroid(self,i):
+        cls_i=self.get_cluster(i)
+        return np.mean(cls_i,axis=0)
+    
     def clust_size(self,clusters):
         clusters=range(self.n_clusters())
         sizes=[]
@@ -140,6 +144,7 @@ def cluster(n_clusters=3,
 def eval_cluster(n_clusters=3,
                  n_neurons=512):
     clust=cluster(n_clusters,n_neurons)
+    print(clust.centroid(0).shape)
     print(f"Clusters:{clust.n_clusters()}")
     silhouette_avg = silhouette_score( clust.feat, 
                                        clust.labels)
