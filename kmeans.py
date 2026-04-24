@@ -74,6 +74,12 @@ class ExpResults(object):
                      dict[key].append(value)
             return cls(dict)
 
+class Cluster(object):
+    def __init__(self,X,y,feat):
+        self.X=X
+        self.y=y
+        self.feat=feat
+
 class ClusterAsig(object):
     def __init__( self,
                   labels,
@@ -88,7 +94,14 @@ class ClusterAsig(object):
 
     def get_cluster(self,i):
         indexes=(self.labels==i)
-        return self.data.X[indexes]
+        x_i=self.data.X[indexes]
+        feat_i=self.feat[indexes]
+        y_i=self.labels[indexes]
+        return Cluster(x_i,y_i,feat_i)
+
+#    def get_cluster(self,i):
+#        indexes=(self.labels==i)
+#        return self.data.X[indexes]
 
     def centroid(self,i):
         cls_i=self.get_cluster(i)
