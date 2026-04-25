@@ -79,6 +79,17 @@ class Cluster(object):
         self.X=X
         self.y=y
         self.feat=feat
+    
+    def centroid(self):
+        return np.mean(self.feat,axis=0)
+
+    def central(self):
+        center=self.centroid()
+        dist=[ np.linalg.norm(center-feat_i,ord=2)
+                 for feat_i in self.feat]
+#        print(dist)
+        k=np.argmax(dist)
+        return self.feat[k]
 
 class ClusterAsig(object):
     def __init__( self,
@@ -103,10 +114,6 @@ class ClusterAsig(object):
 #        indexes=(self.labels==i)
 #        return self.data.X[indexes]
 
-    def centroid(self,i):
-        cls_i=self.get_cluster(i)
-        return np.mean(cls_i,axis=0)
-    
     def clust_size(self,clusters):
         clusters=range(self.n_clusters())
         sizes=[]
@@ -123,7 +130,7 @@ class ClusterAsig(object):
         for clust_i in clusters:
             indexes=(self.labels==clust_i)
             y_i=self.data.y[indexes]
-            print(np.bincount(y_i))
+#            print(np.bincount(y_i))
             plt.hist(y_i)
             plt.show()
 
@@ -157,7 +164,6 @@ def cluster(n_clusters=3,
 def eval_cluster(n_clusters=3,
                  n_neurons=512):
     clust=cluster(n_clusters,n_neurons)
-    print(clust.centroid(0).shape)
     print(f"Clusters:{clust.n_clusters()}")
     silhouette_avg = silhouette_score( clust.feat, 
                                        clust.labels)
@@ -197,9 +203,11 @@ def save_cluster(out_path,
                  n_clusters=3,
                  n_neurons=512):
     clust=cluster(n_clusters,n_neurons)
+    c=clust.get_cluster(0)
+    print(c.central())
 #    clust.save(out_path)
     clust.clust_hist()
 
-exp=xy_exp("neuron")
-exp.plot()
-#save_cluster("out")
+#exp=xy_exp("neuron")
+#exp.plot()
+save_cluster("out")
