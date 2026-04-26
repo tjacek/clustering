@@ -87,9 +87,15 @@ class Cluster(object):
         center=self.centroid()
         dist=[ np.linalg.norm(center-feat_i,ord=2)
                  for feat_i in self.feat]
-#        print(dist)
         k=np.argmax(dist)
         return self.feat[k]
+    
+    def save(self,out_path):
+        utils.make_dir(out_path)
+        for i,x_i in enumerate(self.X):
+            out_ij=f"{out_path}/{i}.png"
+            cv2.imwrite(out_ij,x_j)
+
 
 class ClusterAsig(object):
     def __init__( self,
@@ -103,16 +109,17 @@ class ClusterAsig(object):
     def n_clusters(self):
         return max(self.labels)+1
 
+    def all_clusters(self):
+        n=self.n_clusters()
+        return [ self.get_cluster(i) 
+                     for i in range(n)]
+
     def get_cluster(self,i):
         indexes=(self.labels==i)
         x_i=self.data.X[indexes]
         feat_i=self.feat[indexes]
         y_i=self.labels[indexes]
         return Cluster(x_i,y_i,feat_i)
-
-#    def get_cluster(self,i):
-#        indexes=(self.labels==i)
-#        return self.data.X[indexes]
 
     def clust_size(self,clusters):
         clusters=range(self.n_clusters())
