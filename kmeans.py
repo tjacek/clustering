@@ -137,7 +137,6 @@ class ClusterAsig(object):
         for clust_i in clusters:
             indexes=(self.labels==clust_i)
             y_i=self.data.y[indexes]
-#            print(np.bincount(y_i))
             plt.hist(y_i)
             plt.show()
 
@@ -147,14 +146,19 @@ class ClusterAsig(object):
 
     def save(self,out_path):
         utils.make_dir(out_path)
-        n_clusters=self.n_clusters()
-        for clust_i in range(n_clusters):
-            out_i=f"{out_path}/{clust_i}"
-            utils.make_dir(out_i)
-            x_i=self.get_cluster(clust_i)
-            for j,x_j in enumerate(x_i):
-                out_ij=f"{out_i}/{j}.png"
-                cv2.imwrite(out_ij,x_j)
+        clusters=self.all_clusters()
+        for i,cluster_i in enumerate(clusters):
+            clust_i.save(f"{out_path}/{i}")
+#    def save(self,out_path):
+#        utils.make_dir(out_path)
+#        n_clusters=self.n_clusters()
+#        for clust_i in range(n_clusters):
+#            out_i=f"{out_path}/{clust_i}"
+#            utils.make_dir(out_i)
+#            x_i=self.get_cluster(clust_i)
+#            for j,x_j in enumerate(x_i):
+#                out_ij=f"{out_i}/{j}.png"
+#                cv2.imwrite(out_ij,x_j)
 
 def cluster(n_clusters=3,
             n_neurons=512):
