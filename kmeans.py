@@ -94,7 +94,7 @@ class Cluster(object):
         utils.make_dir(out_path)
         for i,x_i in enumerate(self.X):
             out_ij=f"{out_path}/{i}.png"
-            cv2.imwrite(out_ij,x_j)
+            cv2.imwrite(out_ij,x_i)
 
 
 class ClusterAsig(object):
@@ -148,7 +148,7 @@ class ClusterAsig(object):
         utils.make_dir(out_path)
         clusters=self.all_clusters()
         for i,cluster_i in enumerate(clusters):
-            clust_i.save(f"{out_path}/{i}")
+            cluster_i.save(f"{out_path}/{i}")
 #    def save(self,out_path):
 #        utils.make_dir(out_path)
 #        n_clusters=self.n_clusters()
@@ -216,7 +216,7 @@ def save_cluster(out_path,
     clust=cluster(n_clusters,n_neurons)
     c=clust.get_cluster(0)
     print(c.central())
-#    clust.save(out_path)
+    clust.save(out_path)
     clust.clust_hist()
 
 #exp=xy_exp("neuron")
