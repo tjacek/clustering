@@ -96,6 +96,8 @@ class Cluster(object):
             out_ij=f"{out_path}/{i}.png"
             cv2.imwrite(out_ij,x_i)
 
+    def mean(self):
+        return np.mean(self.X,axis=0)
 
 class ClusterAsig(object):
     def __init__( self,
@@ -149,16 +151,13 @@ class ClusterAsig(object):
         clusters=self.all_clusters()
         for i,cluster_i in enumerate(clusters):
             cluster_i.save(f"{out_path}/{i}")
-#    def save(self,out_path):
-#        utils.make_dir(out_path)
-#        n_clusters=self.n_clusters()
-#        for clust_i in range(n_clusters):
-#            out_i=f"{out_path}/{clust_i}"
-#            utils.make_dir(out_i)
-#            x_i=self.get_cluster(clust_i)
-#            for j,x_j in enumerate(x_i):
-#                out_ij=f"{out_i}/{j}.png"
-#                cv2.imwrite(out_ij,x_j)
+
+    def mean_img(self,out_path):
+        utils.make_dir(out_path)
+        clusters=self.all_clusters()
+        for i,cluster_i in enumerate(clusters):
+            path_i=f"{out_path}/{i}.png"
+            cv2.imwrite(path_i,cluster_i.mean())
 
 def cluster(n_clusters=3,
             n_neurons=512):
@@ -216,9 +215,9 @@ def save_cluster(out_path,
     clust=cluster(n_clusters,n_neurons)
     c=clust.get_cluster(0)
     print(c.central())
-    clust.save(out_path)
+    clust.mean_img(out_path)
     clust.clust_hist()
 
 #exp=xy_exp("neuron")
 #exp.plot()
-save_cluster("out")
+save_cluster("out_mean")
