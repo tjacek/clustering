@@ -2,6 +2,12 @@ import tensorflow as tf
 from tensorflow.keras import Input, Model
 import numpy as np
 from tensorflow.keras.models import load_model 
+from dataclasses import dataclass
+
+@dataclass(frozen=True)
+class Params:
+    model:str = "cnn"
+    clustering:str = "kmeans"
 
 class Dataset(object):
     def __init__(self,X,y):
