@@ -32,7 +32,6 @@ class Split(object):
                          clf=clf)
 
 
-
 class Experiment(object):
     def __init__(self,dataset,model):
          self.dataset=dataset
@@ -51,41 +50,6 @@ def make_extractor(model,name_i='dense_1'):
     output= model.get_layer(name_i).output 
     return Model(inputs=model.input,
                  outputs=output)
-
-#class Dataset(object):
-#    def __init__(self,x_train, y_train,x_test, y_test):
-#        self.x_train=x_train
-#        self.y_train=y_train
-#        self.x_test=x_test
-#        self.y_test=y_test
-
-#    def transform(self,fun):
-#    	return Dataset(x_train=fun(self.x_train), 
-#    		           y_train=self.y_train,
-#    		           x_test=fun(self.x_test), 
-#    		           y_test=self.y_test)
-
-#    def dim(self):
-#        shape= self.x_train.shape
-#        return (shape[1],shape[2],1)
-
-#    def n_cats(self):
-#        return max(self.y_train)
-
-#    def get_cat(self,i):
-#        indices=(self.y_train==i)#[:,i]==1)
-#        x_i=self.x_train[indices]
-#        return x_i
-
-#    def save(self,out_path):
-#        args={'file':out_path,
-#              'x_train':self.x_train,
-#              'y_train':self.y_train,
-#              'x_test':self.x_test,
-#              'y_test':self.y_test}
-#        np.savez_compressed(**args)
-
-
 
 def read_dataset(in_path):
     raw_data= np.load(in_path)
