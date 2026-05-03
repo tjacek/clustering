@@ -7,7 +7,9 @@ import cv2
 import os,os.path
 import base
 
-def make_ae(params):
+def make_ae(params=None):
+    if(params is None):
+        params=default_params()
     model = Sequential()
     model.add(Conv2D( params['n_kern1'], 
                       params['kern_size1'], 

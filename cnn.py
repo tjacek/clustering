@@ -49,7 +49,9 @@ class SimpleCallback(tf.keras.callbacks.Callback):
         self.model.stop_training = True
 
 
-def make_cnn(params,verbose=False):
+def make_cnn(params=None,verbose=False):
+    if(params is None):
+        params=default_params()
     model = Sequential()
 
     model.add(Conv2D(filters=params['n_kern1'], 
