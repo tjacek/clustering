@@ -5,7 +5,7 @@ import ae,cnn,cluster
 @dataclass(frozen=True)
 class Params:
     model:str = "cnn"
-    clustering:str = "kmeans"
+    clustering:str = "spectral"
     
     def make_model(self):
         if(self.model=="cnn"):
@@ -17,6 +17,8 @@ class Params:
     def clust_alg(self):
         if(self.clustering=="kmeans"):
             return cluster.kmeans_alg
+        elif(self.clustering=="spectral"):
+            return cluster.spectral_alg
 
 def simple_exp(*args):
     data=base.get_minst_dataset()
@@ -30,4 +32,4 @@ def simple_exp(*args):
                     n_clusters=2)
     clust.mean_img("test")
 
-simple_exp( "cnn", "kmeans")
+simple_exp( "cnn", "spectral")
