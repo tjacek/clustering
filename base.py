@@ -14,6 +14,19 @@ class Dataset(object):
     def n_cats(self):
         return max(self.y)+1
 
+    def cat_index(self,i):
+        bool_values= (self.y==i)
+        return [ i for i,bool_i in enumerate(bool_values)
+                   if(bool_i)]
+
+    def select(self,indexes):
+        new_X,new_y=[],[]
+        for i in indexes:
+            new_X.append(self.X[i])
+            new_y.append(self.y[i])
+        return Dataset(X=np.array(new_X),
+                       y=np.array(new_y))
+
 class DataPair(object):
     def __init__( self,
                   train,

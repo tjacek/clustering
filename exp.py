@@ -20,16 +20,20 @@ class Params:
         elif(self.clustering=="spectral"):
             return cluster.spectral_alg
 
+    def __call__(self,data):
+        model=self.make_model()
+        model.fit(data.train)
+        feat=model.extract(data.train)
+        clust_alg=self.clust_alg()
+        clust=clust_alg(data,
+                    feat,
+                    n_clusters=2)
+        return clust
+
 def simple_exp(*args):
     data=base.get_minst_dataset()
     params=Params(*args)
-    model=params.make_model()
-    model.fit(data.train)
-    feat=model.extract(data.train)
-    clust_alg=params.clust_alg()
-    clust=clust_alg(data,
-                    feat,
-                    n_clusters=2)
+    clust=params(data)   
     clust.mean_img("test")
 
-simple_exp( "cnn", "spectral")
+simple_exp( "cnn", "kmeans")
