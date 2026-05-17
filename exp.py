@@ -30,6 +30,16 @@ class Params:
                     n_clusters=2)
         return clust
 
+class ParamsSpace(object):
+    def __init__(self,models, clust_algs):
+        self.models=models
+        self.clust_algs=clust_algs
+
+    def __call__(self):
+        for model_i in self.models:
+            for clust_j in self.clust_algs:
+                yield Params(model_i,clust_j) 
+
 def simple_exp(*args):
     data=base.get_minst_dataset()
     params=Params(*args)
