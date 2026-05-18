@@ -6,7 +6,8 @@ import ae,cnn,cluster
 class Params:
     model:str = "cnn"
     clustering:str = "spectral"
-    
+    n_clusters:int = 2
+
     def make_model(self):
         if(self.model=="cnn"):
             model=cnn.make_cnn()
@@ -27,13 +28,20 @@ class Params:
         clust_alg=self.clust_alg()
         clust=clust_alg(data,
                     feat,
-                    n_clusters=2)
+                    n_clusters=self.n_clusters)
         return clust
+    
+    def __str__(self):
+        return f"{self.model},{self.clustering},{self.n_clusters}"
 
+@dataclass
 class ParamsSpace(object):
-    def __init__(self,models, clust_algs):
-        self.models=models
-        self.clust_algs=clust_algs
+    models=["cnn"]
+    clust_algs=["kmeans"]
+    n_clusters=[2,5,10]
+#    def __init__(self,models, clust_algs):
+#        self.models=models
+#        self.clust_algs=clust_algs
 
     def __call__(self):
         for model_i in self.models:
