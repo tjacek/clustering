@@ -5,8 +5,8 @@ import ae,cnn,cluster
 
 @dataclass(frozen=True)
 class Params:
-    model:str = "cnn"
     clustering:str = "spectral"
+    model:str = "cnn"
     n_clusters:int = 2
 
     def make_model(self):
@@ -37,16 +37,19 @@ class Params:
 
 @dataclass
 class ParamsSpace:
-    models: list = field(default_factory=lambda: ["cnn"])
-    clust_algs: list = field(default_factory=lambda: ["kmeans"])
-    n_clusters: list = field(default_factory=lambda: [2, 5, 10])
+    models: list = set_default(["cnn"])
+    clust_algs: list = set_default(["kmeans"])
+    n_clusters: list = set_default( [2, 5, 10])
     def __call__(self):
         as_dict=self.__dict__
         keys=list(as_dict.keys())
         keys.sort()
         values=[ as_dict[key_i] for key_i in keys]
         for params_i in product(*values):
-            yield params_i 
+            yield Params(*params_i) 
+
+def set_default(value):
+    return field(default_factory=lambda: value)
 
 def simple_exp(*args):
     data=base.get_minst_dataset()
@@ -57,7 +60,8 @@ def simple_exp(*args):
 def multi_exp():
     param_space=ParamsSpace()
     print(param_space.models)
-    param_space()
+    for param_i in param_space():
+        print(param_i)
 
 #simple_exp( "cnn", "kmeans")
 multi_exp()
