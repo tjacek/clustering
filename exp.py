@@ -62,7 +62,7 @@ def simple_exp(*args):
     clust.mean_img("test")
 
 def multi_exp(out_path):
-    param_space=ParamsSpace()
+    param_space=ParamsSpace(models=['ae'])
     data=base.get_minst_dataset()
     utils.make_dir(out_path)
     for i,param_i in enumerate(param_space()):
@@ -70,4 +70,4 @@ def multi_exp(out_path):
         clust_i.mean_img(f"{out_path}/{i}")
 
 #simple_exp( "cnn", "kmeans")
-multi_exp("mulit")
+multi_exp("mulit_ae")

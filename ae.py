@@ -7,6 +7,28 @@ import cv2
 import os,os.path
 import base
 
+class AE(object):
+    def __init__(self,model):
+        self.model=model
+    
+    def fit( self,
+             data,
+             epochs=50,
+             batch_size = 64):
+        self.model.compile( optimizer="adam", 
+                            loss="mean_squared_error")
+        X=np.expand_dims(data.X,-1)
+        self.model.fit(X,X,
+                       batch_size=batch_size,
+                       epochs=epochs)
+    
+    def extract(self,data):#,n_layer=1):
+        layer=self.model.get_layer(f"dense")
+        extractor = Model( inputs=self.model.inputs,
+                           outputs=layer.output)
+        feat=extractor.predict(data.X)
+        return feat
+
 def make_ae(params=None):
     if(params is None):
         params=default_params()
@@ -15,7 +37,7 @@ def make_ae(params=None):
                       params['kern_size1'], 
                       activation="relu", 
                       padding="same",
-                      input_shape=params['input_shape']))
+                      input_shape=(28,28,1)))
     model.add(MaxPooling2D(params['max_pool1'], 
                            padding="same"))
     model.add(Conv2D( params['n_kern2'], 
@@ -25,7 +47,7 @@ def make_ae(params=None):
     model.add(MaxPooling2D(params['max_pool2'], 
                            padding="same"))
     model.add(Flatten())  
-    model.add(Dense(1568, activation='relu'))
+    model.add(Dense(1568, activation='relu',name="dense"))
     model.add(Reshape(target_shape=(7, 7, 32)))
     model.add(Conv2DTranspose(params['n_kern2'], 
                               params['kern_size2'], 
@@ -41,7 +63,7 @@ def make_ae(params=None):
                     (3, 3), 
                     activation="sigmoid",
                     padding="same"))
-    return model
+    return AE(model)
 
 
 def default_params():
