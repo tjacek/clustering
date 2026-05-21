@@ -1,7 +1,7 @@
 import base
 from dataclasses import dataclass,asdict,field
 from itertools import product
-import ae,cnn,cluster
+import ae,cnn,cluster,utils
 
 @dataclass(frozen=True)
 class Params:
@@ -33,7 +33,14 @@ class Params:
         return clust
     
     def __str__(self):
-        return f"{self.model},{self.clustering},{self.n_clusters}"
+        keys=list(self.__dict__.keys())
+        keys.sort()
+        values=[ str(self.__dict__[key_i])
+                     for key_i in keys]
+        return ",".join(values) 
+
+def set_default(value):
+    return field(default_factory=lambda: value)
 
 @dataclass
 class ParamsSpace:
@@ -48,20 +55,19 @@ class ParamsSpace:
         for params_i in product(*values):
             yield Params(*params_i) 
 
-def set_default(value):
-    return field(default_factory=lambda: value)
-
 def simple_exp(*args):
     data=base.get_minst_dataset()
     params=Params(*args)
     clust=params(data)   
     clust.mean_img("test")
 
-def multi_exp():
+def multi_exp(out_path):
     param_space=ParamsSpace()
-    print(param_space.models)
-    for param_i in param_space():
-        print(param_i)
+    data=base.get_minst_dataset()
+    utils.make_dir(out_path)
+    for i,param_i in enumerate(param_space()):
+        clust_i=param_i(data) 
+        clust_i.mean_img(f"{out_path}/{i}")
 
 #simple_exp( "cnn", "kmeans")
-multi_exp()
+multi_exp("mulit")
