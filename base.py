@@ -26,6 +26,11 @@ class Dataset(object):
             new_y.append(self.y[i])
         return Dataset(X=np.array(new_X),
                        y=np.array(new_y))
+    
+    def __call__(self,fun):
+        new_X=[fun(x_i) for x_i in self.X]
+        return Dataset(X=np.array(new_X),
+                       y=self.y)
 
 class DataPair(object):
     def __init__( self,
