@@ -8,6 +8,9 @@ class Dataset(object):
         self.X=X
         self.y=y
 
+    def __len__(self):
+        return len(self.y)
+
     def dim(self):
         return self.X.shape
 
@@ -29,6 +32,14 @@ class Dataset(object):
     
     def __call__(self,fun):
         new_X=[fun(x_i) for x_i in self.X]
+        return Dataset(X=np.array(new_X),
+                       y=self.y)
+
+    def subsample(self,p=0.1):
+        new_X=[]
+        for x_i in self.X:
+            if(p < np.random.uniform()):
+                new_X.append(x_i)
         return Dataset(X=np.array(new_X),
                        y=self.y)
 
