@@ -2,6 +2,8 @@ import tensorflow as tf
 from tensorflow.keras import Input, Model
 import numpy as np
 from tensorflow.keras.models import load_model 
+import cv2
+import utils 
 
 class Dataset(object):
     def __init__(self,X,y):
@@ -36,12 +38,19 @@ class Dataset(object):
                        y=self.y)
 
     def subsample(self,p=0.1):
-        new_X=[]
-        for x_i in self.X:
-            if(p < np.random.uniform()):
+        new_X,new_y=[],[]
+        for i,x_i in enumerate(self.X):
+            if( np.random.uniform() < p):
                 new_X.append(x_i)
+                new_y.append(self.y[i])
         return Dataset(X=np.array(new_X),
-                       y=self.y)
+                       y=np.array(new_y))
+
+    def save(self,out_path):
+        utils.make_dir(out_path)
+        for i,x_i in enumerate(self.X):
+            out_ij=f"{out_path}/{i}.png"
+            cv2.imwrite(out_ij,x_i)
 
 class DataPair(object):
     def __init__( self,
