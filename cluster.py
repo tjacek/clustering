@@ -1,5 +1,6 @@
 import numpy as np
 from sklearn.cluster import KMeans
+from sklearn.cluster import SpectralClustering
 from sklearn.metrics import silhouette_samples,silhouette_score
 import cv2
 import utils
@@ -89,12 +90,36 @@ class ClusterAsig(object):
             path_i=f"{out_path}/{i}.png"
             cv2.imwrite(path_i,cluster_i.mean())
 
+class KMeansAssig(ClusterAsig):
+    def __init__( self,
+                  labels,
+                  data,
+                  feat,
+                  centroids):
+        super().__init__(labels,data,feat)
+        self.centroids=centroids
+    
+    def assig_new(self,x):
+        dist=[np.linalg.norm(x-c_i, ord=2) 
+                   for c_i in centroids ]
+        return np.argmax(dist)
+
 def kmeans_alg(data,
                feat,
                n_clusters=2):
     kmeans = KMeans(n_clusters=n_clusters, 
 	                random_state=0, 
 	                n_init="auto").fit(feat)
+    return ClusterAsig(labels=kmeans.labels_,
+                       data=data.train,
+                       feat=feat)
+
+def spectral_alg(data,
+               feat,
+               n_clusters=2):
+    clust = SpectralClustering(n_clusters=n_clusters, 
+                    assign_labels='discretize',
+                    random_state=0).fit(feat)
     return ClusterAsig(labels=kmeans.labels_,
                        data=data.train,
                        feat=feat)
