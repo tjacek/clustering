@@ -2,6 +2,7 @@ import tensorflow as tf
 from tensorflow.keras import Input, Model
 import numpy as np
 from tensorflow.keras.models import load_model 
+import os
 import cv2
 import utils 
 
@@ -58,6 +59,22 @@ class DataPair(object):
                   test):
         self.train=train
         self.test=test
+
+class NeuralModel(object):
+    @classmethod
+    def get_model(cls,out_path,data=None):
+        if(os.path.exists(out_path)):
+            return cls.read(out_path)
+        if(data is None):
+            data=get_minst_dataset()
+        if(type(data)==DataPair):
+            data=data.train
+        nn_model=cls.make()
+        nn_model.fit(data)
+        nn_model.save(out_path)
+
+    def save(self,out_path):
+        self.model.save(out_path)
 
 class Split(object):
     def __init__(self,train_index,test_index):

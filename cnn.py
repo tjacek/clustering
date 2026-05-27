@@ -6,9 +6,13 @@ from tensorflow.keras import Input, Model
 from sklearn.metrics import accuracy_score
 import base 
 
-class ConvNN(object):
+class ConvNN(base.NeuralModel):
     def __init__(self,model):
         self.model=model
+
+    @classmethod
+    def make(cls,params=None,verbose=False):
+        return make_cnn(params,verbose)
 
     def fit( self,
              data,
