@@ -72,6 +72,12 @@ class NeuralModel(object):
         nn_model=cls.make()
         nn_model.fit(data)
         nn_model.save(out_path)
+        return nn_model
+
+    @classmethod
+    def read(cls,in_path):
+        model = load_model(in_path)
+        return cls(model)
 
     def save(self,out_path):
         self.model.save(out_path)

@@ -110,9 +110,10 @@ def kmeans_alg(data,
     kmeans = KMeans(n_clusters=n_clusters, 
 	                random_state=0, 
 	                n_init="auto").fit(feat)
-    return ClusterAsig(labels=kmeans.labels_,
+    return KMeansAssig(labels=kmeans.labels_,
                        data=data.train,
-                       feat=feat)
+                       feat=feat,
+                       centroids=kmeans.cluster_centers_)
 
 def spectral_alg(data,
                feat,
