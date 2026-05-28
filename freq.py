@@ -1,5 +1,7 @@
 import base
 from scipy.ndimage import gaussian_filter
+import matplotlib.pyplot as plt
+import seaborn as sns
 import base,cnn,cluster
 
 def gauss_diff(img):
@@ -13,7 +15,7 @@ def simple_exp():
     s_data=data.train.subsample(0.03)
     diff_data=s_data(gauss)
     diff_data.save("gauss")
-
+ 
 def freq_exp(out_path):
     data=base.get_minst_dataset()
     model=cnn.ConvNN.get_model(out_path,data)
@@ -22,6 +24,11 @@ def freq_exp(out_path):
     clust_assig=cluster.kmeans_alg(data,
                                    feat,
                                     n_clusters=train.n_cats())
-    print(clust_assig.centroids)
+    purtity_hist= clust_assig.purity()
+    
+    sns.heatmap(purtity_hist, annot=True, fmt="g", cmap='viridis')
+    plt.show()
+
+#    print(purtity_hist)
 
 freq_exp("cnn_test.keras")

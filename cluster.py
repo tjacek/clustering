@@ -77,6 +77,14 @@ class ClusterAsig(object):
         return silhouette_score( self.feat, 
                                  self.labels)
 
+    def purity(self):
+        n_cats=self.data.n_cats()
+        n_clusters=self.n_clusters()
+        purity_hist=np.zeros((n_clusters,n_cats))
+        for clust_i,y_i in zip(self.labels,self.data.y):
+            purity_hist[clust_i][y_i]+=1
+        return purity_hist
+    
     def save(self,out_path):
         utils.make_dir(out_path)
         clusters=self.all_clusters()
