@@ -37,10 +37,11 @@ def freq_exp(out_path):
                                    n_clusters=train.n_cats())
     purtity_hist= clust_assig.purity()
     for feat_i in freq_iter(gauss,data.train,model):
-        print(feat_i.shape)
-    
-#    sns.heatmap(purtity_hist, annot=True, fmt="g", cmap='viridis')
-#    plt.show()
+        clust_assig_i=clust(feat_i,data.train)
+        purity_i=clust_assig_i.purity()
+        print(purity_i.shape)
+#        sns.heatmap(purity_i, annot=True, fmt="g", cmap='viridis')
+#        plt.show()
 
 #    print(purtity_hist)
 

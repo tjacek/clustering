@@ -101,18 +101,18 @@ class ClusterAsig(object):
 class KMeansClust(object):
     def __init__(self,centroids):
         self.centroids=centroids
-#    def __init__( self,
-#                  labels,
-#                  data,
-#                  feat,
-#                  centroids):
-#        super().__init__(labels,data,feat)
-#        self.centroids=centroids
-#    
+    
+    def __call__(self,feat,data=None):
+        labels=[ self.assig_new(feat_i)
+                 for feat_i in feat]
+        return ClusterAsig( labels=labels,
+                            data=data,
+                            feat=feat)
+    
     def assig_new(self,x):
         dist=[np.linalg.norm(x-c_i, ord=2) 
-                   for c_i in centroids ]
-        return np.argmax(dist)
+                   for c_i in self.centroids ]
+        return np.argmin(dist)
 
 def kmeans_alg(data,
                feat,
