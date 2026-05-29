@@ -98,15 +98,17 @@ class ClusterAsig(object):
             path_i=f"{out_path}/{i}.png"
             cv2.imwrite(path_i,cluster_i.mean())
 
-class KMeansAssig(ClusterAsig):
-    def __init__( self,
-                  labels,
-                  data,
-                  feat,
-                  centroids):
-        super().__init__(labels,data,feat)
+class KMeansClust(object):
+    def __init__(self,centroids):
         self.centroids=centroids
-    
+#    def __init__( self,
+#                  labels,
+#                  data,
+#                  feat,
+#                  centroids):
+#        super().__init__(labels,data,feat)
+#        self.centroids=centroids
+#    
     def assig_new(self,x):
         dist=[np.linalg.norm(x-c_i, ord=2) 
                    for c_i in centroids ]
@@ -118,10 +120,11 @@ def kmeans_alg(data,
     kmeans = KMeans(n_clusters=n_clusters, 
 	                random_state=0, 
 	                n_init="auto").fit(feat)
-    return KMeansAssig(labels=kmeans.labels_,
+    assig=ClusterAsig( labels=kmeans.labels_,
                        data=data.train,
-                       feat=feat,
-                       centroids=kmeans.cluster_centers_)
+                       feat=feat)
+    clust=KMeansClust(centroids=kmeans.cluster_centers_)
+    return clust,assig
 
 def spectral_alg(data,
                feat,
