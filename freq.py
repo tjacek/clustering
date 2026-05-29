@@ -1,11 +1,11 @@
-import base
+import numpy as np
 from scipy.ndimage import gaussian_filter
 import matplotlib.pyplot as plt
 import seaborn as sns
 import base,cnn,cluster
 
 def gauss_diff(img,sigma=5):
-	return (img-gaussian_filter(img,sigma=sigma))
+	return np.abs(img-gaussian_filter(img,sigma=sigma))
 
 def gauss(img,sigma=5):
 	return  gaussian_filter(img,sigma=sigma)
@@ -35,13 +35,19 @@ def freq_exp(out_path):
     clust,clust_assig=cluster.kmeans_alg(data,
                                    feat,
                                    n_clusters=train.n_cats())
-    purtity_hist= clust_assig.purity()
-    for feat_i in freq_iter(gauss,data.train,model):
+    n_clusters=clust_assig.n_clusters()
+    purtity_hist= clust_assig.purity(n_clusters)
+    full_purity=[purtity_hist]
+    for feat_i in freq_iter(gauss_diff,data.train,model):
         clust_assig_i=clust(feat_i,data.train)
-        purity_i=clust_assig_i.purity()
-        print(purity_i.shape)
-#        sns.heatmap(purity_i, annot=True, fmt="g", cmap='viridis')
-#        plt.show()
+        purity_i=clust_assig_i.purity(n_clusters)
+        full_purity.append(purity_i)
+    full_purity=np.array(full_purity)
+    for purity_by_cat in full_purity.T:
+        print(purity_by_cat.shape)
+        sns.heatmap(purity_by_cat.T, 
+                    annot=True, fmt="g", cmap='viridis')
+        plt.show()
 
 #    print(purtity_hist)
 
