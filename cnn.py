@@ -43,7 +43,7 @@ class ConvNN(base.NeuralModel):
         layer=self.model.get_layer(f"layer_{n_layer}")
         extractor = Model( inputs=self.model.inputs,
                            outputs=layer.output)
-        feat=extractor.predict(data.X)
+        feat=extractor.predict(data.X,batch_size=256)
         return feat
 
 class SimpleCallback(tf.keras.callbacks.Callback):

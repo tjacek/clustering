@@ -37,18 +37,27 @@ def freq_exp(out_path):
                                    n_clusters=train.n_cats())
     n_clusters=clust_assig.n_clusters()
     purtity_hist= clust_assig.purity(n_clusters)
+    cls2cat=np.argmax(purtity_hist,axis=1)
+    print(cls2cat)
+    clust.reorder(cls2cat)
+    show_heat(purtity_hist)
+    purtity_hist=clust(feat,data.train).purity(n_clusters)    
+    show_heat(purtity_hist)
     full_purity=[purtity_hist]
-    for feat_i in freq_iter(gauss_diff,data.train,model):
+    for feat_i in freq_iter(gauss,data.train,model):
         clust_assig_i=clust(feat_i,data.train)
         purity_i=clust_assig_i.purity(n_clusters)
         full_purity.append(purity_i)
     full_purity=np.array(full_purity)
-    for purity_by_cat in full_purity.T:
-        print(purity_by_cat.shape)
-        sns.heatmap(purity_by_cat.T, 
-                    annot=True, fmt="g", cmap='viridis')
-        plt.show()
+    for i,purity_by_cat in enumerate(full_purity.T):
+        show_heat(purity_by_cat.T,str(i))
 
-#    print(purtity_hist)
+
+def show_heat(X,title=None):
+    sns.heatmap(X, 
+                annot=True, fmt="g", cmap='viridis')
+    if(title):
+        plt.title(title)
+    plt.show()
 
 freq_exp("cnn_test.keras")

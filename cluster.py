@@ -77,9 +77,10 @@ class ClusterAsig(object):
         return silhouette_score( self.feat, 
                                  self.labels)
 
-    def purity(self):
+    def purity(self,n_clusters=None):
         n_cats=self.data.n_cats()
-        n_clusters=self.n_clusters()
+        if(n_clusters is None):
+            n_clusters=self.n_clusters()
         purity_hist=np.zeros((n_clusters,n_cats))
         for clust_i,y_i in zip(self.labels,self.data.y):
             purity_hist[clust_i][y_i]+=1
@@ -113,6 +114,14 @@ class KMeansClust(object):
         dist=[np.linalg.norm(x-c_i, ord=2) 
                    for c_i in self.centroids ]
         return np.argmin(dist)
+    
+    def reorder(self,cls2cat):
+        new_ord=np.argsort(cls2cat)
+        print(new_ord)
+        new_centroids=[self.centroids[i]  
+                        for i in new_ord ]
+        self.centroids=new_centroids
+#        print(new_ord)
 
 def kmeans_alg(data,
                feat,
