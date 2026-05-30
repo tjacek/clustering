@@ -34,16 +34,13 @@ def freq_exp(out_path):
     train=data.train
     clust,clust_assig=cluster.kmeans_alg(data,
                                    feat,
-                                   n_clusters=train.n_cats())
-    n_clusters=clust_assig.n_clusters()
-    purtity_hist= clust_assig.purity(n_clusters)
-    cls2cat=np.argmax(purtity_hist,axis=1)
-    print(cls2cat)
-    clust.reorder(cls2cat)
-    show_heat(purtity_hist)
-    purtity_hist=clust(feat,data.train).purity(n_clusters)    
-    show_heat(purtity_hist)
-    full_purity=[purtity_hist]
+                                   n_clusters=train.n_cats())   
+    purity_hist=clust.new_purity( clust_assig,
+                                  feat,
+                                  data.train)
+    show_heat(purity_hist)
+    n_clusters=purity_hist.shape[0]
+    full_purity=[purity_hist]
     for feat_i in freq_iter(gauss,data.train,model):
         clust_assig_i=clust(feat_i,data.train)
         purity_i=clust_assig_i.purity(n_clusters)
