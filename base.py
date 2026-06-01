@@ -134,3 +134,22 @@ def read_exp(in_path,
     model=load_model(in_path)
     return Experiment(dataset=read_dataset(),
     	              model=model)
+
+def get_metric(metric_type="L2"):
+    if(metric_type=="L2"):
+        return L2
+    if(metric_type=="L1"):
+        return L1
+    if(metric_type=="cos"):
+        return cos_metric
+        
+def L2(a,b):
+    return np.linalg.norm(a-b)
+
+def L1(a,b):
+    return np.sum(np.abs(a-b))
+
+def cos_metric(a,b):
+    a_len=np.linalg.norm(a)
+    b_len=np.linalg.norm(b)
+    return 1.0 - np.dot(a,b)/(a_len*b_len)
