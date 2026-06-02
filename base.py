@@ -136,6 +136,8 @@ def read_exp(in_path,
     	              model=model)
 
 def get_metric(metric_type="L2"):
+    if(metric_type==None):
+        return L2
     if(metric_type=="L2"):
         return L2
     if(metric_type=="L1"):

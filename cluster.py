@@ -2,6 +2,7 @@ import numpy as np
 from sklearn.cluster import KMeans
 from sklearn.cluster import SpectralClustering
 from sklearn.metrics import silhouette_samples,silhouette_score
+import itertools
 import cv2
 import utils
 
@@ -73,9 +74,12 @@ class ClusterAsig(object):
             plt.hist(y_i)
             plt.show()
 
-    def quality(self):
-        return silhouette_score( self.feat, 
-                                 self.labels)
+    def quality(self,quality_metric,metric=None):
+        clusters=self.all_clusters()
+        for x,y in itertools.combinations(clusters,2):
+            print(x,y)
+#        return silhouette_score( self.feat, 
+#                                 self.labels)
 
     def purity(self,n_clusters=None):
         n_cats=self.data.n_cats()
@@ -115,13 +119,23 @@ class KMeansClust(object):
                    for c_i in self.centroids ]
         return np.argmin(dist)
     
+    def new_purity( self,
+                    clust_assig,
+                    feat,
+                    data):
+        n_clusters=clust_assig.n_clusters()
+        purity_hist= clust_assig.purity(n_clusters)
+        cls2cat=np.argmax(purity_hist,axis=1)
+        self.reorder(cls2cat)
+        purity_hist=self(feat,data).purity(n_clusters)  
+        return purity_hist
+
     def reorder(self,cls2cat):
         new_ord=np.argsort(cls2cat)
         print(new_ord)
         new_centroids=[self.centroids[i]  
                         for i in new_ord ]
         self.centroids=new_centroids
-#        print(new_ord)
 
 def kmeans_alg(data,
                feat,
