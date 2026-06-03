@@ -82,6 +82,12 @@ class NeuralModel(object):
     def save(self,out_path):
         self.model.save(out_path)
 
+class Features(list):
+    def __init__(self,data,feats):
+        super(Features,self).__init__(feats)
+        self.X=data.X
+        self.y=data.y
+
 class Split(object):
     def __init__(self,train_index,test_index):
         self.train_index=train_index
