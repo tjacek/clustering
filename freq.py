@@ -35,6 +35,9 @@ def freq_exp(out_path):
     clust,clust_assig=cluster.kmeans_alg(data,
                                    feat,
                                    n_clusters=train.n_cats())   
+    q=clust_assig.quality()
+    show_heat(q)
+    return
     purity_hist=clust.new_purity( clust_assig,
                                   feat,
                                   data.train)

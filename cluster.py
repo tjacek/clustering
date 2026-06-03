@@ -4,7 +4,7 @@ from sklearn.cluster import SpectralClustering
 from sklearn.metrics import silhouette_samples,silhouette_score
 import itertools
 import cv2
-import utils
+import base,utils
 
 class Cluster(object):
     def __init__(self,X,y,feat):
@@ -74,12 +74,17 @@ class ClusterAsig(object):
             plt.hist(y_i)
             plt.show()
 
-    def quality(self,quality_metric,metric=None):
+    def quality(self,metric=None):
+        metric=base.get_metric(metric)
         clusters=self.all_clusters()
-        for x,y in itertools.combinations(clusters,2):
-            print(x,y)
-#        return silhouette_score( self.feat, 
-#                                 self.labels)
+        dist_matrix=np.zeros((len(clusters),len(clusters)))
+        for i,j in utils.index_pairs(clusters):
+            print(i,j)
+            clus_i=clusters[i]
+            clus_j=clusters[j]
+            dist_j= all_dist(clus_i,clus_j,metric)
+            dist_matrix[i][j]=np.mean(dist_j)
+        return dist_matrix
 
     def purity(self,n_clusters=None):
         n_cats=self.data.n_cats()
@@ -158,3 +163,10 @@ def spectral_alg(data,
     return ClusterAsig(labels=kmeans.labels_,
                        data=data.train,
                        feat=feat)
+
+def all_dist(x,y,metric):
+    distances=[]
+    for x_i,y_i in itertools.product(x.feat,
+                                     y.feat):
+        distances.append(metric(x_i,y_i))
+    return distances
