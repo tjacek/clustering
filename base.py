@@ -141,11 +141,13 @@ def read_exp(in_path,
     return Experiment(dataset=read_dataset(),
     	              model=model)
 
-def get_metric(metric_type="L2"):
+def get_metric(metric_type="L2",arr=False):
     if(metric_type==None):
         return L2
-    if(metric_type=="L2"):
+    if(metric_type=="L2" and not arr):
         return L2
+    if(metric_type=="L2" and arr):
+        return L2_arr
     if(metric_type=="L1"):
         return L1
     if(metric_type=="cos"):
@@ -161,3 +163,9 @@ def cos_metric(a,b):
     a_len=np.linalg.norm(a)
     b_len=np.linalg.norm(b)
     return 1.0 - np.dot(a,b)/(a_len*b_len)
+
+
+def L2_arr(x,b):
+    diff=x-b
+    diff=diff*diff
+    return np.sqrt(np.sum(diff,axis=1))
