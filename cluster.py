@@ -4,7 +4,10 @@ from sklearn.cluster import SpectralClustering
 from sklearn.metrics import silhouette_samples,silhouette_score
 import itertools
 import cv2
+import cProfile
 import base,utils
+
+
 
 class Cluster(object):
     def __init__(self,X,y,feat):
@@ -75,15 +78,19 @@ class ClusterAsig(object):
             plt.show()
 
     def quality(self,metric=None):
-        metric=base.get_metric(metric)
+        metric=base.get_metric("L2",True)
         clusters=self.all_clusters()
         dist_matrix=np.zeros((len(clusters),len(clusters)))
         for i,j in utils.index_pairs(clusters):
             print(i,j)
             clus_i=clusters[i]
             clus_j=clusters[j]
-            dist_j= all_dist(clus_i,clus_j,metric)
-            dist_matrix[i][j]=np.mean(dist_j)
+            profile_metric(clus_i.feat,
+                           clus_j.feat,
+                           metric_type="L1")
+            return
+#            dist_j= all_dist(clus_i,clus_j,metric)
+#            dist_matrix[i][j]=np.mean(dist_j)
         return dist_matrix
 
     def purity(self,n_clusters=None):
@@ -166,7 +173,26 @@ def spectral_alg(data,
 
 def all_dist(x,y,metric):
     distances=[]
-    for x_i,y_i in itertools.product(x.feat,
-                                     y.feat):
+    for i,j in utils.pair_iter(x,y): 
+        x_i,y_j=x.feat[i],y
         distances.append(metric(x_i,y_i))
     return distances
+
+
+
+def profile_metric(feat_i,feat_j,metric_type="L2"):
+    metric=base.get_metric(metric_type,True)
+    def new_fun():
+        distance=0
+        for x_i in feat_i:
+            distance+=metric(feat_j,x_i)
+        return distance
+    cProfile.runctx('new_fun()', globals(), locals())
+    metric=base.get_metric(metric_type,False)
+    def old_fun():
+        distance=0
+        for x_i in feat_i:
+            for y_i in feat_j:
+                distance=metric(x_i,y_i)
+        return distance
+    cProfile.runctx('old_fun()', globals(), locals())
