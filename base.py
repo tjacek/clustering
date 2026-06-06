@@ -152,9 +152,11 @@ def get_metric(metric_type="L2",arr=False):
         return L1
     if(metric_type=="L1" and arr):
         return L1_arr
-    if(metric_type=="cos"):
+    if(metric_type=="cos" and not arr):
         return cos_metric
-        
+    if(metric_type=="cos" and arr):
+        return cos_arr
+
 def L2(a,b):
     return np.linalg.norm(a-b)
 
@@ -174,3 +176,11 @@ def L2_arr(x,b):
 def L1_arr(x,b):
     diff=np.abs(x-b)
     return np.sqrt(np.sum(diff,axis=1))
+
+def cos_arr(x,b):
+    x_len=l2_norm_arr(x)
+    b_len=np.linalg.norm(b)
+    return 1.0 - np.dot(x,b)/(x_len*b_len)
+
+def l2_norm_arr(x):
+    return np.sqrt(np.sum(x*x,axis=1))

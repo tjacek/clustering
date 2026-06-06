@@ -87,7 +87,7 @@ class ClusterAsig(object):
             clus_j=clusters[j]
             profile_metric(clus_i.feat,
                            clus_j.feat,
-                           metric_type="L1")
+                           metric_type="cos")
             return
 #            dist_j= all_dist(clus_i,clus_j,metric)
 #            dist_matrix[i][j]=np.mean(dist_j)
