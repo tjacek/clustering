@@ -7,8 +7,6 @@ import cv2
 import cProfile
 import base,utils
 
-
-
 class Cluster(object):
     def __init__(self,X,y,feat):
         self.X=X
@@ -77,20 +75,18 @@ class ClusterAsig(object):
             plt.hist(y_i)
             plt.show()
 
-    def quality(self,metric=None):
-        metric=base.get_metric("L2",True)
+    def quality(self,metric="L2"):
+        metric=base.get_metric(metric,True)
         clusters=self.all_clusters()
         dist_matrix=np.zeros((len(clusters),len(clusters)))
         for i,j in utils.index_pairs(clusters):
             print(i,j)
             clus_i=clusters[i]
             clus_j=clusters[j]
-            profile_metric(clus_i.feat,
-                           clus_j.feat,
-                           metric_type="cos")
-            return
-#            dist_j= all_dist(clus_i,clus_j,metric)
-#            dist_matrix[i][j]=np.mean(dist_j)
+            dist_ij=0
+            for x_i in clus_i.feat:
+                dist_ij+=metric(clus_i.feat,x_i)
+            dist_matrix[i][j]=np.mean(dist_ij)
         return dist_matrix
 
     def purity(self,n_clusters=None):
