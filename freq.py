@@ -2,6 +2,7 @@ import numpy as np
 from scipy.ndimage import gaussian_filter
 import matplotlib.pyplot as plt
 import seaborn as sns
+from sklearn.decomposition import PCA
 import base,cnn,cluster
 
 def gauss_diff(img,sigma=5):
@@ -60,4 +61,15 @@ def show_heat(X,title=None):
         plt.title(title)
     plt.show()
 
-freq_exp("cnn_test.keras")
+def pca_feats(out_path):
+    data=base.get_minst_dataset()
+    model=cnn.ConvNN.get_model(out_path,data)
+    feat=model.extract(data.train)
+    pca = PCA(n_components=None)
+    pca.fit(feat)
+    var=pca.explained_variance_
+    print(var/np.sum(var))
+    print(np.cumsum(var/np.sum(var)))
+
+#freq_exp("cnn_test.keras")
+pca_feats("cnn_test.keras")
