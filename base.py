@@ -2,6 +2,8 @@ import tensorflow as tf
 from tensorflow.keras import Input, Model
 import numpy as np
 from tensorflow.keras.models import load_model 
+from sklearn.decomposition import PCA
+
 import os
 import cv2
 import utils 
@@ -82,12 +84,25 @@ class NeuralModel(object):
     def save(self,out_path):
         self.model.save(out_path)
 
-class Features(list):
-    def __init__(self,data,feats):
-        super(Features,self).__init__(feats)
-        self.X=data.X
-        self.y=data.y
+class Features(object):#list):
+    def __init__(self,
+                 feats,
+                 data,
+                 info=None):
+#        super(Features,self).__init__(feats)
+        self.data=data
+        self.feats=feats
+        self.info=info
+#        self.X=data.X
+#        self.y=data.y
 
+    def to_pca(self):
+        pca = PCA(n_components=None)
+        feats=pca.fit_transform(self.feats)
+        var=pca.explained_variance_
+        return Features( feats,
+                         self.data,
+                         var)
 class Split(object):
     def __init__(self,train_index,test_index):
         self.train_index=train_index
