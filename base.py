@@ -107,7 +107,14 @@ class Features(np.ndarray):
         if(name=="X"):
             return self.info["data"].X 
         if(name=="y"):
-            return self.info["y"].y
+            return self.info["data"].y
+
+    def select(self,indices):
+        X=self("X")[indices]
+        y=self("y")[indices]
+        feat=self[indices]
+        data=Dataset(X,y)
+        return Features(feat,data)
 
     def to_pca(self):
         pca = PCA(n_components=None)
@@ -133,7 +140,6 @@ class Split(object):
         return data.eval(train_index=self.train_index,
                          test_index=self.test_index,
                          clf=clf)
-
 
 class Experiment(object):
     def __init__(self,dataset,model):

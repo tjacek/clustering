@@ -8,6 +8,29 @@ import cProfile
 import base,utils
 
 class Cluster(object):
+    def __init__(self,feat):
+        self.feat=feat
+
+    def centroid(self):
+        return np.mean(self.feat,axis=0)
+    
+    def central(self):
+        center=self.centroid()
+        dist=[ np.linalg.norm(center-feat_i,ord=2)
+                 for feat_i in self.feat]
+        k=np.argmax(dist)
+        return self.feat[k]
+    
+    def save(self,out_path):
+        utils.make_dir(out_path)
+        for i,x_i in enumerate(self("X")):
+            out_ij=f"{out_path}/{i}.png"
+            cv2.imwrite(out_ij,x_i)
+
+    def mean(self):
+        return np.mean(self("X"),axis=0)
+
+class Cluster_(object):
     def __init__(self,X,y,feat):
         self.X=X
         self.y=y
@@ -35,10 +58,8 @@ class Cluster(object):
 class ClusterAsig(object):
     def __init__( self,
                   labels,
-                  data,
                   feat):
         self.labels=labels
-        self.data=data
         self.feat=feat
     
     def n_clusters(self):
@@ -48,14 +69,11 @@ class ClusterAsig(object):
         n=self.n_clusters()
         return [ self.get_cluster(i) 
                      for i in range(n)]
-
     def get_cluster(self,i):
-        indexes=(self.labels==i)
-        x_i=self.data.X[indexes]
-        feat_i=self.feat[indexes]
-        y_i=self.labels[indexes]
-        return Cluster(x_i,y_i,feat_i)
-
+        indices=(self.labels==i)
+        new_feat=self.feat.select(indices)
+        return Cluster(new_feat)
+    
     def clust_size(self,clusters):
         clusters=range(self.n_clusters())
         sizes=[]
@@ -63,18 +81,7 @@ class ClusterAsig(object):
             indexes=(self.labels==clust_i)
             sizes.append(len(indexes))
         return sizes
-
-    def clust_hist(self,clusters=None):
-        if(clusters==None):
-            clusters=range(self.n_clusters())
-        if(type(clusters)==int):
-            clusters=[clusters]
-        for clust_i in clusters:
-            indexes=(self.labels==clust_i)
-            y_i=self.data.y[indexes]
-            plt.hist(y_i)
-            plt.show()
-
+    
     def quality(self,metric="L2"):
         metric=base.get_metric(metric,True)
         clusters=self.all_clusters()
@@ -88,15 +95,6 @@ class ClusterAsig(object):
                 dist_ij+=metric(clus_i.feat,x_i)
             dist_matrix[i][j]=np.mean(dist_ij)
         return dist_matrix
-
-    def purity(self,n_clusters=None):
-        n_cats=self.data.n_cats()
-        if(n_clusters is None):
-            n_clusters=self.n_clusters()
-        purity_hist=np.zeros((n_clusters,n_cats))
-        for clust_i,y_i in zip(self.labels,self.data.y):
-            purity_hist[clust_i][y_i]+=1
-        return purity_hist
     
     def save(self,out_path):
         utils.make_dir(out_path)
@@ -110,6 +108,15 @@ class ClusterAsig(object):
         for i,cluster_i in enumerate(clusters):
             path_i=f"{out_path}/{i}.png"
             cv2.imwrite(path_i,cluster_i.mean())
+    
+    def purity(self):
+        n_cats=self.feat.n_cats()
+        n_clusters=self.n_clusters()
+        purity_hist=np.zeros((n_clusters,n_cats))
+        for clust_i,y_i in zip(self.labels,
+                               self.feat("y")):
+            purity_hist[clust_i][y_i]+=1
+        return purity_hist
 
 class KMeansClust(object):
     def __init__(self,centroids):
@@ -151,7 +158,6 @@ def kmeans_alg(feat,
 	                random_state=0, 
 	                n_init="auto").fit(feat)
     assig=ClusterAsig( labels=kmeans.labels_,
-                       data=feat.data,
                        feat=feat)
     clust=KMeansClust(centroids=kmeans.cluster_centers_)
     return clust,assig
@@ -172,8 +178,6 @@ def all_dist(x,y,metric):
         x_i,y_j=x.feat[i],y
         distances.append(metric(x_i,y_i))
     return distances
-
-
 
 def profile_metric(feat_i,feat_j,metric_type="L2"):
     metric=base.get_metric(metric_type,True)
