@@ -32,7 +32,7 @@ def freq_exp(out_path):
     model=cnn.ConvNN.get_model(out_path,data)
     feat=model.extract(data.train)
     features=base.Features(feat,data.train)
-    n_clusters=features.data.n_cats()
+    n_clusters=features.n_cats()
     clust,clust_assig=cluster.kmeans_alg(features,
                                          n_clusters=n_clusters)   
     q=clust_assig.quality(metric="cos")
@@ -66,8 +66,9 @@ def pca_feats(out_path):
     feat=model.extract(data.train)
     features=base.Features(feat,data.train)
     pca=features.to_pca()
-    print(pca.info/np.sum(pca.info))
-    print(np.cumsum(pca.info/np.sum(pca.info)))
+    print(pca.cum_var())
+#    print(pca.info/np.sum(pca.info))
+#    print(np.cumsum(pca.info/np.sum(pca.info)))
 
-#freq_exp("cnn_test.keras")
-pca_feats("cnn_test.keras")
+freq_exp("cnn_test.keras")
+#pca_feats("cnn_test.keras")

@@ -145,14 +145,13 @@ class KMeansClust(object):
                         for i in new_ord ]
         self.centroids=new_centroids
 
-def kmeans_alg(data,
-               feat,
+def kmeans_alg(feat,
                n_clusters=2):
     kmeans = KMeans(n_clusters=n_clusters, 
 	                random_state=0, 
 	                n_init="auto").fit(feat)
     assig=ClusterAsig( labels=kmeans.labels_,
-                       data=data.train,
+                       data=feat.data,
                        feat=feat)
     clust=KMeansClust(centroids=kmeans.cluster_centers_)
     return clust,assig

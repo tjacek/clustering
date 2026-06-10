@@ -84,25 +84,46 @@ class NeuralModel(object):
     def save(self,out_path):
         self.model.save(out_path)
 
-class Features(object):#list):
-    def __init__(self,
-                 feats,
-                 data,
-                 info=None):
-#        super(Features,self).__init__(feats)
-        self.data=data
-        self.feats=feats
-        self.info=info
-#        self.X=data.X
-#        self.y=data.y
+class Features(np.ndarray):
+    def __new__( cls,
+                 input_array, 
+                 info=None,
+                 feat_type="base"):
+        obj = np.asarray(input_array).view(cls)
+        if(type(info)==Dataset):
+            info={"data":info}
+        obj.info=info
+        obj.feat_type=feat_type
+        return obj
+
+    def __array_finalize__(self, obj):
+        if obj is None: return
+        self.info = getattr(obj, 'info', None)
+        self.feat_type = getattr(obj, 'feat_type', None)
+    
+    def __call__(self,name):
+        if(name in self.info):
+            return self.info[name]
+        if(name=="X"):
+            return self.info["data"].X 
+        if(name=="y"):
+            return self.info["y"].y
 
     def to_pca(self):
         pca = PCA(n_components=None)
-        feats=pca.fit_transform(self.feats)
-        var=pca.explained_variance_
-        return Features( feats,
-                         self.data,
-                         var)
+        feats=pca.fit_transform(self)
+        info=self.info.copy()
+        info["var"]=pca.explained_variance_
+        return PcaFeatures( feats,info,"PCA")
+
+    def n_cats(self):
+        return self.info["data"].n_cats()
+
+class PcaFeatures(Features):
+    def cum_var(self):
+        var=self.info["var"]
+        return np.cumsum(var/np.sum(var))
+
 class Split(object):
     def __init__(self,train_index,test_index):
         self.train_index=train_index
