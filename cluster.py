@@ -30,31 +30,6 @@ class Cluster(object):
     def mean(self):
         return np.mean(self("X"),axis=0)
 
-class Cluster_(object):
-    def __init__(self,X,y,feat):
-        self.X=X
-        self.y=y
-        self.feat=feat
-    
-    def centroid(self):
-        return np.mean(self.feat,axis=0)
-
-    def central(self):
-        center=self.centroid()
-        dist=[ np.linalg.norm(center-feat_i,ord=2)
-                 for feat_i in self.feat]
-        k=np.argmax(dist)
-        return self.feat[k]
-    
-    def save(self,out_path):
-        utils.make_dir(out_path)
-        for i,x_i in enumerate(self.X):
-            out_ij=f"{out_path}/{i}.png"
-            cv2.imwrite(out_ij,x_i)
-
-    def mean(self):
-        return np.mean(self.X,axis=0)
-
 class ClusterAsig(object):
     def __init__( self,
                   labels,

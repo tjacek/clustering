@@ -126,6 +126,12 @@ class Features(np.ndarray):
     def n_cats(self):
         return self.info["data"].n_cats()
 
+    def mean_norm(self):
+        dist=0
+        for x_i in self:
+            dist+=l0_norm(x_i)
+        return dist/len(self)
+
 class PcaFeatures(Features):
     def cum_var(self):
         var=self.info["var"]
@@ -226,3 +232,7 @@ def cos_arr(x,b):
 
 def l2_norm_arr(x):
     return np.sqrt(np.sum(x*x,axis=1))
+
+
+def l0_norm(x):
+    return np.sum((x==0).astype(int))

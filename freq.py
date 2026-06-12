@@ -21,11 +21,19 @@ def freq_iter( fun,
         feat=model.extract(data_i)
         yield feat
 
-def simple_exp():
+def simple_exp(out_path):
     data=base.get_minst_dataset()
-    s_data=data.train.subsample(0.03)
-    diff_data=s_data(gauss)
-    diff_data.save("gauss")
+    model=cnn.ConvNN.get_model(out_path,data)
+    feat=model.extract(data.train)
+    features=base.Features(feat,data.train)
+    n_clusters=features.n_cats()
+    clust,clust_assig=cluster.kmeans_alg(features,
+                                         n_clusters=n_clusters)  
+    for clust_i in clust_assig.all_clusters():
+        print(clust_i.feat.mean_norm())
+#    s_data=data.train.subsample(0.03)
+#    diff_data=s_data(gauss)
+#    diff_data.save("gauss")
  
 def freq_exp(out_path):
     data=base.get_minst_dataset()
@@ -70,5 +78,5 @@ def pca_feats(out_path):
 #    print(pca.info/np.sum(pca.info))
 #    print(np.cumsum(pca.info/np.sum(pca.info)))
 
-freq_exp("cnn_test.keras")
+simple_exp("cnn_test.keras")
 #pca_feats("cnn_test.keras")
