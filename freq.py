@@ -2,7 +2,7 @@ import numpy as np
 from scipy.ndimage import gaussian_filter
 import matplotlib.pyplot as plt
 import seaborn as sns
-import base,cnn,cluster
+import base,cnn,cluster,exp
 
 def gauss_diff(img,sigma=5):
 	return np.abs(img-gaussian_filter(img,sigma=sigma))
@@ -22,10 +22,7 @@ def freq_iter( fun,
         yield feat
 
 def simple_exp(out_path):
-    data=base.get_minst_dataset()
-    model=cnn.ConvNN.get_model(out_path,data)
-    feat=model.extract(data.train)
-    features=base.Features(feat,data.train)
+    features=exp.get_features(out_path)
     n_clusters=features.n_cats()
     clust,clust_assig=cluster.kmeans_alg(features,
                                          n_clusters=n_clusters)  
@@ -36,14 +33,11 @@ def simple_exp(out_path):
 #    diff_data.save("gauss")
  
 def freq_exp(out_path):
-    data=base.get_minst_dataset()
-    model=cnn.ConvNN.get_model(out_path,data)
-    feat=model.extract(data.train)
-    features=base.Features(feat,data.train)
+    features=exp.get_features(out_path)
     n_clusters=features.n_cats()
     clust,clust_assig=cluster.kmeans_alg(features,
                                          n_clusters=n_clusters)   
-    q=clust_assig.quality(metric="cos")
+    q=clust_assig.quality(metric="L2")
     show_heat(q)
     return
     purity_hist=clust.new_purity( clust_assig,
@@ -78,5 +72,5 @@ def pca_feats(out_path):
 #    print(pca.info/np.sum(pca.info))
 #    print(np.cumsum(pca.info/np.sum(pca.info)))
 
-simple_exp("cnn_test.keras")
+freq_exp("cnn_test.keras")
 #pca_feats("cnn_test.keras")

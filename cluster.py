@@ -10,6 +10,9 @@ import base,utils
 class Cluster(object):
     def __init__(self,feat):
         self.feat=feat
+    
+    def __len__(self):
+        return self.feat.shape[0]
 
     def centroid(self):
         return np.mean(self.feat,axis=0)
@@ -29,6 +32,14 @@ class Cluster(object):
 
     def mean(self):
         return np.mean(self("X"),axis=0)
+    
+    def dist(self,feat,metric):  
+        dist=0
+        for x_i in feat:
+            dist_i=metric(self.feat,x_i)
+            dist+=np.mean(dist_i)
+        size=len(self)*feat.shape[0]
+        return dist/size
 
 class ClusterAsig(object):
     def __init__( self,
@@ -61,14 +72,16 @@ class ClusterAsig(object):
         metric=base.get_metric(metric,True)
         clusters=self.all_clusters()
         dist_matrix=np.zeros((len(clusters),len(clusters)))
+        for i,clust_i in enumerate(clusters):
+            print(i)
+            dist_matrix[i][i]= clust_i.dist(clust_i.feat,metric)
         for i,j in utils.index_pairs(clusters):
             print(i,j)
             clus_i=clusters[i]
             clus_j=clusters[j]
-            dist_ij=0
-            for x_i in clus_i.feat:
-                dist_ij+=metric(clus_i.feat,x_i)
-            dist_matrix[i][j]=np.mean(dist_ij)
+            dist_ij= clus_i.dist(clus_j.feat,metric)
+            dist_matrix[i][j]=dist_ij
+            dist_matrix[j][i]=dist_ij
         return dist_matrix
     
     def save(self,out_path):
