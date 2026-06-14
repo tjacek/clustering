@@ -62,12 +62,12 @@ def show_heat(X,title=None):
     plt.show()
 
 def pca_feats(out_path,metric="L2"):
-    features=exp.get_features(out_path)
-    cluster_dist(features,metric)
+    features=exp.get_features(out_path,0.01)
+#    cluster_dist(features,metric)
     pca_features=features.to_pca()
-    cluster_dist(pca_features,metric)
-#    print(pca.info/np.sum(pca.info))
-#    print(np.cumsum(pca.info/np.sum(pca.info)))
+    pca_features.plot(2,1)
+#    cluster_dist(pca_features,metric)
+
 
 #freq_exp("cnn_test.keras")
 pca_feats("cnn_test.keras")

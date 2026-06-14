@@ -3,7 +3,7 @@ from tensorflow.keras import Input, Model
 import numpy as np
 from tensorflow.keras.models import load_model 
 from sklearn.decomposition import PCA
-
+import matplotlib.pyplot as plt
 import os
 import cv2
 import utils 
@@ -61,6 +61,10 @@ class DataPair(object):
                   test):
         self.train=train
         self.test=test
+
+    def subsample(self,p=0.1):
+        return DataPair(self.train.subsample(p),
+                        self.test.subsample(p))
 
 class NeuralModel(object):
     @classmethod
@@ -136,6 +140,20 @@ class PcaFeatures(Features):
     def cum_var(self):
         var=self.info["var"]
         return np.cumsum(var/np.sum(var))
+
+    def plot(self,i,j):
+        x,y=self[:,i],self[:,j]
+        labels=self.info["data"].y
+        fig, ax = plt.subplots()
+        colors=["b",'g','r','c','m',"y",
+                "orange",'pink','gray','brown']
+        point_colors=[colors[i % len(colors)]  
+                         for i in labels]
+        ax.scatter(x, y,c=point_colors)
+        for i, txt in enumerate(labels):
+            
+            ax.annotate(str(txt), (x[i], y[i]))
+        plt.show()
 
 class Split(object):
     def __init__(self,train_index,test_index):
