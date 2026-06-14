@@ -38,8 +38,8 @@ class Cluster(object):
         for x_i in feat:
             dist_i=metric(self.feat,x_i)
             dist+=np.mean(dist_i)
-        size=len(self)*feat.shape[0]
-        return dist/size
+#        size=len(self)*feat.shape[0]
+        return dist/len(self)
 
 class ClusterAsig(object):
     def __init__( self,

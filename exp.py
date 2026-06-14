@@ -69,5 +69,12 @@ def multi_exp(out_path):
         clust_i=param_i(data) 
         clust_i.mean_img(f"{out_path}/{i}")
 
+def get_features(out_path):
+    data=base.get_minst_dataset()
+    model=cnn.ConvNN.get_model(out_path,data)
+    feat=model.extract(data.train)
+    features=base.Features(feat,data.train)
+    return features
+
 #simple_exp( "cnn", "kmeans")
-multi_exp("mulit_ae")
+#multi_exp("mulit_ae")

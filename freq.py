@@ -21,6 +21,13 @@ def freq_iter( fun,
         feat=model.extract(data_i)
         yield feat
 
+def cluster_dist(features,metric="L2"):
+    n_clusters=features.n_cats()
+    clust,clust_assig=cluster.kmeans_alg(features,
+                                         n_clusters=n_clusters)   
+    q=clust_assig.quality(metric=metric)
+    show_heat(q,title=metric)
+
 def simple_exp(out_path):
     features=exp.get_features(out_path)
     n_clusters=features.n_cats()
@@ -28,17 +35,10 @@ def simple_exp(out_path):
                                          n_clusters=n_clusters)  
     for clust_i in clust_assig.all_clusters():
         print(clust_i.feat.mean_norm())
-#    s_data=data.train.subsample(0.03)
-#    diff_data=s_data(gauss)
-#    diff_data.save("gauss")
- 
+
 def freq_exp(out_path):
     features=exp.get_features(out_path)
-    n_clusters=features.n_cats()
-    clust,clust_assig=cluster.kmeans_alg(features,
-                                         n_clusters=n_clusters)   
-    q=clust_assig.quality(metric="L2")
-    show_heat(q)
+    cluster_dist(features,metric="L2")
     return
     purity_hist=clust.new_purity( clust_assig,
                                   feat,
@@ -54,7 +54,6 @@ def freq_exp(out_path):
     for i,purity_by_cat in enumerate(full_purity.T):
         show_heat(purity_by_cat.T,str(i))
 
-
 def show_heat(X,title=None):
     sns.heatmap(X, 
                 annot=True, fmt="g", cmap='viridis')
@@ -62,15 +61,13 @@ def show_heat(X,title=None):
         plt.title(title)
     plt.show()
 
-def pca_feats(out_path):
-    data=base.get_minst_dataset()
-    model=cnn.ConvNN.get_model(out_path,data)
-    feat=model.extract(data.train)
-    features=base.Features(feat,data.train)
-    pca=features.to_pca()
-    print(pca.cum_var())
+def pca_feats(out_path,metric="L2"):
+    features=exp.get_features(out_path)
+    cluster_dist(features,metric)
+    pca_features=features.to_pca()
+    cluster_dist(pca_features,metric)
 #    print(pca.info/np.sum(pca.info))
 #    print(np.cumsum(pca.info/np.sum(pca.info)))
 
-freq_exp("cnn_test.keras")
-#pca_feats("cnn_test.keras")
+#freq_exp("cnn_test.keras")
+pca_feats("cnn_test.keras")
