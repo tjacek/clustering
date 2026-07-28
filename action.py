@@ -18,9 +18,22 @@ class ActionGroup(object):
         actions=[ Action.read(path_i) 
                     for path_i in utils.top_files(in_path)]
         return cls(actions)
+   
+    def unify(self,fun):
+        all_items=[]
+        for action_i in self.actions:
+            all_items=action_i(fun)
+        return all_items
     
-    def  max_dims(self):
-         return [action_i.max_dims() for action_i in self.actions] 
+    def stats(self,fun):
+        values=self.unify(fun)
+        print(f"Mean:{np.mean(values)}")
+        print(f"Max:{np.amax(values)}")
+        print(f"Min:{np.amin(values)}")
+
+
+#    def  max_dims(self):
+#         return [action_i.max_dims() for action_i in self.actions] 
 
 
 @dataclass(frozen=True)
@@ -49,6 +62,9 @@ class Action(object):
 
     def __str__(self):
         return self.desc.name
+
+    def __call__(self,fun):
+        return [ fun(frame_i) for frame_i in self.frames]
     
     @classmethod
     def read(cls,in_path):
@@ -57,13 +73,20 @@ class Action(object):
         desc=ActionDesc.from_path(in_path)
         return cls(frames,desc)
 
-    def shape(self):
-    	return [frame_i.shape for frame_i in self.frames]
+def width(frame):
+    return frame.shape[0]
 
-    def max_dims(self):
-    	arr=np.array(self.shape())
-    	print(arr)
-    	return np.amax(arr,axis=0)
+def height(frame):
+    return frame.shape[1]
+
+#    def shape(self):
+#    	return [frame_i.shape for frame_i in self.frames]
+
+#    def max_dims(self):
+#    	arr=np.array(self.shape())
+#    	print(arr)
+#    	return np.amax(arr,axis=0)
 
 actions=ActionGroup.read("MSR")
-print(f"{actions[0]}")
+actions.stats(width)
+actions.stats(height)
