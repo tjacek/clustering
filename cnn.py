@@ -1,122 +1,175 @@
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Conv2D,Dense,Dropout,Flatten,BatchNormalization,MaxPooling2D
-from tensorflow.keras import Input, Model
+from tensorflow.keras.layers import (
+    Conv2D,
+    Dense,
+    Dropout,
+    BatchNormalization,
+    MaxPooling2D,
+    GlobalAveragePooling2D,
+)
+from tensorflow.keras import Model
 from sklearn.metrics import accuracy_score
-import base 
+from dataclasses import dataclass
+import base
 
 class ConvNN(base.NeuralModel):
     def __init__(self,model):
         self.model=model
 
     @classmethod
-    def make(cls,params=None,verbose=False):
-        return make_cnn(params,verbose)
+    def make(cls, params=None, verbose=False):
+        return make_cnn(params, verbose)
 
-    def fit( self,
-             data,
-             epochs=50,
-             batch_size = 64):
-        optim=tf.keras.optimizers.RMSprop(epsilon=1e-08)
-        self.model.compile( optimizer=optim, 
-                            loss='categorical_crossentropy', 
-                            metrics=['acc'])
-        callbacks=SimpleCallback()
-        X=np.expand_dims(data.X,-1)
-        y=tf.one_hot(data.y,
-                     depth=10)
-        self.model.fit(X,y,
-                       batch_size=batch_size,
-                       epochs=epochs,
-                       validation_split=0.1,
-                       callbacks=[callbacks])
+    def fit(self, data, epochs=50, batch_size=64):
+        self.model.compile(
+            optimizer=tf.keras.optimizers.Adam(1e-3),
+            loss="sparse_categorical_crossentropy",
+            metrics=["accuracy"],
+        )
+        
+        callbacks = [SimpleCallback()]
 
-    def eval( self,
-              data):
-        y=self.model.predict(data.X)
-        y=np.argmax(y,axis=1)
-        acc=accuracy_score(data.y,y)
-        return acc
+        X = np.expand_dims(data.X.astype("float32") / 255.0, -1)
+
+        self.model.fit( 
+            X,
+            data.y,
+            batch_size=batch_size,
+            epochs=epochs,
+            validation_split=0.1,
+            callbacks=callbacks,
+            verbose=1,
+        )
+
+    def eval(self, data):
+        X = np.expand_dims(data.X.astype("float32") / 255.0, -1)
+
+        y_pred = self.model.predict(X, verbose=0)
+        y_pred = np.argmax(y_pred, axis=1)
+
+        return accuracy_score(data.y, y_pred)
     
-    def extract(self,data,n_layer=1):
-        layer=self.model.get_layer(f"layer_{n_layer}")
-        extractor = Model( inputs=self.model.inputs,
-                           outputs=layer.output)
-        feat=extractor.predict(data.X,batch_size=256)
+
+    def extract(self, data, n_layer=1):
+        X = np.expand_dims(data.X.astype("float32") / 255.0, -1)
+
+        layer = self.model.get_layer(f"layer_{n_layer}")
+
+        extractor = Model(
+            inputs=self.model.inputs,
+            outputs=layer.output,
+        )
+
+        feat = extractor.predict(X, batch_size=256, verbose=0)
         return feat
 
 class SimpleCallback(tf.keras.callbacks.Callback):
-    def on_epoch_end(self, epoch, logs={}):
-        if(logs.get('acc')>0.995):
-            print("\nReached 99.5% accuracy so cancelling training!")
-        self.model.stop_training = True
+    def on_epoch_end(self, epoch, logs=None):
+        logs = logs or {}
+        acc = logs.get("accuracy")
 
+        if acc is not None and acc > 0.995:
+            print("\nReached 99.5% accuracy, stopping training.")
+            self.model.stop_training = True
 
-def make_cnn(params=None,verbose=False):
-    if(params is None):
-        params=default_params()
+def make_cnn(params=None, verbose=False):
+    if params is None:
+        params = minst_params()
+
     model = Sequential()
+    for n_kerns_i,sizes_i,pool_i in params:
+        if(pool_i is None):
+            model.add(Conv2D(
+                          filters=n_kerns_i,
+                          kernel_size=sizes_i,
+                          padding="same",
+                          activation="relu",
+                          input_shape=params.input_shape,
+                      ))
+        else:
+            model.add(BatchNormalization())
+            model.add(MaxPooling2D(pool_size=pool_i))
 
-    model.add(Conv2D(filters=params['n_kern1'], 
-                     kernel_size=params['kern_size1'], 
-                     activation='relu', strides=1, 
-                     padding='same', 
-                     data_format='channels_last',
-                      input_shape=(28,28,1)))
+            model.add(Conv2D(
+                          filters=n_kerns_i,
+                          kernel_size=sizes_i,
+                          padding="same",
+                          activation="relu",
+                     ))
+    
     model.add(BatchNormalization())
-    model.add(Conv2D(filters=params['n_kern2'], 
-                     kernel_size=params['kern_size2'],
-                     activation='relu', 
-                     strides=1, padding='same', 
-                     data_format='channels_last'))
-    model.add(BatchNormalization())
-    model.add(MaxPooling2D(pool_size=(2, 2), 
-                           strides=2, 
-                           padding='valid' ))
-    model.add(Dropout(0.25))
+    model.add(GlobalAveragePooling2D())
 
-    model.add(Conv2D(filters=params['n_kern3'], 
-                     kernel_size=params['kern_size3'],
-                     activation='relu', 
-                     strides=1, 
-                     padding='same', 
-                     data_format='channels_last'))
-    model.add(BatchNormalization())
-    model.add(Conv2D( filters=64, 
-                      kernel_size=(3, 3), 
-                      strides=1, 
-                      padding='same', 
-                      activation='relu', 
-                      data_format='channels_last'))
-    model.add(BatchNormalization())
-    model.add(MaxPooling2D(pool_size=(2, 2), padding='valid', strides=2))
-    model.add(Dropout(0.25))
-
-    model.add(Flatten())
-    model.add(Dense(params['n_layer1'], 
-                    activation='relu',
-                    name="layer_2"))
-    model.add(BatchNormalization())
-    model.add(Dropout(0.25))
-    model.add(Dense( params['n_layer2'], 
-                     activation='relu',
-                     name="layer_1"))
-    model.add(BatchNormalization())
-    model.add(Dropout(0.5))
-    model.add(Dense(params['n_cats'], activation='softmax'))
-    if(verbose):
+    for i,dense_i in enumerate(params.dense_layers):
+        model.add(Dense(
+                    dense_i,
+                    activation="relu",
+                    name=f"layer_{i}",
+                  ))
+        model.add(Dropout(0.5))
+    model.add( Dense(params.n_cats, 
+                     activation="softmax"))
+    if verbose:
         model.summary()
+
     return ConvNN(model)
 
-def default_params(n_layer1=1024,
-                   n_layer2=512):
-    return {'n_layer1':n_layer1,
-            'n_layer2':n_layer2,
-            'n_kern1':32, "kern_size1":(3,3),
-            'n_kern2':32, "kern_size2":(3,3),
-            'n_kern3':64, "kern_size3":(3,3),  
-            "n_cats":10}
+@dataclass(frozen=True)
+class Hyperparams:
+    input_shape:tuple
+    n_cats:int
+    dense_layers:list 
+    n_kerns:list 
+    kernel_sizes:list
+    pool_size:list 
+
+    def __iter__(self):
+        pairs=zip(self.n_kerns,self.kernel_sizes)
+        for i,(kerns_i,sizes_i) in enumerate(pairs):
+            if(i==0):
+                pool_i=None
+            else:
+                pool_i=self.pool_size[i-1]
+            yield kerns_i,sizes_i,pool_i
+
+def minst_params(n_cats=10):
+    return Hyperparams(
+            input_shape=(28,28,1),
+            n_cats=n_cats,
+            dense_layers=[1024,512],
+            n_kerns=[32,32,64],
+            kernel_sizes=[(3,3),(3,3),(3,3)],
+            pool_size=[(2,2),(2,2)]
+        )
+
+def frame_params(n_cats=20):
+    return Hyperparams(
+            input_shape=(240, 80, 1),
+            n_cats=n_cats,
+            dense_layers=[1024,128],
+            n_kerns=[32,64,128,256],
+            kernel_sizes=[(5, 3),(3,3),(3,3),(3,3)],
+            pool_size=[(2, 2),(2, 2),(2, 2)]
+        )
+
+
+def default_params(
+    n_layer1=256,
+    n_layer2=128,
+    n_cats=10,
+):
+    return {
+        "n_layer1": n_layer1,
+        "n_layer2": n_layer2,
+        "n_kern1": 32,
+        "n_kern2": 64,
+        "n_kern3": 128,
+        "n_kern4": 256,
+        "n_cats": n_cats,
+    }
+
 
 def simple_exp(data=None,
                n_neurons=512):
@@ -130,5 +183,7 @@ def simple_exp(data=None,
     return model,data
 
 if __name__ == '__main__':
-    model,data=simple_exp()
-    model.extract(data.train)
+    hyper=frame_params()
+    make_cnn(hyper,verbose=True)
+#    model,data=simple_exp()
+#    model.extract(data.train)
