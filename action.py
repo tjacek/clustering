@@ -1,7 +1,7 @@
 import numpy as np
 import cv2
 from dataclasses import dataclass
-import utils
+import base,utils
 
 class ActionGroup(object):
     def __init__(self, actions):
@@ -10,31 +10,64 @@ class ActionGroup(object):
     def __len__(self):
         return len(self.actions)
     
-    def __getitem__(self,i):
-        return self.actions[i]
+    def __iter__(self):
+        return iter(self.actions)
+
+    def map(self,fun):
+        actions=[action_i.map(fun,as_list=False) 
+                   for action_i in self.actions]
+        return ActionGroup(actions)
 
     @classmethod
     def read(cls,in_path):
         actions=[ Action.read(path_i) 
                     for path_i in utils.top_files(in_path)]
         return cls(actions)
+
+    def save(self,out_path):
+        utils.make_dir(out_path)
+        for action_i in self:#.actions:
+            action_i.save(f"{out_path}/{action_i}")
    
     def unify(self,fun):
         all_items=[]
         for action_i in self.actions:
-            all_items=action_i(fun)
+            all_items.extend(action_i.map(fun,as_list=True))
         return all_items
+
+    def split(self,fun=None):
+        if(fun is None):
+            fun= lambda desc: (desc.person % 2)==1
+        train,test=[],[]
+        for action_i in self:
+            if(fun(action_i.desc)):
+                train.append(action_i)
+            else:
+                test.append(action_i)
+        return ActionGroup(train),ActionGroup(test)
     
+    def as_dataset(self):
+        X,y=[],[]
+        for action_i in self:
+            for frame_j in action_i:
+                X.append(frame_j)
+                y.append(action_i.desc.cat)
+        return base.Dataset(X=np.array(X),
+                            y=np.array(y))
+
     def stats(self,fun):
         values=self.unify(fun)
         print(f"Mean:{np.mean(values)}")
+        print(f"Median:{np.median(values)}")
         print(f"Max:{np.amax(values)}")
         print(f"Min:{np.amin(values)}")
 
-
-#    def  max_dims(self):
-#         return [action_i.max_dims() for action_i in self.actions] 
-
+    def rescale( self, 
+                 new_width=80,
+                 new_height=240):
+        def helper(frame):
+            return cv2.resize(frame, (new_width, new_height))
+        return self.map(helper)
 
 @dataclass(frozen=True)
 class ActionDesc:
@@ -54,17 +87,24 @@ class Action(object):
     def __init__( self,
                  frames,
                  desc):
-        self.frames=frames
-        self.desc=desc
+        self.frames = frames
+        self.desc = desc
     
     def __len__(self):
     	return len(self.frames)
 
     def __str__(self):
         return self.desc.name
+    
+    def __iter__(self):
+        return iter(self.frames)
 
-    def __call__(self,fun):
-        return [ fun(frame_i) for frame_i in self.frames]
+    def map(self,fun,as_list=False):
+        values = [ fun(frame_i) for frame_i in self]#.frames]
+        if(as_list):
+            return values
+        return Action(frames=values,
+                      desc=self.desc )
     
     @classmethod
     def read(cls,in_path):
@@ -73,20 +113,22 @@ class Action(object):
         desc=ActionDesc.from_path(in_path)
         return cls(frames,desc)
 
-def width(frame):
-    return frame.shape[0]
+    def save(self,out_path):
+        utils.make_dir(out_path)
+        for i,frame_i in enumerate(self.frames):
+            cv2.imwrite(f"{out_path}/{i}.png", frame_i)
 
 def height(frame):
+    return frame.shape[0]
+
+def width(frame):
     return frame.shape[1]
 
-#    def shape(self):
-#    	return [frame_i.shape for frame_i in self.frames]
-
-#    def max_dims(self):
-#    	arr=np.array(self.shape())
-#    	print(arr)
-#    	return np.amax(arr,axis=0)
-
-actions=ActionGroup.read("MSR")
-actions.stats(width)
-actions.stats(height)
+if __name__ == '__main__':
+    actions=ActionGroup.read("MSR(scaled)")
+    train,test=actions.split()
+    import cnn
+    cnn.cnn_exp( train.as_dataset(),
+                 test.as_dataset(),
+                 cnn.frame_params(),
+                 epochs=100)

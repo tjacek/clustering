@@ -124,7 +124,11 @@ class Hyperparams:
     n_kerns:list 
     kernel_sizes:list
     pool_size:list 
-
+    
+    def __post_init__(self):
+        assert len(self.n_kerns) == len(self.kernel_sizes), "n_kerns i kernel_sizes muszą mieć tę samą długość"
+        assert len(self.pool_size) == len(self.n_kerns) - 1, "pool_size musi mieć o jeden element mniej niż n_kerns"
+    
     def __iter__(self):
         pairs=zip(self.n_kerns,self.kernel_sizes)
         for i,(kerns_i,sizes_i) in enumerate(pairs):
@@ -154,36 +158,30 @@ def frame_params(n_cats=20):
             pool_size=[(2, 2),(2, 2),(2, 2)]
         )
 
-
-def default_params(
-    n_layer1=256,
-    n_layer2=128,
-    n_cats=10,
-):
-    return {
-        "n_layer1": n_layer1,
-        "n_layer2": n_layer2,
-        "n_kern1": 32,
-        "n_kern2": 64,
-        "n_kern3": 128,
-        "n_kern4": 256,
-        "n_cats": n_cats,
-    }
-
-
 def simple_exp(data=None,
                n_neurons=512):
     if(data is None):
         data=base.get_minst_dataset()
-    params=default_params(n_layer1=n_neurons)
+    params=minst_params(n_cats=10)
     model=make_cnn(params)
     model.fit(data.train)
     acc=model.eval(data.test)
     print(f"{acc:.4f}")
     return model,data
 
+def cnn_exp( train,
+             test,
+             params,
+             epochs=50):
+    model=make_cnn(params)
+    model.fit(train,epochs=epochs)
+    acc=model.eval(test)
+    print(f"{acc:.4f}")
+    data=base.DataPair(train,test)
+    return model,data   
+
 if __name__ == '__main__':
-    hyper=frame_params()
-    make_cnn(hyper,verbose=True)
-#    model,data=simple_exp()
+#    hyper=frame_params()
+#    make_cnn(hyper,verbose=True)
+    model,data=simple_exp()
 #    model.extract(data.train)
