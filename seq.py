@@ -16,6 +16,8 @@ class Seq(object):
                   vectors,
                   desc,
                   labels=None):
+        if(type(vectors)!=np.ndarray):
+            vectors=np.array(vectors)
         if(labels is None):
             labels=[]
         self.vectors = vectors
@@ -27,6 +29,9 @@ class Seq(object):
     
     def __iter__(self):
         return iter(self.actions)
+    
+    def __str__(self):
+        return self.desc.name
 
 def train( in_path,
            out_path,
@@ -43,12 +48,15 @@ def make_seqs( action_path,
                model_path):
     actions=action.ActionGroup.read(action_path)
     model=cnn.ConvNN.read(model_path)
-    def helper(action_i):
-        X=np.array(action_i.frames)
-        return model.extract(X,n_layer=1)
+    seqs=[]
     for action_i in actions:
-        X=helper(action_i)
-        print(X.shape)
-
+        X=np.array(action_i.frames)
+        vectors=model.extract(X,n_layer=1)
+        labels=model.predict(X)
+        seq_i=Seq( vectors=vectors,
+                   desc=action_i.desc,
+                   labels=labels)
+    return SeqGroup(seqs)
+    
 #train("MSR/scaled","MSR/model")
 make_seqs("MSR/scaled","MSR/model.keras")

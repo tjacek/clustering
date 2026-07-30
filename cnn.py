@@ -17,6 +17,7 @@ import base
 class ConvNN(base.NeuralModel):
     def __init__(self,model):
         self.model=model
+        self._extractor=None
 
     @classmethod
     def make(cls, params=None, verbose=False):
@@ -53,17 +54,23 @@ class ConvNN(base.NeuralModel):
     
 
     def extract(self, data, n_layer=1):
-        X = np.expand_dims(data.X.astype("float32") / 255.0, -1)
+        old_X = data.X if(type(data)==base.Dataset) else data
+        X = np.expand_dims(old_X.astype("float32") / 255.0, -1)
 
         layer = self.model.get_layer(f"layer_{n_layer}")
 
-        extractor = Model(
-            inputs=self.model.inputs,
-            outputs=layer.output,
-        )
+        if(self._extractor is None):
+            self._extractor = Model(
+                                inputs=self.model.inputs,
+                                outputs=layer.output,
+                              )
 
-        feat = extractor.predict(X, batch_size=256, verbose=0)
+        feat = self._extractor.predict(X, batch_size=256, verbose=0)
         return feat
+
+    def predict(self,X):
+        prob= self.model.predict(X,verbose=0)
+        return np.argmax(prob,axis=1)
 
 class SimpleCallback(tf.keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs=None):
