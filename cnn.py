@@ -69,6 +69,7 @@ class ConvNN(base.NeuralModel):
         return feat
 
     def predict(self,X):
+        X=X.astype("float32") / 255.0
         prob= self.model.predict(X,verbose=0)
         return np.argmax(prob,axis=1)
 
