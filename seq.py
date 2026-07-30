@@ -1,4 +1,15 @@
+import numpy as np
 import action,cnn
+
+class SeqGroup(object):
+    def __init__(self, actions):
+        self.seqs=seqs
+    
+    def __len__(self):
+        return len(self.seqs)
+    
+    def __iter__(self):
+        return iter(self.seqs)
 
 class Seq(object):
     def __init__( self,
@@ -10,6 +21,12 @@ class Seq(object):
         self.vectors = vectors
         self.desc = desc
         self.labels=labels
+    
+    def __len__(self):
+        return len(self.actions)
+    
+    def __iter__(self):
+        return iter(self.actions)
 
 def train( in_path,
            out_path,
@@ -22,4 +39,16 @@ def train( in_path,
                          epochs=epochs)
     model.save(out_path)
 
-train("MSR/scaled","MSR/model")
+def make_seqs( action_path,
+               model_path):
+    actions=action.ActionGroup.read(action_path)
+    model=cnn.ConvNN.read(model_path)
+    def helper(action_i):
+        X=np.array(action_i.frames)
+        return model.extract(X,n_layer=1)
+    for action_i in actions:
+        X=helper(action_i)
+        print(X.shape)
+
+#train("MSR/scaled","MSR/model")
+make_seqs("MSR/scaled","MSR/model.keras")

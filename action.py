@@ -12,9 +12,9 @@ class ActionGroup(object):
     
     def __iter__(self):
         return iter(self.actions)
-
+    
     def map(self,fun):
-        actions=[action_i.map(fun,as_list=False) 
+        actions=[action_i.map(fun) 
                    for action_i in self.actions]
         return ActionGroup(actions)
 
@@ -32,7 +32,7 @@ class ActionGroup(object):
     def unify(self,fun):
         all_items=[]
         for action_i in self.actions:
-            all_items.extend(action_i.map(fun,as_list=True))
+            all_items.extend(action_i.eval(fun))
         return all_items
 
     def split(self,fun=None):
@@ -98,12 +98,12 @@ class Action(object):
     
     def __iter__(self):
         return iter(self.frames)
-
-    def map(self,fun,as_list=False):
-        values = [ fun(frame_i) for frame_i in self]#.frames]
-        if(as_list):
-            return values
-        return Action(frames=values,
+    
+    def eval(self,fun):
+        return [ fun(frame_i) for frame_i in self]
+    
+    def map(self,fun):
+        return Action(frames=self.eval(fun),
                       desc=self.desc )
     
     @classmethod
@@ -126,9 +126,4 @@ def width(frame):
 
 if __name__ == '__main__':
     actions=ActionGroup.read("MSR(scaled)")
-    train,test=actions.split()
-    import cnn
-    cnn.cnn_exp( train.as_dataset(),
-                 test.as_dataset(),
-                 cnn.frame_params(),
-                 epochs=100)
+
