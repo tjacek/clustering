@@ -50,10 +50,10 @@ class Seq(object):
         self.labels=labels
     
     def __len__(self):
-        return len(self.actions)
+        return len(self.vectors)
     
     def __iter__(self):
-        return iter(self.actions)
+        return iter(self.vectors)
     
     def __str__(self):
         return self.desc.name
@@ -79,6 +79,6 @@ def train( in_path,
                          epochs=epochs)
     model.save(out_path)
 
-#train("MSR/scaled","MSR/model")
+train("MSR/scaled","MSR/model")
 seqs=SeqGroup.from_actions("MSR/scaled","MSR/model.keras")
 #seqs.save("MSR/seqs")

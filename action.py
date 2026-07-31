@@ -80,7 +80,7 @@ class ActionDesc:
         name=path.split("/")[-1]
         raw=name.split("_")
         return cls(name=name,
-                   cat=int(raw[0]), 
+                   cat=int(raw[0])-1, 
                    person=int(raw[1]))
 
 class Action(object):

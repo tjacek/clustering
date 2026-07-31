@@ -18,6 +18,7 @@ class ConvNN(base.NeuralModel):
     def __init__(self,model):
         self.model=model
         self._extractor=None
+        self.extractor_layer=None
 
     @classmethod
     def make(cls, params=None, verbose=False):
@@ -54,16 +55,18 @@ class ConvNN(base.NeuralModel):
     
 
     def extract(self, data, n_layer=1):
-        old_X = data.X if(type(data)==base.Dataset) else data
+        old_X = data.X if(isinstance(data, base.Dataset)) else data
         X = np.expand_dims(old_X.astype("float32") / 255.0, -1)
 
-        layer = self.model.get_layer(f"layer_{n_layer}")
 
-        if(self._extractor is None):
+        if(self._extractor is None or 
+              self.extractor_layer!=n_layer):
+            layer = self.model.get_layer(f"layer_{n_layer}")
             self._extractor = Model(
                                 inputs=self.model.inputs,
                                 outputs=layer.output,
                               )
+            self.n_layer=n_layer
 
         feat = self._extractor.predict(X, batch_size=256, verbose=0)
         return feat
