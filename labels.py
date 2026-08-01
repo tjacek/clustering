@@ -22,11 +22,13 @@ class LabelingGroup(seq.SeqGroup):
                 frame_dict[int(label_j)].append(frame_j)
         
         dtype=seq_group.dtype()
-        def helper(i):
-            return seq.ActionDesc(f"label_{i}",
-                                  None,
-                                  None)
-        frame_dict={ i:dtype(frames_i,helper(i))
+#        def helper(i):
+#            return seq.ActionDesc(f"label_{i}",
+#                                  None,
+#                                  None)
+        desc=seq.ActionDesc.from_name
+        frame_dict={ i:dtype(frames=frames_i,
+                             desc=desc(f"{i+1}_0_0"))
                         for i,frames_i in frame_dict.items()}
         return frame_dict
 
@@ -75,7 +77,8 @@ def train( in_path,
 
 def save_by_labels( label_path,
                     action_path,
-                    out_path):
+                    out_path,
+                    mean=True):
     labels=LabelingGroup.read(label_path)
     actions=seq.ActionGroup.read(action_path)
     label_dict=labels.by_labels(actions)
@@ -83,11 +86,15 @@ def save_by_labels( label_path,
     items=label_dict.items()
     for i,(cat_i,group_i) in enumerate(items):
         print(cat_i)
-        group_i.save(f"{out_path}/{i}")
+        out_i=f"{out_path}/{i}"
+        if(mean):
+            group_i.mean_img(out_i)
+        else:
+            group_i.save(out_i)
 #train("MSR/scaled","MSR/model")
 #seqs=FeatSeqGroup.from_actions("MSR/scaled","MSR/model.keras")
 #labels=LabelingGroup.from_actions("MSR/scaled","MSR/model.keras")
 #labels.save("MSR/labels")
 save_by_labels( "MSR/labels",
                 "MSR/scaled",
-                "MSR/by_labels")
+                "MSR/mean_img")

@@ -104,6 +104,10 @@ class ActionDesc:
     @classmethod
     def from_path(cls,path):
         name=path.split("/")[-1]
+        return cls.from_name(name)
+
+    @classmethod
+    def from_name(cls,name):
         raw=name.split("_")
         return cls(name=name,
                    cat=int(raw[0])-1, 
@@ -127,6 +131,12 @@ class ActionGroup(SeqGroup):
         def helper(frame):
             return cv2.resize(frame, (new_width, new_height))
         return self.map(helper)
+    
+    def mean_img(self,out_path=None):
+        utils.make_dir(out_path)
+        for action_i in self:
+            out_i=f"{out_path}/{action_i}"
+            action_i.mean_img(out_i)
 
 class Action(Seq):
 
@@ -141,6 +151,13 @@ class Action(Seq):
         utils.make_dir(out_path)
         for i,frame_i in enumerate(self):
             cv2.imwrite(f"{out_path}/{i}.png", frame_i)
+
+    def mean_img(self,out_path=None):
+        X=np.array(self)
+        mean_img=np.mean(X,axis=0)
+        if(out_path):
+            cv2.imwrite(f"{out_path}.png", mean_img)
+        return mean_img
 
 def height(frame):
     return frame.shape[0]
