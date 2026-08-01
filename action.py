@@ -26,7 +26,7 @@ class SeqGroup(list):
     def save(self,out_path):
         utils.make_dir(out_path)
         for seq_i in self:
-            seq_i.save(f"{out_path}/{action_i}")
+            seq_i.save(f"{out_path}/{seq_i}")
    
     def flatten(self,fun):
         all_items=[]

@@ -14,42 +14,41 @@ class FeatSeqGroup(action.SeqGroup):
                       n_layer=1):
         actions=action.ActionGroup.read(action_path)
         model=cnn.ConvNN.read(model_path)
-        seqs=[]
+        seqs=cls([])
         for action_i in actions:
             X=np.array(action_i)
-            seq_i=FeatSeq( vectors=model.extract(X,n_layer),
-                           desc=action_i.desc,
-                           labels=model.predict(X))
-            print(seq_i.labels)
-            print(seq_i)
+            seq_i=FeatSeq( frames=model.extract(X,n_layer),
+                           desc=action_i.desc)
+            seqs.append(seq_i)
+        return seqs
+
+class FeatSeq(action.Seq):
+    def save(self,out_path):
+        np.savetxt(out_path,self)
+
+class LabelingGroup(action.SeqGroup):
+    @classmethod
+    def dtype(cls):
+        return Labeling
+
+    @classmethod
+    def from_actions( cls,
+                      action_path,
+                      model_path):
+        actions=action.ActionGroup.read(action_path)
+        model=cnn.ConvNN.read(model_path)
+        seqs=cls([])
+        for action_i in actions:
+            X=np.array(action_i)
+            seq_i=Labeling( frames=model.predict(X),
+                            desc=action_i.desc)
             print(seq_i.as_symbols())
             seqs.append(seq_i)
-        return cls(seqs)
+        return seqs
 
-class FeatSeq(object):
-    def __init__( self,
-                  vectors,
-                  desc,
-                  labels=None):
-        if(type(vectors)!=np.ndarray):
-            vectors=np.array(vectors)
-        if(labels is None):
-            labels=[]
-        self.vectors = vectors
-        self.desc = desc
-        self.labels=labels
-    
-    def __len__(self):
-        return len(self.vectors)
-    
-    def __iter__(self):
-        return iter(self.vectors)
-    
-    def __str__(self):
-        return self.desc.name
-
+class Labeling(action.Seq):
     def save(self,out_path):
-        np.savetxt(out_path,self.vectors)
+        np.savetxt(out_path,self)
 
     def as_symbols(self):
         letters = list(string.ascii_lowercase)
@@ -59,7 +58,7 @@ class FeatSeq(object):
             symb=letters[i%n]
             k= int(np.floor(i/n))
             return symb+str(k)
-        for i in self.labels:
+        for i in self:
             symb_seq+=helper(i)
         return symb_seq
 
@@ -75,5 +74,6 @@ def train( in_path,
     model.save(out_path)
 
 #train("MSR/scaled","MSR/model")
-seqs=FeatSeqGroup.from_actions("MSR/scaled","MSR/model.keras")
+#seqs=FeatSeqGroup.from_actions("MSR/scaled","MSR/model.keras")
+seqs=LabelingGroup.from_actions("MSR/scaled","MSR/model.keras")
 #seqs.save("MSR/seqs")
