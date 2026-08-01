@@ -1,10 +1,13 @@
 import numpy as np
 import cv2
+from collections import defaultdict
 from dataclasses import dataclass
-import base,utils
+import base,cnn,utils
 
 class SeqGroup(list):
-    def __init__(self, actions):
+    def __init__(self, actions=None):
+        if(actions is None):
+            actions=[]
         super().__init__(actions)
     
     @classmethod
@@ -37,7 +40,7 @@ class SeqGroup(list):
     def split(self,fun=None):
         if(fun is None):
             fun= lambda desc: (desc.person % 2)==1
-        train,test=self.__class__(), self.__class__()
+        train,test=self.__class__([]), self.__class__([])
         for action_i in self:
             if(fun(action_i.desc)):
                 train.append(action_i)
@@ -53,6 +56,24 @@ class SeqGroup(list):
                 y.append(action_i.desc.cat)
         return base.Dataset(X=np.array(X),
                             y=np.array(y))
+    
+    @classmethod
+    def _from_actions(cls, action_path, model_path, fun):
+        actions = ActionGroup.read(action_path)
+        model = cnn.ConvNN.read(model_path)
+        seqs = cls([])
+        for action_i in actions:
+            X = np.array(action_i)
+            seq_i = cls.dtype()(frames=fun(model, X), desc=action_i.desc)
+            seqs.append(seq_i)
+        return seqs
+
+    def by_cat(self):
+        cat_dict = defaultdict(lambda: self.__class__())
+        for seq_i in self:
+            cat_i=seq_i.desc.cat
+            cat_dict[cat_i].append(seq_i)
+        return cat_dict
 
 class Seq(list):
     def __init__( self, 
@@ -114,7 +135,7 @@ class Action(Seq):
 
     def save(self,out_path):
         utils.make_dir(out_path)
-        for i,frame_i in enumerate(self.frames):
+        for i,frame_i in enumerate(self):
             cv2.imwrite(f"{out_path}/{i}.png", frame_i)
 
 def height(frame):

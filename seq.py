@@ -8,19 +8,9 @@ class FeatSeqGroup(action.SeqGroup):
         return FeatSeq
 
     @classmethod
-    def from_actions( cls,
-                      action_path,
-                      model_path,
-                      n_layer=1):
-        actions=action.ActionGroup.read(action_path)
-        model=cnn.ConvNN.read(model_path)
-        seqs=cls([])
-        for action_i in actions:
-            X=np.array(action_i)
-            seq_i=FeatSeq( frames=model.extract(X,n_layer),
-                           desc=action_i.desc)
-            seqs.append(seq_i)
-        return seqs
+    def from_actions(cls, action_path, model_path, n_layer=1):
+        return cls._from_actions(action_path, model_path,
+                                  lambda model, X: model.extract(X, n_layer))
 
 class FeatSeq(action.Seq):
     def save(self,out_path):
@@ -32,23 +22,23 @@ class LabelingGroup(action.SeqGroup):
         return Labeling
 
     @classmethod
-    def from_actions( cls,
-                      action_path,
-                      model_path):
-        actions=action.ActionGroup.read(action_path)
-        model=cnn.ConvNN.read(model_path)
-        seqs=cls([])
-        for action_i in actions:
-            X=np.array(action_i)
-            seq_i=Labeling( frames=model.predict(X),
-                            desc=action_i.desc)
-            print(seq_i.as_symbols())
-            seqs.append(seq_i)
-        return seqs
+    def from_actions(cls, action_path, model_path):
+        return cls._from_actions(action_path, model_path,
+                                  lambda model, X: model.predict(X))
+
+    def unique(self):
+        labels=[]
+        for seq_i in self:
+            labels+=seq_i.unique()
+        labels=list(set(labels))
+        return np.array(labels)
 
 class Labeling(action.Seq):
     def save(self,out_path):
         np.savetxt(out_path,self)
+    
+    def unique(self):
+        return list(set(self))
 
     def as_symbols(self):
         letters = list(string.ascii_lowercase)
@@ -76,4 +66,8 @@ def train( in_path,
 #train("MSR/scaled","MSR/model")
 #seqs=FeatSeqGroup.from_actions("MSR/scaled","MSR/model.keras")
 seqs=LabelingGroup.from_actions("MSR/scaled","MSR/model.keras")
+cat_dict=seqs.by_cat()
+for cat_i,group_i in cat_dict.items():
+    print(cat_i)
+    print(group_i.unique())
 #seqs.save("MSR/seqs")
