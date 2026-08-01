@@ -3,48 +3,47 @@ import cv2
 from dataclasses import dataclass
 import base,utils
 
-class ActionGroup(object):
+class SeqGroup(list):
     def __init__(self, actions):
-        self.actions=actions
+        super().__init__(actions)
     
-    def __len__(self):
-        return len(self.actions)
-    
-    def __iter__(self):
-        return iter(self.actions)
-    
+    @classmethod
+    def dtype(cls):
+        raise NotImplementedError
+
     def map(self,fun):
-        actions=[action_i.map(fun) 
-                   for action_i in self.actions]
-        return ActionGroup(actions)
+        seqs=[seq_i.map(fun) 
+                   for seq_i in self]
+        return self.__class__(seqs)
 
     @classmethod
     def read(cls,in_path):
-        actions=[ Action.read(path_i) 
+        dtype=cls.dtype()
+        seqs=[  dtype.read(path_i) 
                     for path_i in utils.top_files(in_path)]
-        return cls(actions)
+        return cls(seqs)
 
     def save(self,out_path):
         utils.make_dir(out_path)
-        for action_i in self:#.actions:
-            action_i.save(f"{out_path}/{action_i}")
+        for seq_i in self:
+            seq_i.save(f"{out_path}/{action_i}")
    
-    def unify(self,fun):
+    def flatten(self,fun):
         all_items=[]
-        for action_i in self.actions:
+        for action_i in self:
             all_items.extend(action_i.eval(fun))
         return all_items
 
     def split(self,fun=None):
         if(fun is None):
             fun= lambda desc: (desc.person % 2)==1
-        train,test=[],[]
+        train,test=self.__class__(), self.__class__()
         for action_i in self:
             if(fun(action_i.desc)):
                 train.append(action_i)
             else:
                 test.append(action_i)
-        return ActionGroup(train),ActionGroup(test)
+        return train,test
     
     def as_dataset(self):
         X,y=[],[]
@@ -55,20 +54,22 @@ class ActionGroup(object):
         return base.Dataset(X=np.array(X),
                             y=np.array(y))
 
-    def stats(self,fun):
-        values=self.unify(fun)
-        print(f"Mean:{np.mean(values)}")
-        print(f"Median:{np.median(values)}")
-        print(f"Max:{np.amax(values)}")
-        print(f"Min:{np.amin(values)}")
-
-    def rescale( self, 
-                 new_width=80,
-                 new_height=240):
-        def helper(frame):
-            return cv2.resize(frame, (new_width, new_height))
-        return self.map(helper)
-
+class Seq(list):
+    def __init__( self, 
+                  frames,
+                  desc):
+        super().__init__(frames)
+        self.desc=desc
+    
+    def __str__(self):
+        return self.desc.name
+    
+    def eval(self,fun):
+        return [ fun(frame_i) for frame_i in self]
+    
+    def map(self,fun):
+        return self.__class__( frames=self.eval(fun),
+                               desc=self.desc )
 @dataclass(frozen=True)
 class ActionDesc:
     name:str
@@ -83,29 +84,27 @@ class ActionDesc:
                    cat=int(raw[0])-1, 
                    person=int(raw[1]))
 
-class Action(object):
-    def __init__( self,
-                 frames,
-                 desc):
-        self.frames = frames
-        self.desc = desc
-    
-    def __len__(self):
-    	return len(self.frames)
+class ActionGroup(SeqGroup):
+    @classmethod
+    def dtype(cls):
+        return Action
 
-    def __str__(self):
-        return self.desc.name
-    
-    def __iter__(self):
-        return iter(self.frames)
-    
-    def eval(self,fun):
-        return [ fun(frame_i) for frame_i in self]
-    
-    def map(self,fun):
-        return Action(frames=self.eval(fun),
-                      desc=self.desc )
-    
+    def stats(self,fun):
+        values=self.flatten(fun)
+        print(f"Mean:{np.mean(values)}")
+        print(f"Median:{np.median(values)}")
+        print(f"Max:{np.amax(values)}")
+        print(f"Min:{np.amin(values)}")
+
+    def rescale( self, 
+                 new_width=80,
+                 new_height=240):
+        def helper(frame):
+            return cv2.resize(frame, (new_width, new_height))
+        return self.map(helper)
+
+class Action(Seq):
+
     @classmethod
     def read(cls,in_path):
         frames=[cv2.imread(path_i,cv2.IMREAD_GRAYSCALE)

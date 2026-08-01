@@ -2,20 +2,10 @@ import numpy as np
 import string
 import action,cnn,utils
 
-class SeqGroup(object):
-    def __init__(self, seqs):
-        self.seqs=seqs
-    
-    def __len__(self):
-        return len(self.seqs)
-    
-    def __iter__(self):
-        return iter(self.seqs)
-    
-    def save(self,out_path):
-        utils.make_dir(out_path)
-        for i,seq_i in enumerate(self.seqs):
-            seq_i.save(f"{out_path}/{i}")
+class FeatSeqGroup(action.SeqGroup):
+    @classmethod
+    def dtype(cls):
+        return FeatSeq
 
     @classmethod
     def from_actions( cls,
@@ -26,17 +16,17 @@ class SeqGroup(object):
         model=cnn.ConvNN.read(model_path)
         seqs=[]
         for action_i in actions:
-            X=np.array(action_i.frames)
-            seq_i=Seq( vectors=model.extract(X,n_layer),
-                       desc=action_i.desc,
-                       labels=model.predict(X))
+            X=np.array(action_i)
+            seq_i=FeatSeq( vectors=model.extract(X,n_layer),
+                           desc=action_i.desc,
+                           labels=model.predict(X))
             print(seq_i.labels)
             print(seq_i)
             print(seq_i.as_symbols())
             seqs.append(seq_i)
         return cls(seqs)
 
-class Seq(object):
+class FeatSeq(object):
     def __init__( self,
                   vectors,
                   desc,
@@ -63,9 +53,14 @@ class Seq(object):
 
     def as_symbols(self):
         letters = list(string.ascii_lowercase)
+        n=len(letters)
         symb_seq=""
+        def helper(i):
+            symb=letters[i%n]
+            k= int(np.floor(i/n))
+            return symb+str(k)
         for i in self.labels:
-            symb_seq+=letters[i]
+            symb_seq+=helper(i)
         return symb_seq
 
 def train( in_path,
@@ -79,6 +74,6 @@ def train( in_path,
                          epochs=epochs)
     model.save(out_path)
 
-train("MSR/scaled","MSR/model")
-seqs=SeqGroup.from_actions("MSR/scaled","MSR/model.keras")
+#train("MSR/scaled","MSR/model")
+seqs=FeatSeqGroup.from_actions("MSR/scaled","MSR/model.keras")
 #seqs.save("MSR/seqs")
