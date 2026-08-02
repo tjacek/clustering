@@ -1,9 +1,9 @@
 import numpy as np
 import string
 from collections import defaultdict
+from dataclasses import dataclass
 import seq,cnn,utils
 
-#class
 
 class FeatSeqGroup(seq.SeqGroup):
     @classmethod
@@ -14,12 +14,6 @@ class FeatSeqGroup(seq.SeqGroup):
     def from_actions(cls, action_path, model_path, n_layer=1):
         return cls._from_actions(action_path, model_path,
                                   lambda model, X: model.extract(X, n_layer))
-    def get_pre(self):
-        frames=self.flatten(seq.identity)
-        indexes=self.flatten(seq.GetIndex())
-        order_labeling=self.eval(seq.GetIndex(),
-                                 LabelingGroup)
-        print(order_labeling[0].as_symbols())
 
 class FeatSeq(seq.Seq):
     @classmethod
@@ -88,6 +82,19 @@ class Labeling(seq.Seq):
             symb_seq+=helper(i)
         return symb_seq
 
+@dataclass
+class Preclustering:
+    frames:np.ndarray
+    indexes:np.ndarray
+    order_labeling:LabelingGroup
+    
+    @classmethod
+    def frorm_feats(cls,feat_seqs):
+        return cls(feat_seqs.flatten(seq.identity),
+                   feat_seqs.flatten(seq.GetIndex()),
+                   feat_seqs.eval(seq.GetIndex(),
+                                  LabelingGroup))
+
 def train( in_path,
            out_path,
            epochs=150):
@@ -119,7 +126,7 @@ def save_by_labels( label_path,
 #seqs=FeatSeqGroup.from_actions("MSR/scaled","MSR/model.keras")
 #seqs.save("MSR/seq")
 seqs= FeatSeqGroup.read("MSR/seq")
-print(seqs.get_pre())
+print(seqs.get_preclustering())
 #labels=LabelingGroup.from_actions("MSR/scaled","MSR/model.keras")
 #labels.save("MSR/labels")
 #save_by_labels( "MSR/labels",
