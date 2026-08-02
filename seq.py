@@ -18,7 +18,14 @@ class SeqGroup(list):
         seqs=[seq_i.map(fun) 
                    for seq_i in self]
         return self.__class__(seqs)
-
+    
+    def eval(self,fun,group_type):
+        dtype=group_type.dtype()
+        raw_values= [ dtype(frames=seq_i.eval(fun),
+                            desc=seq_i.desc)
+                        for seq_i in self]
+        return group_type(raw_values)
+    
     @classmethod
     def read(cls,in_path):
         dtype=cls.dtype()
@@ -165,19 +172,17 @@ def height(frame):
 def width(frame):
     return frame.shape[1]
 
-class FeatSeqGroup(SeqGroup):
-    @classmethod
-    def dtype(cls):
-        return FeatSeq
+def identity(x):
+    return x
 
-    @classmethod
-    def from_actions(cls, action_path, model_path, n_layer=1):
-        return cls._from_actions(action_path, model_path,
-                                  lambda model, X: model.extract(X, n_layer))
-
-class FeatSeq(Seq):
-    def save(self,out_path):
-        np.save(out_path,self)
+class GetIndex(object):
+    def __init__(self):
+        self.counter=0
+    
+    def __call__(self,frame):
+        old_value=self.counter
+        self.counter+=1
+        return old_value
 
 if __name__ == '__main__':
     actions=ActionGroup.read("MSR(scaled)")
