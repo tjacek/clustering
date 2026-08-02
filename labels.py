@@ -60,6 +60,10 @@ class LabelingGroup(seq.SeqGroup):
         labels=list(set(labels))
         return np.array(labels)
 
+    def show_symbols(self):
+        for seq_i in self:
+            print(f"{seq_i}-{seq_i.as_symbols()}")
+
 class Labeling(seq.Seq):
     @classmethod
     def read(cls,in_path):
@@ -80,7 +84,7 @@ class Labeling(seq.Seq):
         def helper(i):
             symb=letters[i%n]
             k= int(np.floor(i/n))
-            return symb+str(k)
+            return symb#+str(k)
         for i in self:
             symb_seq+=helper(i)
         return symb_seq

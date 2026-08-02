@@ -25,7 +25,13 @@ class SeqGroup(list):
                             desc=seq_i.desc)
                         for seq_i in self]
         return group_type(raw_values)
-    
+
+    def map_with_index(self,fun):
+        get_index=GetIndex()
+        def helper(x):
+            return fun(get_index(),x)
+        return self.map(fun)
+
     @classmethod
     def read(cls,in_path):
         dtype=cls.dtype()

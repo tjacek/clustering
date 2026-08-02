@@ -16,6 +16,11 @@ class ClusterAsig(object):
 		return silhouette_score( self.preclustr.frames,
 	                             self.labels,
 	                             metric='euclidean')
+	def cls_labeling(self):
+		def helper(i):
+			return self.labels[i]
+		order=self.preclustr.order_labeling
+		return order.map(helper)
 
 def get_cluster_alg(alg_type):
     if(alg_type=="spectral"):
@@ -54,15 +59,20 @@ def find_number( precluster,
     scores=np.array([assig_i.score() 
     	        for assig_i in tqdm(assig)])
     print(scores)
-    print(np.argmax(scores))
+    k=np.argmax(scores)
     plt.scatter(sizes,scores,alpha=0.5)
     plt.xlabel("n_clusters")
     plt.ylabel("Silhouette")
     plt.title(alg_type)
     plt.grid(alpha=0.7)
     plt.show()
+    return sizes[k],assig[k]
+
 
 
 seqs= labels.FeatSeqGroup.read("MSR/seq")
 precluster=seqs.as_precluster()
-find_number(precluster)
+n_cluser,assig=find_number(precluster)
+print(n_cluser)
+cls_labels=assig.cls_labeling()
+cls_labels.show_symbols()
