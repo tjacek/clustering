@@ -15,6 +15,9 @@ class FeatSeqGroup(seq.SeqGroup):
         return cls._from_actions(action_path, model_path,
                                   lambda model, X: model.extract(X, n_layer))
 
+    def as_precluster(self):
+        return Preclustering.from_feats(self)
+
 class FeatSeq(seq.Seq):
     @classmethod
     def read(cls,in_path):
@@ -89,7 +92,7 @@ class Preclustering:
     order_labeling:LabelingGroup
     
     @classmethod
-    def frorm_feats(cls,feat_seqs):
+    def from_feats(cls,feat_seqs):
         return cls(feat_seqs.flatten(seq.identity),
                    feat_seqs.flatten(seq.GetIndex()),
                    feat_seqs.eval(seq.GetIndex(),
@@ -122,13 +125,9 @@ def save_by_labels( label_path,
             group_i.mean_img(out_i)
         else:
             group_i.save(out_i)
+
+if __name__ == '__main__':
 #train("MSR/scaled","MSR/model")
 #seqs=FeatSeqGroup.from_actions("MSR/scaled","MSR/model.keras")
 #seqs.save("MSR/seq")
-seqs= FeatSeqGroup.read("MSR/seq")
-print(seqs.get_preclustering())
-#labels=LabelingGroup.from_actions("MSR/scaled","MSR/model.keras")
-#labels.save("MSR/labels")
-#save_by_labels( "MSR/labels",
-#                "MSR/scaled",
-#                "MSR/mean_img")
+    seqs= FeatSeqGroup.read("MSR/seq")
