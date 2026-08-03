@@ -3,7 +3,7 @@ from sklearn.cluster import KMeans
 from sklearn.cluster import SpectralClustering
 from sklearn.metrics import silhouette_samples,silhouette_score
 from tqdm import tqdm
-import labels
+import labels,utils
 
 class ClusterAsig(object):
 	def __init__( self,
@@ -72,7 +72,9 @@ def find_number( precluster,
 
 seqs= labels.FeatSeqGroup.read("MSR/seq")
 precluster=seqs.as_precluster()
-n_cluser,assig=find_number(precluster)
-print(n_cluser)
+#n_cluser,assig=find_number(precluster)
+#print(n_cluser)
+assig=kmeans_alg(precluster,21)
 cls_labels=assig.cls_labeling()
-cls_labels.show_symbols()
+#utils.print_dict(cls_labels.tf_idf())
+cls_labels.as_symbols("tf-idf",verbose=True)

@@ -152,8 +152,23 @@ class DictMap(object):
 
     @classmethod
     def tf_map(cls,label_group):
+        cat_dict=defaultdict(lambda:[])
         tf_arr=label_group.tf_idf()
-        raise Exception(tf_arr)
+        for i,cls_i in enumerate(tf_arr.T):
+            k=np.argmax(cls_i)
+            value=cls_i[k]
+            cat_dict[k].append((i,value))
+        letters=string.ascii_letters
+        cls_dict={}
+        for cat_i,pairs_i in cat_dict.items():
+            cls_i,score_i=zip(*pairs_i)
+            score_i=np.array(score_i)
+            symb_i=letters[cat_i]
+            indexes=np.argsort(score_i)[::-1]
+            for j in indexes:
+                cls_j=cls_i[j]
+                cls_dict[cls_j]=f"{symb_i}{j}"
+        return cls(cls_dict)
 
 def train( in_path,
            out_path,
