@@ -38,9 +38,15 @@ class LabelingGroup(seq.SeqGroup):
         return cls._from_actions(action_path, model_path,
                                   lambda model, X: model.predict(X))
     
-    def hist(self):
+    def hist(self,n_clusters=None):
         raw=np.array(self.flatten())
-        return np.histogram(raw,bins=np.amax(raw))[0]
+        if(n_clusters is None):
+            n_clusters=np.amax(raw)+1
+        hist=np.zeros((n_clusters,))
+        for label_i in raw:
+            hist[label_i]+=1
+        return hist
+#        return np.histogram(raw,bins=n[0]
 
     def by_labels(self, seq_group):
         frame_dict=defaultdict(lambda :[])
@@ -68,23 +74,26 @@ class LabelingGroup(seq.SeqGroup):
                     verbose=True):
         if(symb_map is None):
             symb_map=BasicMap()
+        if(symb_map=="tf-idf"):
+            symb_map=DictMap.tf_map(self)
         symb_dict={ str(seq_i): seq_i.as_symbols(symb_map) 
                     for seq_i in self}
         if(verbose):
-            for name_i,symb_i in symb_dict.items():
-                print(name_i)
-                print("".join(symb_i))
+            utils.print_dict(symb_dict)
         return symb_dict
 
     def tf_idf(self):
         full_hist = self.hist()
+        n_clusters=full_hist.shape[0]
         cat_dict = self.by_cat()
-        def relative_freq(cat_hist):
-            return [cat_count / full_count
-                    for cat_count, full_count in zip(cat_hist, full_hist)]
-        return {cat_i: np.array(relative_freq(group_i.hist()))
-                 for cat_i, group_i in cat_dict.items()}
-    
+        n_cats=len(cat_dict)
+        def relative_freq(i):
+            hist_i=cat_dict[i].hist(n_clusters)
+            return [cat_j / full_j
+                    for cat_j, full_j in zip(hist_i,full_hist)]
+        tf_arr= np.array([relative_freq(i) 
+                        for i in range(n_cats)])
+        return tf_arr
 
 class Labeling(seq.Seq):
     @classmethod
@@ -133,6 +142,18 @@ class BasicMap(object):
         if(k==0):
             return symb
         return f"{symb}_{k}"
+
+class DictMap(object):
+    def __init__(self,symb_dict):
+        self.symb_dict=symb_dict
+
+    def __call__(self,label):
+        return self.symb_dict[label]
+
+    @classmethod
+    def tf_map(cls,label_group):
+        tf_arr=label_group.tf_idf()
+        raise Exception(tf_arr)
 
 def train( in_path,
            out_path,

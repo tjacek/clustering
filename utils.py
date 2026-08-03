@@ -1,5 +1,16 @@
-import os.path
+import os.path,re
 import itertools
+
+def top_files(path):
+    paths=[ path_i for id_i,path_i in iter_files(path)]
+    paths=sorted(paths,key=natural_keys)
+    return paths
+
+def natural_keys(text):
+    return [ atoi(c) for c in re.split('(\\d+)', text) ]
+
+def atoi(text):
+    return int(text) if text.isdigit() else text
 
 def iter_files(path):
     if(type(path)==str):
@@ -23,3 +34,8 @@ def pair_iter(x,y):
     for i in x:
         for j in y[i:]:
             yield i,j
+
+def print_dict(d):
+    for key_i,value_i in d.items():
+        print(key_i)
+        print(value_i)
