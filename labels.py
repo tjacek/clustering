@@ -60,9 +60,18 @@ class LabelingGroup(seq.SeqGroup):
         labels=list(set(labels))
         return np.array(labels)
 
-    def show_symbols(self):
-        for seq_i in self:
-            print(f"{seq_i}-{seq_i.as_symbols()}")
+    def as_symbols( self,
+                    symb_map=None,
+                    verbose=True):
+        if(symb_map is None):
+            symb_map=BasicMap()
+        symb_dict={ str(seq_i): seq_i.as_symbols(symb_map) 
+                    for seq_i in self}
+        if(verbose):
+            for name_i,symb_i in symb_dict.items():
+                print(name_i)
+                print("".join(symb_i))
+        return symb_dict
 
 class Labeling(seq.Seq):
     @classmethod
@@ -77,17 +86,9 @@ class Labeling(seq.Seq):
     def unique(self):
         return list(set(self))
 
-    def as_symbols(self):
-        letters = list(string.ascii_lowercase)
-        n=len(letters)
-        symb_seq=""
-        def helper(i):
-            symb=letters[i%n]
-            k= int(np.floor(i/n))
-            return symb#+str(k)
-        for i in self:
-            symb_seq+=helper(i)
-        return symb_seq
+    def as_symbols(self,symb_map):
+        return [ symb_map(label) 
+                  for label in self]
 
 @dataclass
 class Preclustering:
@@ -101,6 +102,21 @@ class Preclustering:
                    feat_seqs.flatten(seq.GetIndex()),
                    feat_seqs.eval(seq.GetIndex(),
                                   LabelingGroup))
+
+class BasicMap(object):
+    def __init__(self):
+        self.letters = list(string.ascii_lowercase)
+        self.n=len(self.letters)
+    
+    def to_symb(self,i):
+        return self.letters[i % self.n]
+    
+    def __call__(self,label):
+        symb=self.to_symb(label)
+        k= int(np.floor(label/self.n))
+        if(k==0):
+            return symb
+        return f"{symb}_{k}"
 
 def train( in_path,
            out_path,
