@@ -38,6 +38,10 @@ class LabelingGroup(seq.SeqGroup):
         return cls._from_actions(action_path, model_path,
                                   lambda model, X: model.predict(X))
     
+    def hist(self):
+        raw=np.array(self.flatten())
+        return np.histogram(raw,bins=np.amax(raw))[0]
+
     def by_labels(self, seq_group):
         frame_dict=defaultdict(lambda :[])
         label_dict=self.as_dict()
@@ -57,8 +61,7 @@ class LabelingGroup(seq.SeqGroup):
         labels=[]
         for seq_i in self:
             labels+=seq_i.unique()
-        labels=list(set(labels))
-        return np.array(labels)
+        return np.array(list(set(labels)))
 
     def as_symbols( self,
                     symb_map=None,
@@ -73,10 +76,20 @@ class LabelingGroup(seq.SeqGroup):
                 print("".join(symb_i))
         return symb_dict
 
+    def tf_idf(self):
+        full_hist = self.hist()
+        cat_dict = self.by_cat()
+        def relative_freq(cat_hist):
+            return [cat_count / full_count
+                    for cat_count, full_count in zip(cat_hist, full_hist)]
+        return {cat_i: np.array(relative_freq(group_i.hist()))
+                 for cat_i, group_i in cat_dict.items()}
+    
+
 class Labeling(seq.Seq):
     @classmethod
     def read(cls,in_path):
-        arr=np.loadtxt(in_path)
+        arr=np.loadtxt(in_path).astype(int)
         desc=seq.ActionDesc.from_path(in_path)
         return cls(arr,desc)
 
@@ -98,10 +111,13 @@ class Preclustering:
     
     @classmethod
     def from_feats(cls,feat_seqs):
-        return cls(feat_seqs.flatten(seq.identity),
-                   feat_seqs.flatten(seq.GetIndex()),
-                   feat_seqs.eval(seq.GetIndex(),
-                                  LabelingGroup))
+        pairs=feat_seqs.map_with_index(lambda i,x:(i,x))
+        pairs=pairs.flatten()
+        indexes,frames=zip(*pairs)
+        return cls( np.array(frames),
+                    np.array(indexes),
+                    feat_seqs.eval(seq.GetIndex(),
+                                   LabelingGroup))
 
 class BasicMap(object):
     def __init__(self):

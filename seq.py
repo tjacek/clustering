@@ -38,7 +38,9 @@ class SeqGroup(list):
         for seq_i in self:
             seq_i.save(f"{out_path}/{seq_i}")
    
-    def flatten(self,fun):
+    def flatten(self,fun=None):
+        if(fun is None):
+            fun=identity
         all_items=[]
         for action_i in self:
             all_items.extend(action_i.eval(fun))
@@ -90,7 +92,7 @@ class SeqGroup(list):
         get_index=GetIndex()
         def helper(x):
             return fun(get_index(),x)
-        return self.map(fun)
+        return self.map(helper)
 
 class Seq(list):
     def __init__( self, 
@@ -146,7 +148,8 @@ class ActionGroup(SeqGroup):
         return self.map(helper)
     
     def mean_img(self,out_path=None):
-        utils.make_dir(out_path)
+        if(out_path):
+            utils.make_dir(out_path)
         for action_i in self:
             out_i=f"{out_path}/{action_i}"
             action_i.mean_img(out_i)
@@ -185,7 +188,7 @@ class GetIndex(object):
     def __init__(self):
         self.counter=0
     
-    def __call__(self,frame):
+    def __call__(self,frame=None):
         old_value=self.counter
         self.counter+=1
         return old_value
