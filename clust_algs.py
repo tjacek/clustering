@@ -3,7 +3,8 @@ from sklearn.cluster import KMeans
 from sklearn.cluster import SpectralClustering
 from sklearn.metrics import silhouette_samples,silhouette_score
 from tqdm import tqdm
-import labels,utils
+import argparse
+import labels,plot,utils
 
 class ClusterAsig(object):
 	def __init__( self,
@@ -46,7 +47,19 @@ def spectral_alg(data,
                        data=data.train,
                        feat=feat)
 
-import matplotlib.pyplot as plt
+def make_clusteing( seqs,
+                    layer_path,
+                    n_clusters=None,
+                    alg_type="kmeans"):
+    precluster=seqs.as_precluster()
+    if(n_clusters is None):
+        n_clusters,assig=find_number(precluster)
+    else:
+        alg=get_cluster_alg(alg_type)
+        assig=alg(precluster,n_clusters)
+    cls_labels=assig.cls_labeling()
+    cls_labels.save(f"{layer_path}/{alg_type}_{n_clusters}")
+    cls_labels.as_symbols("tf-idf",verbose=True)
 
 def find_number( precluster,
 	             alg_type="kmeans",
@@ -60,21 +73,20 @@ def find_number( precluster,
     	        for assig_i in tqdm(assig)])
     print(scores)
     k=np.argmax(scores)
-    plt.scatter(sizes,scores,alpha=0.5)
-    plt.xlabel("n_clusters")
-    plt.ylabel("Silhouette")
-    plt.title(alg_type)
-    plt.grid(alpha=0.7)
-    plt.show()
+    plot.scatter( sizes, scores, 
+                  title=alg_type,
+                  xlabel="n_clusters",
+                  ylabel="Silhouette")
     return sizes[k],assig[k]
 
 
-
-seqs= labels.FeatSeqGroup.read("MSR/seq")
-precluster=seqs.as_precluster()
-#n_cluser,assig=find_number(precluster)
-#print(n_cluser)
-assig=kmeans_alg(precluster,21)
-cls_labels=assig.cls_labeling()
-#utils.print_dict(cls_labels.tf_idf())
-cls_labels.as_symbols("tf-idf",verbose=True)
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--nn_path", type=str,default="MSR/cnn")
+    parser.add_argument("--layer", type=int,default=1)
+    args=parser.parse_args()
+    layer_path=f"{args.nn_path}/layer_{args.layer}"
+    seqs= labels.FeatSeqGroup.read(f"{layer_path}/seq")
+    make_clusteing( seqs,
+                    layer_path,
+                    n_clusters=8)

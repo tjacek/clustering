@@ -211,4 +211,4 @@ if __name__ == '__main__':
                                    n_layer=args.layer)
     layer_path=f"{args.nn_path}/layer_{args.layer}"
     utils.make_dir(layer_path)
-    seqs.save(layer_path)
+    seqs.save(f"{layer_path}")
