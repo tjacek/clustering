@@ -8,6 +8,7 @@ def convert(in_path,out_path):
     for id_i,path_i in tqdm(utils.iter_files(in_path)):
         id_i=clean_id(id_i)
         action_i=load_depth_map(path_i)
+        action_i=bound_action(action_i)
         action_i=norm_action(action_i)
         out_i=f"{out_path}/{id_i}"
         utils.make_dir(out_i)
@@ -31,6 +32,21 @@ def norm_action(action):
     action[nonzero]= 1 - action[nonzero]
     action*=256
     return action
+
+def bound_action(action):
+    def helper(frame_i):
+        rows = np.any(frame_i != 0, axis=1)
+        cols = np.any(frame_i != 0, axis=0)
+        rmin, rmax = np.where(rows)[0][[0, -1]]
+        cmin, cmax = np.where(cols)[0][[0, -1]]
+        return rmin,cmin,rmax,cmax
+    extr= np.array([ helper(frame_i) 
+                        for frame_i in action])
+    min_x,min_y=np.amin(extr[:,:2],axis=0)
+    max_x,max_y=np.amax(extr[:,2:],axis=0)
+    action= [ frame_i[min_x:max_x,min_y:max_y] 
+                for frame_i in action]  
+    return np.array(action)
 
 def load_depth_map(path):
     with open(path, 'rb') as fid:
