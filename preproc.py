@@ -7,12 +7,13 @@ def convert(in_path,out_path):
     utils.make_dir(out_path)
     for id_i,path_i in tqdm(utils.iter_files(in_path)):
         id_i=clean_id(id_i)
-        depth_map=load_depth_map(path_i)
+        action_i=load_depth_map(path_i)
+        action_i=norm_action(action_i)
         out_i=f"{out_path}/{id_i}"
         utils.make_dir(out_i)
-        for j,depth_j in enumerate(depth_map):
+        for j,frame_j in enumerate(action_i):
             out_j=f"{out_i}/{j}.png"
-            cv2.imwrite(out_j,depth_j)
+            cv2.imwrite(out_j,frame_j)
 
 def clean_id(name):
     raw=re.findall(r'\d+', name)
@@ -21,6 +22,15 @@ def clean_id(name):
 def remove_letters(name):
     return ''.join(c for c in name 
                if not c.isalpha())
+
+def norm_action(action):
+    nonzero=(action!=0)
+    offset=np.amin(action[nonzero])-1
+    action[nonzero]-=offset
+    action[nonzero]/=np.amax(action)
+    action[nonzero]= 1 - action[nonzero]
+    action*=256
+    return action
 
 def load_depth_map(path):
     with open(path, 'rb') as fid:
