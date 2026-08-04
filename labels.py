@@ -2,8 +2,8 @@ import numpy as np
 import string
 from collections import defaultdict
 from dataclasses import dataclass
+import argparse,os
 import seq,cnn,utils
-
 
 class FeatSeqGroup(seq.SeqGroup):
     @classmethod
@@ -46,7 +46,6 @@ class LabelingGroup(seq.SeqGroup):
         for label_i in raw:
             hist[label_i]+=1
         return hist
-#        return np.histogram(raw,bins=n[0]
 
     def by_labels(self, seq_group):
         frame_dict=defaultdict(lambda :[])
@@ -199,7 +198,17 @@ def save_by_labels( label_path,
             group_i.save(out_i)
 
 if __name__ == '__main__':
-#train("MSR/scaled","MSR/model")
-#seqs=FeatSeqGroup.from_actions("MSR/scaled","MSR/model.keras")
-#seqs.save("MSR/seq")
-    seqs= FeatSeqGroup.read("MSR/seq")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--action_path", type=str,default="MSR/scaled")
+    parser.add_argument("--nn_path", type=str,default="MSR/cnn")
+    parser.add_argument("--layer", type=int,default=0)
+    args=parser.parse_args()
+    model_path=f"{args.nn_path}/model.keras"
+    if(not os.path.exists(model_path)):
+        train(args.action_path,model_path)
+    seqs=FeatSeqGroup.from_actions(args.action_path,
+                                   model_path,
+                                   n_layer=args.layer)
+    layer_path=f"{args.nn_path}/layer_{args.layer}"
+    utils.make_dir(layer_path)
+    seqs.save(layer_path)

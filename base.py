@@ -86,7 +86,9 @@ class NeuralModel(object):
         return cls(model)
 
     def save(self,out_path):
-        self.model.save(f"{out_path}.keras")
+        if(len(out_path.split("."))<2):
+            out_path+=".keras"
+        self.model.save(out_path)#f"{out_path}.keras")
 
 class Features(np.ndarray):
     def __new__( cls,

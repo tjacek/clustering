@@ -2,6 +2,8 @@ import numpy as np
 import cv2
 from collections import defaultdict
 from dataclasses import dataclass
+import argparse
+from tqdm import tqdm
 import base,cnn,utils
 
 class SeqGroup(list):
@@ -16,7 +18,7 @@ class SeqGroup(list):
 
     def map(self,fun):
         seqs=[seq_i.map(fun) 
-                   for seq_i in self]
+                   for seq_i in tqdm(self)]
         return self.__class__(seqs)
     
     def eval(self,fun,group_type):
@@ -71,11 +73,11 @@ class SeqGroup(list):
                     for seq_i in self}
 
     @classmethod
-    def _from_actions(cls, action_path, model_path, fun):
+    def _from_actions( cls, action_path, model_path, fun):
         actions = ActionGroup.read(action_path)
         model = cnn.ConvNN.read(model_path)
         seqs = cls([])
-        for action_i in actions:
+        for action_i in tqdm(actions):
             X = np.array(action_i)
             seq_i = cls.dtype()(frames=fun(model, X), desc=action_i.desc)
             seqs.append(seq_i)
@@ -194,5 +196,10 @@ class GetIndex(object):
         return old_value
 
 if __name__ == '__main__':
-    actions=ActionGroup.read("MSR(scaled)")
-
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--in_path", type=str,default="MSR/raw")
+    parser.add_argument("--out_path", type=str,default="MSR/scaled")
+    args=parser.parse_args()
+    actions=ActionGroup.read(args.in_path)
+    actions=actions.rescale()
+    actions.save(args.out_path)
