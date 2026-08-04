@@ -50,7 +50,8 @@ def spectral_alg(data,
 def make_clusteing( seqs,
                     layer_path,
                     n_clusters=None,
-                    alg_type="kmeans"):
+                    alg_type="kmeans",
+                    verbose=True):
     precluster=seqs.as_precluster()
     if(n_clusters is None):
         n_clusters,assig=find_number(precluster)
@@ -58,8 +59,12 @@ def make_clusteing( seqs,
         alg=get_cluster_alg(alg_type)
         assig=alg(precluster,n_clusters)
     cls_labels=assig.cls_labeling()
-    cls_labels.save(f"{layer_path}/{alg_type}_{n_clusters}")
-    cls_labels.as_symbols("tf-idf",verbose=True)
+    clust_name=f"{alg_type}_{n_clusters}"
+    cls_labels.save(f"{layer_path}/{clust_name}")
+    if(verbose):
+        plot.show_heatmap( cls_labels.tf_idf(),
+                           title=clust_name)
+#    cls_labels.as_symbols("tf-idf",verbose=True)
 
 def find_number( precluster,
 	             alg_type="kmeans",
@@ -89,4 +94,4 @@ if __name__ == '__main__':
     seqs= labels.FeatSeqGroup.read(f"{layer_path}/seq")
     make_clusteing( seqs,
                     layer_path,
-                    n_clusters=8)
+                    n_clusters=20)
