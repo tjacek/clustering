@@ -45,10 +45,7 @@ class LabelingGroup(seq.SeqGroup):
         raw=np.array(self.flatten())
         if(n_clusters is None):
             n_clusters=np.amax(raw)+1
-        hist=np.zeros((n_clusters,))
-        for label_i in raw:
-            hist[label_i]+=1
-        return hist
+        return hist_fun(raw,n_clusters)
 
     def by_labels(self, seq_group):
         frame_dict=defaultdict(lambda :[])
@@ -116,6 +113,15 @@ class Labeling(seq.Seq):
     
     def as_numpy(self):
         return np.array(self,dtype=int)
+    
+    def hist(self,n_clusters=None):
+        return hist_fun(self,n_clusters)
+
+def hist_fun(arr,n_clusters):
+    hist=np.zeros((n_clusters,))
+    for label_i in arr:
+        hist[label_i]+=1
+    return hist
 
 @dataclass
 class Preclustering:
