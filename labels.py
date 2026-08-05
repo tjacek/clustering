@@ -27,6 +27,9 @@ class FeatSeq(seq.Seq):
 
     def save(self,out_path):
         np.save(out_path,self)
+    
+    def as_numpy(self):
+        return np.array(self,dtype=float)
 
 class LabelingGroup(seq.SeqGroup):
     @classmethod
@@ -102,7 +105,6 @@ class Labeling(seq.Seq):
         return cls(arr,desc)
     
     def save(self,out_path):
-#        arr=
         np.savetxt( out_path,self, fmt='%i')
     
     def unique(self):
@@ -114,6 +116,7 @@ class Labeling(seq.Seq):
     
     def as_numpy(self):
         return np.array(self,dtype=int)
+
 @dataclass
 class Preclustering:
     frames:np.ndarray

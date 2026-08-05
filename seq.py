@@ -21,6 +21,13 @@ class SeqGroup(list):
                    for seq_i in tqdm(self)]
         return self.__class__(seqs)
     
+    def map_seq(self,fun,group_type):
+        dtype=group_type.dtype()
+        new_seqs=[ dtype( fun(seq_i),
+                          seq_i.desc)
+                     for seq_i in self]
+        return group_type(new_seqs)
+
     def eval(self,fun,group_type):
         dtype=group_type.dtype()
         raw_values= [ dtype(frames=seq_i.eval(fun),

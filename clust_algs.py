@@ -7,21 +7,38 @@ import argparse
 import labels,plot,utils
 
 class ClusterAsig(object):
-	def __init__( self,
-		          preclustr,
-		          labels):
-		self.preclustr=preclustr
-		self.labels=labels
+    def __init__( self,
+                preclustr,
+                labels,
+                dynamic):
+        self.preclustr=preclustr
+        self.labels=labels
+        self.dynamic=dynamic
 
-	def score(self):
-		return silhouette_score( self.preclustr.frames,
-	                             self.labels,
-	                             metric='euclidean')
-	def cls_labeling(self):
-		def helper(i):
-			return self.labels[i]
-		order=self.preclustr.order_labeling
-		return order.map(helper)
+    def score(self):
+        return silhouette_score( self.preclustr.frames,
+                                 self.labels,
+                                 metric='euclidean')
+    def cls_labeling(self):
+        def helper(i):
+            return self.labels[i]
+        order=self.preclustr.order_labeling
+        return order.map(helper)
+
+    def from_seqs(self,seqs):
+        return seqs.map_seq(self.dynamic,
+                            group_type=labels.LabelingGroup)
+
+class DynamicKmeans(object):
+    def __init__(self,centroids):
+        self.centroids=centroids
+  
+    def __call__(self,feat_seq):
+        def helper(frame_i):
+            dist=np.linalg.norm(self.centroids-frame_i,axis=1)
+            return np.argmin(dist)
+        return [ helper(frame_i)
+                   for frame_i in feat_seq]
 
 def get_cluster_alg(alg_type):
     if(alg_type=="spectral"):
@@ -34,8 +51,10 @@ def kmeans_alg(preclustr,
 	                random_state=0, 
 	                n_init="auto")
     kmeans.fit(preclustr.frames)
+    dynamic=DynamicKmeans(kmeans.cluster_centers_)
     return ClusterAsig(  preclustr=preclustr,
-    	                 labels=kmeans.labels_)
+    	                 labels=kmeans.labels_,
+                         dynamic=dynamic)
 
 def spectral_alg(data,
                feat,
@@ -52,13 +71,15 @@ def make_clusteing( seqs,
                     n_clusters=None,
                     alg_type="kmeans",
                     verbose=True):
-    precluster=seqs.as_precluster()
+    train,test=seqs.split()
+    precluster=test.as_precluster()
     if(n_clusters is None):
         n_clusters,assig=find_number(precluster)
     else:
         alg=get_cluster_alg(alg_type)
         assig=alg(precluster,n_clusters)
-    cls_labels=assig.cls_labeling()
+#    cls_labels=assig.cls_labeling()
+    cls_labels=assig.from_seqs(seqs)
     clust_name=f"{alg_type}_{n_clusters}"
     cls_labels.save(f"{layer_path}/{clust_name}")
     if(verbose):
@@ -88,10 +109,10 @@ def find_number( precluster,
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--nn_path", type=str,default="MSR/cnn")
-    parser.add_argument("--layer", type=int,default=1)
+    parser.add_argument("--layer", type=int,default=0)
     args=parser.parse_args()
     layer_path=f"{args.nn_path}/layer_{args.layer}"
     seqs= labels.FeatSeqGroup.read(f"{layer_path}/seq")
     make_clusteing( seqs,
                     layer_path,
-                    n_clusters=20)
+                    n_clusters=5)
