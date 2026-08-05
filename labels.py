@@ -100,9 +100,10 @@ class Labeling(seq.Seq):
         arr=np.loadtxt(in_path).astype(int)
         desc=seq.ActionDesc.from_path(in_path)
         return cls(arr,desc)
-
+    
     def save(self,out_path):
-        np.savetxt(out_path,self)
+#        arr=
+        np.savetxt( out_path,self, fmt='%i')
     
     def unique(self):
         return list(set(self))
@@ -110,7 +111,9 @@ class Labeling(seq.Seq):
     def as_symbols(self,symb_map):
         return [ symb_map(label) 
                   for label in self]
-
+    
+    def as_numpy(self):
+        return np.array(self,dtype=int)
 @dataclass
 class Preclustering:
     frames:np.ndarray
