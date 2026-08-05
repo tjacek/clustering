@@ -75,6 +75,18 @@ class ConvNN(base.NeuralModel):
         X=X.astype("float32") / 255.0
         prob= self.model.predict(X,verbose=0)
         return np.argmax(prob,axis=1)
+    
+    @classmethod
+    def train_model(self, train,
+             test,
+             params,
+             epochs=50):
+        model=make_cnn(params)
+        model.fit(train,epochs=epochs)
+        acc=model.eval(test)
+        print(f"{acc:.4f}")
+        data=base.DataPair(train,test)
+        return model,data   
 
 class SimpleCallback(tf.keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs=None):
@@ -179,17 +191,6 @@ def simple_exp(data=None,
     acc=model.eval(data.test)
     print(f"{acc:.4f}")
     return model,data
-
-def cnn_exp( train,
-             test,
-             params,
-             epochs=50):
-    model=make_cnn(params)
-    model.fit(train,epochs=epochs)
-    acc=model.eval(test)
-    print(f"{acc:.4f}")
-    data=base.DataPair(train,test)
-    return model,data   
 
 if __name__ == '__main__':
 #    hyper=frame_params()

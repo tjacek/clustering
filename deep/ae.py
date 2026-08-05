@@ -86,6 +86,18 @@ class ConvAE(base.NeuralModel):
         encoder = tf.keras.models.load_model(f"{in_path}/encoder")
         return cls(model, encoder)
 
+    @classmethod
+    def train_model(self, train,
+              test,
+              params,
+              epochs=50):
+        model = make_autoencoder(params)
+        model.fit(train, epochs=epochs)
+        mse = model.eval(test)
+        print(f"{mse:.4f}")
+        data = base.DataPair(train, test)
+        return model, data
+
 class SimpleAECallback(tf.keras.callbacks.Callback):
  
     def __init__(self, patience=10, min_delta=1e-5):
@@ -231,16 +243,6 @@ def frame_ae_params(latent_dim=128):
         pool_size=[(2, 2), (2, 2), (2, 2)],
     )
 
-def ae_exp(train,
-           test,
-           params,
-           epochs=50):
-    model = make_autoencoder(params)
-    model.fit(train, epochs=epochs)
-    mse = model.eval(test)
-    print(f"{mse:.4f}")
-    data = base.DataPair(train, test)
-    return model, data
 
 
 if __name__ == '__main__':
