@@ -80,14 +80,14 @@ class SeqGroup(list):
                     for seq_i in self}
 
     @classmethod
-    def _from_actions( cls, action_path, model_path, fun):
+    def _from_actions( cls, action_path, model, fun):
         actions = ActionGroup.read(action_path)
-        model = cnn.ConvNN.read(model_path)
+#        model = cnn.ConvNN.read(model_path)
 #        model = nn.get_nn("cnn")
         seqs = cls([])
         for action_i in tqdm(actions):
             X = np.array(action_i)
-            seq_i = cls.dtype()(frames=fun(model, X), desc=action_i.desc)
+            seq_i = cls.dtype()(frames=fun(X), desc=action_i.desc)
             seqs.append(seq_i)
         return seqs
 

@@ -3,7 +3,7 @@ import string
 from collections import defaultdict
 from dataclasses import dataclass
 import argparse,os
-import seq,cnn,utils
+import seq,utils
 
 class FeatSeqGroup(seq.SeqGroup):
     @classmethod
@@ -11,9 +11,9 @@ class FeatSeqGroup(seq.SeqGroup):
         return FeatSeq
 
     @classmethod
-    def from_actions(cls, action_path, model_path, n_layer=1):
-        return cls._from_actions(action_path, model_path,
-                                  lambda model, X: model.extract(X, n_layer))
+    def from_actions(cls, action_path, model, n_layer=1):
+        return cls._from_actions(action_path, model,
+                                  lambda  X: model.extract(X, n_layer))
 
     def as_precluster(self):
         return Preclustering.from_feats(self)
@@ -37,9 +37,9 @@ class LabelingGroup(seq.SeqGroup):
         return Labeling
 
     @classmethod
-    def from_actions(cls, action_path, model_path):
+    def from_actions(cls, action_path, model):
         return cls._from_actions(action_path, model_path,
-                                  lambda model, X: model.predict(X))
+                                  lambda X: model.predict(X))
     
     def hist(self,n_clusters=None):
         raw=np.array(self.flatten())
