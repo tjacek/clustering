@@ -4,7 +4,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 import argparse
 from tqdm import tqdm
-import base,cnn,utils
+import base,utils#,cnn,utils
 
 class SeqGroup(list):
     def __init__(self, actions=None):
@@ -83,6 +83,7 @@ class SeqGroup(list):
     def _from_actions( cls, action_path, model_path, fun):
         actions = ActionGroup.read(action_path)
         model = cnn.ConvNN.read(model_path)
+#        model = nn.get_nn("cnn")
         seqs = cls([])
         for action_i in tqdm(actions):
             X = np.array(action_i)
@@ -102,6 +103,12 @@ class SeqGroup(list):
         def helper(x):
             return fun(get_index(),x)
         return self.map(helper)
+
+    def lazy_save(self,fun,out_path):
+        utils.make_dir(out_path)
+        for seq_i in tqdm(self):
+            new_seq_i=seq_i.map(fun)
+            new_seq_i.save(f"{out_path}/{seq_i}")
 
 class Seq(list):
     def __init__( self, 
