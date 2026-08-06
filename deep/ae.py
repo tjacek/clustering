@@ -245,15 +245,3 @@ def frame_ae_params(latent_dim=128):
         kernel_sizes=[(5, 3), (3, 3), (3, 3), (3, 3)],
         pool_size=[(2, 2), (2, 2), (2, 2)],
     )
-
-
-
-if __name__ == '__main__':
-    import seq
-    in_path="MSR/scaled"
-    actions=seq.ActionGroup.read(in_path)
-    train,test=actions.split()
-    model,_=ae_exp( train.as_dataset(),
-                    test.as_dataset(),
-                    frame_ae_params(),
-                    epochs=5)

@@ -193,9 +193,3 @@ def simple_exp(data=None,
     acc=model.eval(data.test)
     print(f"{acc:.4f}")
     return model,data
-
-if __name__ == '__main__':
-#    hyper=frame_params()
-#    make_cnn(hyper,verbose=True)
-    model,data=simple_exp()
-#    model.extract(data.train)

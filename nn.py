@@ -55,12 +55,24 @@ def extract( frame_path,
     utils.make_dir(layer_path)
     seqs.save(f"{layer_path}/seqs")
 
+def eval( frame_path,
+          dir_path,
+          nn_type="ae"):
+    nn=get_nn(nn_type)
+    nn_path=f"{dir_path}/{nn_type}"
+    model_path=f"{nn_path}/model"
+    model=nn.read(model_path)
+    actions=seq.ActionGroup.read(frame_path)
+    train,test=actions.split()
+    score=model.eval(test.as_dataset())
+    print(f"metric:{score:.4f}")
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--frame_path", type=str,default="MSR/scaled")
     parser.add_argument("--dir_path", type=str,default="MSR")
     parser.add_argument("--nn_type", type=str,default="ae")
-    parser.add_argument("--cmd", type=str,default="extract")
+    parser.add_argument("--cmd", type=str,default="eval")
     parser.add_argument("--layer", type=int,default=0)
     args=parser.parse_args()
     if(args.cmd=="train"):
@@ -75,3 +87,8 @@ if __name__ == '__main__':
                  args.dir_path,
                  args.nn_type,
                  args.layer)
+    if(args.cmd=="eval"):
+        eval( args.frame_path,
+              args.dir_path,
+              args.nn_type)
+
