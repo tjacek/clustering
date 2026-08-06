@@ -84,8 +84,8 @@ class ConvAE(base.NeuralModel):
  
     @classmethod
     def read(cls, in_path):
-        model = tf.keras.models.load_model(f"{in_path}/full")
-        encoder = tf.keras.models.load_model(f"{in_path}/encoder")
+        model = tf.keras.models.load_model(f"{in_path}/full.keras")
+        encoder = tf.keras.models.load_model(f"{in_path}/encoder.keras")
         return cls(model, encoder)
 
     @classmethod
