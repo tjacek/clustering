@@ -21,8 +21,10 @@ class ConvNN(base.NeuralModel):
         self.extractor_layer=None
 
     @classmethod
-    def make(cls, params=None, verbose=False):
-        return make_cnn(params, verbose)
+    def build(cls, params=None, verbose=False):
+        if(params is None):
+            params=frame_params(n_cats=20)
+        return build_cnn(params, verbose)
 
     def fit(self, data, epochs=50, batch_size=64):
         self.model.compile(
@@ -77,11 +79,11 @@ class ConvNN(base.NeuralModel):
         return np.argmax(prob,axis=1)
     
     @classmethod
-    def train_model(self, train,
+    def make_model(cls, train,
              test,
-             params,
+             params=None,
              epochs=50):
-        model=make_cnn(params)
+        model=cls.build(params)
         model.fit(train,epochs=epochs)
         acc=model.eval(test)
         print(f"{acc:.4f}")
@@ -97,7 +99,7 @@ class SimpleCallback(tf.keras.callbacks.Callback):
             print("\nReached 99.5% accuracy, stopping training.")
             self.model.stop_training = True
 
-def make_cnn(params=None, verbose=False):
+def built_cnn(params=None, verbose=False):
     if params is None:
         params = minst_params()
 

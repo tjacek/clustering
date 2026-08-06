@@ -25,8 +25,10 @@ class ConvAE(base.NeuralModel):
         self.extractor_layer = None
 
     @classmethod
-    def make(cls, params=None, verbose=False):
-        return make_autoencoder(params, verbose)
+    def build(cls, params=None, verbose=False):
+        if(params is None):
+            params=frame_ae_params()
+        return build_autoencoder(params, verbose)
 
     def fit(self, data, epochs=50, batch_size=64):
         self.model.compile(
@@ -77,8 +79,8 @@ class ConvAE(base.NeuralModel):
  
     def save(self, out_path):
         utils.make_dir(out_path)
-        self.model.save(f"{out_path}/full")
-        self.encoder.save(f"{out_path}/encoder")
+        self.model.save(f"{out_path}/full.keras")
+        self.encoder.save(f"{out_path}/encoder.keras")
  
     @classmethod
     def read(cls, in_path):
@@ -87,11 +89,12 @@ class ConvAE(base.NeuralModel):
         return cls(model, encoder)
 
     @classmethod
-    def train_model(self, train,
+    def make_model( cls, 
+              train,
               test,
-              params,
+              params=None,
               epochs=50):
-        model = make_autoencoder(params)
+        model = cls.build(params)
         model.fit(train, epochs=epochs)
         mse = model.eval(test)
         print(f"{mse:.4f}")
@@ -122,7 +125,7 @@ class SimpleAECallback(tf.keras.callbacks.Callback):
                 print(f"\nBrak poprawy przez {self.patience} epok, zatrzymuję trening.")
                 self.model.stop_training = True
 
-def make_autoencoder(params=None, verbose=False):
+def build_autoencoder(params=None, verbose=False):
     if params is None:
         params = minst_ae_params()
  
