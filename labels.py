@@ -184,17 +184,6 @@ class DictMap(object):
                 cls_dict[cls_j]=f"{symb_i}{j}"
         return cls(cls_dict)
 
-def train( in_path,
-           out_path,
-           epochs=150):
-    actions=seq.ActionGroup.read(in_path)
-    train,test=actions.split()
-    model,_=cnn.cnn_exp( train.as_dataset(),
-                         test.as_dataset(),
-                         cnn.frame_params(),
-                         epochs=epochs)
-    model.save(out_path)
-
 def save_by_labels( label_path,
                     action_path,
                     out_path,

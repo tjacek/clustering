@@ -16,10 +16,19 @@ class ClusterAsig(object):
         self.dynamic=dynamic
 
     def score(self):
-        return silhouette_score( self.preclustr.frames,
+        s= silhouette_score( self.preclustr.frames,
                                  self.labels,
                                  metric='euclidean')
-    def cls_labeling(self):
+        print(s)
+        return s
+
+    def get_labels(self,seqs):
+        if(self.dynamic is None):
+            return self.from_order()
+        else:
+            return self.from_seqs(seqs)
+
+    def from_order(self):
         def helper(i):
             return self.labels[i]
         order=self.preclustr.order_labeling
@@ -56,30 +65,33 @@ def kmeans_alg(preclustr,
     	                 labels=kmeans.labels_,
                          dynamic=dynamic)
 
-def spectral_alg(data,
-               feat,
+def spectral_alg(preclustr,
                n_clusters=2):
-    clust = SpectralClustering(n_clusters=n_clusters, 
-                    assign_labels='discretize',
-                    random_state=0).fit(feat)
-    return ClusterAsig(labels=kmeans.labels_,
-                       data=data.train,
-                       feat=feat)
+    alg = SpectralClustering(n_clusters=n_clusters, 
+                             assign_labels="kmeans",
+                             n_neighbors=10,
+                             random_state=0)
+    alg.fit(preclustr.frames)
+    return ClusterAsig(  preclustr=preclustr,
+                         labels=alg.labels_,
+                         dynamic=None)
 
-def make_clusteing( seqs,
-                    layer_path,
-                    n_clusters=None,
-                    alg_type="kmeans",
-                    verbose=True):
-    train,test=seqs.split()
-    precluster=test.as_precluster()
+def make_clustering( seqs,
+                     layer_path,
+                     n_clusters=None,
+                     alg_type="kmeans",
+                     verbose=True):
+    print(seqs.dim())
+#    train,test=seqs.split()
+    train,test=seqs,seqs
+    precluster=train.as_precluster()
     if(n_clusters is None):
-        n_clusters,assig=find_number(precluster)
+        n_clusters,assig=find_number( precluster,
+                                      alg_type=alg_type )
     else:
         alg=get_cluster_alg(alg_type)
         assig=alg(precluster,n_clusters)
-#    cls_labels=assig.cls_labeling()
-    cls_labels=assig.from_seqs(seqs)
+    cls_labels=assig.get_labels(seqs)
     clust_name=f"{alg_type}_{n_clusters}"
     cls_labels.save(f"{layer_path}/{clust_name}")
     if(verbose):
@@ -108,11 +120,13 @@ def find_number( precluster,
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--nn_path", type=str,default="MSR/cnn")
-    parser.add_argument("--layer", type=int,default=0)
+    parser.add_argument("--nn_path", type=str,default="MSR/ae")
+    parser.add_argument("--alg", type=str,default="spectral")
+    parser.add_argument("--layer", type=int,default=1)
     args=parser.parse_args()
     layer_path=f"{args.nn_path}/layer_{args.layer}"
-    seqs= labels.FeatSeqGroup.read(f"{layer_path}/seq")
-    make_clusteing( seqs,
+    seqs= labels.FeatSeqGroup.read(f"{layer_path}/seqs")
+    make_clustering( seqs,
                     layer_path,
-                    n_clusters=5)
+                    alg_type=args.alg,
+                    n_clusters=None)
