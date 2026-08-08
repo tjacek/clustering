@@ -14,14 +14,16 @@ class SeqGroup(list):
     
     @classmethod
     def dtype(cls):
-        raise NotImplementedError
-
+        return Seq
+    
     def map(self,fun):
         seqs=[seq_i.map(fun) 
                    for seq_i in tqdm(self)]
         return self.__class__(seqs)
     
-    def map_seq(self,fun,group_type):
+    def map_seq(self,fun,group_type=None):
+        if(group_type is None):
+            group_type=self.__class__
         dtype=group_type.dtype()
         new_seqs=[ dtype( fun(seq_i),
                           seq_i.desc)
@@ -82,8 +84,6 @@ class SeqGroup(list):
     @classmethod
     def _from_actions( cls, action_path, model, fun):
         actions = ActionGroup.read(action_path)
-#        model = cnn.ConvNN.read(model_path)
-#        model = nn.get_nn("cnn")
         seqs = cls([])
         for action_i in tqdm(actions):
             X = np.array(action_i)
@@ -98,8 +98,13 @@ class SeqGroup(list):
             cat_dict[cat_i].append(seq_i)
         return cat_dict
 
-    def map_with_index(self,fun):
+    def map_with_index(self,fun,dtype=None):
         get_index=GetIndex()
+        def helper(seq_i):
+            return [fun(get_index(),frame_j,seq_i.desc)
+                     for frame_j in seq_i]     
+        return self.map_seq(helper,dtype)
+
         def helper(x):
             return fun(get_index(),x)
         return self.map(helper)
@@ -209,6 +214,13 @@ class GetIndex(object):
         self.counter+=1
         return old_value
 
+class Proj(object):
+    def __init__(self,k=0):
+        self.k=k
+    
+    def __call__(self,arg_tuple):
+        return arg_tuple[self.k]
+ 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--in_path", type=str,default="MSR/raw")

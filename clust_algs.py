@@ -2,6 +2,7 @@ import numpy as np
 from sklearn.cluster import KMeans
 from sklearn.cluster import SpectralClustering
 from sklearn.metrics import silhouette_samples,silhouette_score
+from sklearn.metrics import homogeneity_score
 from tqdm import tqdm
 import argparse
 import labels,plot,utils
@@ -15,8 +16,12 @@ class ClusterAsig(object):
         self.labels=labels
         self.dynamic=dynamic
 
-    def score(self):
-        s= silhouette_score( self.preclustr.frames,
+    def score(self,score_type):
+        if(score_type=="homo"):
+            s=homogeneity_score( self.preclustr.cats,
+                                 self.labels)
+        else:
+            s= silhouette_score( self.preclustr.frames,
                                  self.labels,
                                  metric='euclidean')
         print(s)
@@ -80,6 +85,7 @@ def make_clustering( seqs,
                      layer_path,
                      n_clusters=None,
                      alg_type="kmeans",
+                     score_type="homo",
                      verbose=True):
     print(seqs.dim())
 #    train,test=seqs.split()
@@ -87,7 +93,8 @@ def make_clustering( seqs,
     precluster=train.as_precluster()
     if(n_clusters is None):
         n_clusters,assig=find_number( precluster,
-                                      alg_type=alg_type )
+                                      alg_type=alg_type,
+                                      score_type=score_type )
     else:
         alg=get_cluster_alg(alg_type)
         assig=alg(precluster,n_clusters)
@@ -101,27 +108,27 @@ def make_clustering( seqs,
 
 def find_number( precluster,
 	             alg_type="kmeans",
+                 score_type="Silhouette",
 	             max_cluster=50):
     alg=get_cluster_alg(alg_type)
     all_scores=[]
     sizes=np.array(range(max_cluster))+2
     assig=[ alg(precluster,k) 
               for k in tqdm(sizes)]
-    scores=np.array([assig_i.score() 
+    scores=np.array([assig_i.score(score_type) 
     	        for assig_i in tqdm(assig)])
     print(scores)
     k=np.argmax(scores)
     plot.scatter( sizes, scores, 
                   title=alg_type,
                   xlabel="n_clusters",
-                  ylabel="Silhouette")
+                  ylabel=score_type)
     return sizes[k],assig[k]
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--nn_path", type=str,default="MSR/ae")
-    parser.add_argument("--alg", type=str,default="spectral")
+    parser.add_argument("--alg", type=str,default="kmeans")
     parser.add_argument("--layer", type=int,default=1)
     args=parser.parse_args()
     layer_path=f"{args.nn_path}/layer_{args.layer}"
