@@ -81,29 +81,34 @@ def spectral_alg(preclustr,
                          labels=alg.labels_,
                          dynamic=None)
 
-def make_clustering( seqs,
-                     layer_path,
-                     n_clusters=None,
-                     alg_type="kmeans",
-                     score_type="homo",
-                     verbose=True):
-    print(seqs.dim())
-#    train,test=seqs.split()
-    train,test=seqs,seqs
+def make_clust( seqs,
+                layer_path,
+                n_clusters=None,
+                alg_type="kmeans"):
+    train,test=seqs.split()
+#    train,test=seqs,seqs
+    alg=get_cluster_alg(alg_type)
     precluster=train.as_precluster()
-    if(n_clusters is None):
-        n_clusters,assig=find_number( precluster,
-                                      alg_type=alg_type,
-                                      score_type=score_type )
-    else:
-        alg=get_cluster_alg(alg_type)
-        assig=alg(precluster,n_clusters)
-    cls_labels=assig.get_labels(seqs)
-    clust_name=f"{alg_type}_{n_clusters}"
-    cls_labels.save(f"{layer_path}/{clust_name}")
-    if(verbose):
-        plot.show_heatmap( cls_labels.tf_idf(),
-                           title=clust_name)
+    if( type(n_clusters)==int):
+        n_clusters=[n_clusters]
+    for k in tqdm(n_clusters):
+        if(k<2):
+            continue
+        assig=alg(precluster,k)
+        cls_labels=assig.get_labels(seqs)
+        clust_name=f"{alg_type}_{k}"
+        cls_labels.save(f"{layer_path}/{clust_name}")
+
+def eval_clust( seqs,
+                layer_path,
+                alg_type="kmeans"):
+    regex= rf"{alg_type}_\d+"
+    paths=utils.find_paths(layer_path,regex )
+    print(paths)
+
+#    if(verbose):
+#        plot.show_heatmap( cls_labels.tf_idf(),
+#                           title=clust_name)
 #    cls_labels.as_symbols("tf-idf",verbose=True)
 
 def find_number( precluster,
@@ -129,11 +134,17 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--nn_path", type=str,default="MSR/ae")
     parser.add_argument("--alg", type=str,default="kmeans")
+    parser.add_argument("--cmd", type=str,default="eval")
     parser.add_argument("--layer", type=int,default=1)
     args=parser.parse_args()
     layer_path=f"{args.nn_path}/layer_{args.layer}"
     seqs= labels.FeatSeqGroup.read(f"{layer_path}/seqs")
-    make_clustering( seqs,
+    if(args.cmd=="make"):
+        make_clust( seqs,
+                layer_path,
+                alg_type=args.alg,
+                n_clusters=range(50))
+    if(args.cmd=="eval"):
+        eval_clust( seqs,
                     layer_path,
-                    alg_type=args.alg,
-                    n_clusters=None)
+                    alg_type=args.alg)

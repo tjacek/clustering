@@ -39,3 +39,8 @@ def print_dict(d):
     for key_i,value_i in d.items():
         print(key_i)
         print(value_i)
+
+def find_paths(in_path,regex=r'^layer_\d+'):
+    return  [path_i 
+                for id_i,path_i in iter_files(in_path)
+                    if( re.match(regex,id_i))]
