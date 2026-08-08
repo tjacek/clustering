@@ -7,6 +7,22 @@ from tqdm import tqdm
 import argparse
 import labels,plot,utils
 
+class LayerDir(object):
+    def __init__(self,path):
+        self.path=path
+        self._seqs=None
+
+    @property
+    def seqs(self):
+        if(self._seqs is None):
+            read=labels.FeatSeqGroup.read
+            self._seqs=read(f"{self.path}/seqs")
+        return self._seqs
+
+    def labelings(self,alg_type):
+        regex= rf"{alg_type}_\d+"
+        return utils.find_paths(layer_path,regex )
+
 class ClusterAsig(object):
     def __init__( self,
                 preclustr,
@@ -99,12 +115,22 @@ def make_clust( seqs,
         clust_name=f"{alg_type}_{k}"
         cls_labels.save(f"{layer_path}/{clust_name}")
 
-def eval_clust( seqs,
-                layer_path,
+def eval_clust( layer_dir,
                 alg_type="kmeans"):
-    regex= rf"{alg_type}_\d+"
-    paths=utils.find_paths(layer_path,regex )
-    print(paths)
+    scores,sizes=[],[]
+    frames=np.array(layer_dir.seqs.flatten())
+    for path_i in tqdm(layer_dir.labelings(alg_type)):
+        labeling_i=labels.LabelingGroup.read(path_i)
+        labels_i=labeling_i.flatten()
+        score_i=silhouette_score( frames,
+                                  labels_i)
+        scores.append(score_i)
+        sizes.append(len(scores)+1)
+    plot.scatter( sizes, scores, 
+                  title=alg_type,
+                  xlabel="n_clusters",
+                  ylabel="Silhouette")    
+    print(scores)
 
 #    if(verbose):
 #        plot.show_heatmap( cls_labels.tf_idf(),
@@ -145,6 +171,6 @@ if __name__ == '__main__':
                 alg_type=args.alg,
                 n_clusters=range(50))
     if(args.cmd=="eval"):
-        eval_clust( seqs,
-                    layer_path,
+        layer_dir= LayerDir(layer_path)
+        eval_clust( layer_dir,
                     alg_type=args.alg)
