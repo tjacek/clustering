@@ -12,16 +12,17 @@ def get_nn(nn_type):
 
 def train( in_path,
            out_path,
-           nn_type="ae"):
+           nn_type="ae",
+           epochs=200):
     nn=get_nn(nn_type)
     actions=seq.ActionGroup.read(in_path)
     train,test=actions.split()
     model,_=nn.make_model( train.as_dataset(),
                            test.as_dataset(),
-                           epochs=5)
-    model_path=f"{out_path}/{nn_type}"
-    utils.make_dir(model_path)
-    model.save(model_path)
+                           epochs=epochs)
+    nn_path=f"{out_path}/{nn_type}"
+    utils.make_dir(nn_path)
+    model.save(f"{nn_path}/model")
 
 def reconstruct( frame_path,
                  dir_path,
@@ -62,6 +63,7 @@ def eval( frame_path,
     nn_path=f"{dir_path}/{nn_type}"
     model_path=f"{nn_path}/model"
     model=nn.read(model_path)
+    model.model.summary()
     actions=seq.ActionGroup.read(frame_path)
     train,test=actions.split()
     score=model.eval(test.as_dataset())
@@ -72,8 +74,8 @@ if __name__ == '__main__':
     parser.add_argument("--frame_path", type=str,default="MSR/scaled")
     parser.add_argument("--dir_path", type=str,default="MSR")
     parser.add_argument("--nn_type", type=str,default="ae")
-    parser.add_argument("--cmd", type=str,default="eval")
-    parser.add_argument("--layer", type=int,default=0)
+    parser.add_argument("--cmd", type=str,default="extract")
+    parser.add_argument("--layer", type=int,default=1)
     args=parser.parse_args()
     if(args.cmd=="train"):
         train( args.frame_path,

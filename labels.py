@@ -18,6 +18,9 @@ class FeatSeqGroup(seq.SeqGroup):
     def as_precluster(self):
         return Preclustering.from_feats(self)
 
+    def dim(self):
+        return self[0][0].shape
+
 class FeatSeq(seq.Seq):
     @classmethod
     def read(cls,in_path):

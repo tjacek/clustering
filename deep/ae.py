@@ -15,6 +15,7 @@ from tensorflow.keras.layers import (
     GlobalAveragePooling2D,
 )
 from dataclasses import dataclass
+import re
 import base,utils
 
 class ConvAE(base.NeuralModel): 
@@ -66,8 +67,12 @@ class ConvAE(base.NeuralModel):
  
         if ( self._extractor is None or 
              self.extractor_layer != n_layer):
-
-            layer = self.model.get_layer(f"layer_{n_layer}")
+            layer_names=self.find_layers(r"^layer_\d+")
+            if(len(layer_names)<=n_layer):
+                name="bottleneck"
+            else:
+                name=layer_names[n_layer]
+            layer = self.model.get_layer(name)
             self._extractor = Model(inputs=self.model.inputs, outputs=layer.output)
             self.extractor_layer = n_layer
  

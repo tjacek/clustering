@@ -4,7 +4,7 @@ import numpy as np
 from tensorflow.keras.models import load_model 
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
-import os
+import os,re
 import cv2
 import utils 
 
@@ -79,7 +79,7 @@ class NeuralModel(object):
         nn_model.fit(data)
         nn_model.save(out_path)
         return nn_model
-
+     
     @classmethod
     def read(cls,in_path):
         model = load_model(in_path)
@@ -88,8 +88,17 @@ class NeuralModel(object):
     def save(self,out_path):
         if(len(out_path.split("."))<2):
             out_path+=".keras"
-        self.model.save(out_path)#f"{out_path}.keras")
+        self.model.save(out_path)
 
+    def names(self):
+        return [ layer_i.name 
+                for layer_i in self.model.layers]
+
+    def find_layers(self,regex=r'^layer_\d+'):
+        return  [name_i 
+                    for name_i in self.names()
+                        if( re.match(regex,name_i))]
+     
 class Features(np.ndarray):
     def __new__( cls,
                  input_array, 
