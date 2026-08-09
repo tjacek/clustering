@@ -1,16 +1,21 @@
 import numpy as np
-from sklearn.cluster import KMeans
-from sklearn.cluster import SpectralClustering
 from sklearn.metrics import silhouette_samples,silhouette_score
 from sklearn.metrics import homogeneity_score
 from tqdm import tqdm
 import argparse
+from clusters import get_cluster_alg
 import labels,plot,utils
 
 class LayerDir(object):
     def __init__(self,path):
         self.path=path
         self._seqs=None
+        self._frames=None
+        self._cats=None
+
+    def labelings(self,alg_type):
+        regex= rf"{alg_type}_\d+"
+        return utils.find_paths(layer_path,regex )
 
     @property
     def seqs(self):
@@ -18,84 +23,19 @@ class LayerDir(object):
             read=labels.FeatSeqGroup.read
             self._seqs=read(f"{self.path}/seqs")
         return self._seqs
+    
+    @property
+    def frames(self):
+        if(self._frames is None):
+            self._frames=np.array(self.seqs.flatten())
+        return self._frames
 
-    def labelings(self,alg_type):
-        regex= rf"{alg_type}_\d+"
-        return utils.find_paths(layer_path,regex )
-
-class ClusterAsig(object):
-    def __init__( self,
-                preclustr,
-                labels,
-                dynamic):
-        self.preclustr=preclustr
-        self.labels=labels
-        self.dynamic=dynamic
-
-    def score(self,score_type):
-        if(score_type=="homo"):
-            s=homogeneity_score( self.preclustr.cats,
-                                 self.labels)
-        else:
-            s= silhouette_score( self.preclustr.frames,
-                                 self.labels,
-                                 metric='euclidean')
-        print(s)
-        return s
-
-    def get_labels(self,seqs):
-        if(self.dynamic is None):
-            return self.from_order()
-        else:
-            return self.from_seqs(seqs)
-
-    def from_order(self):
-        def helper(i):
-            return self.labels[i]
-        order=self.preclustr.order_labeling
-        return order.map(helper)
-
-    def from_seqs(self,seqs):
-        return seqs.map_seq(self.dynamic,
-                            group_type=labels.LabelingGroup)
-
-class DynamicKmeans(object):
-    def __init__(self,centroids):
-        self.centroids=centroids
-  
-    def __call__(self,feat_seq):
-        def helper(frame_i):
-            dist=np.linalg.norm(self.centroids-frame_i,axis=1)
-            return np.argmin(dist)
-        return [ helper(frame_i)
-                   for frame_i in feat_seq]
-
-def get_cluster_alg(alg_type):
-    if(alg_type=="spectral"):
-        return spectral_alg
-    return kmeans_alg
-
-def kmeans_alg(preclustr,
-               n_clusters=2):
-    kmeans = KMeans(n_clusters=n_clusters, 
-	                random_state=0, 
-	                n_init="auto")
-    kmeans.fit(preclustr.frames)
-    dynamic=DynamicKmeans(kmeans.cluster_centers_)
-    return ClusterAsig(  preclustr=preclustr,
-    	                 labels=kmeans.labels_,
-                         dynamic=dynamic)
-
-def spectral_alg(preclustr,
-               n_clusters=2):
-    alg = SpectralClustering(n_clusters=n_clusters, 
-                             assign_labels="kmeans",
-                             n_neighbors=10,
-                             random_state=0)
-    alg.fit(preclustr.frames)
-    return ClusterAsig(  preclustr=preclustr,
-                         labels=alg.labels_,
-                         dynamic=None)
+    @property
+    def cats(self): 
+        if(self._cats is None):
+            fun= lambda seq_i:seq_i.desc.cat
+            self._cats= self.seqs.cats()
+        return self._cats
 
 def make_clust( seqs,
                 layer_path,
@@ -115,15 +55,24 @@ def make_clust( seqs,
         clust_name=f"{alg_type}_{k}"
         cls_labels.save(f"{layer_path}/{clust_name}")
 
+
+def outer_metric(layer,labels):
+    return silhouette_score( layer.frames,
+                             labels,
+                             metric='euclidean')
+
+def inner_metric(layer,labels):
+    return homogeneity_score( layer.cats,
+                              labels)
 def eval_clust( layer_dir,
                 alg_type="kmeans"):
     scores,sizes=[],[]
-    frames=np.array(layer_dir.seqs.flatten())
+#    frames=np.array(layer_dir.seqs.flatten())
     for path_i in tqdm(layer_dir.labelings(alg_type)):
         labeling_i=labels.LabelingGroup.read(path_i)
         labels_i=labeling_i.flatten()
-        score_i=silhouette_score( frames,
-                                  labels_i)
+        score_i=inner_metric( layer_dir,
+                              labels_i)
         scores.append(score_i)
         sizes.append(len(scores)+1)
     plot.scatter( sizes, scores, 
