@@ -41,7 +41,7 @@ class LabelingGroup(seq.SeqGroup):
 
     @classmethod
     def from_actions(cls, action_path, model):
-        return cls._from_actions(action_path, model_path,
+        return cls._from_actions(action_path, model,
                                   lambda X: model.predict(X))
     
     def hist(self,n_clusters=None):
@@ -65,6 +65,9 @@ class LabelingGroup(seq.SeqGroup):
                         for i,frames_i in frame_dict.items()}
         return frame_dict
 
+    def n_clust(self):
+        return np.amax(self.unique())+1
+    
     def unique(self):
         labels=[]
         for seq_i in self:
