@@ -75,7 +75,7 @@ class LabelingGroup(seq.SeqGroup):
         return np.array(list(set(labels)))
 
     def as_symbols( self,
-                    symb_map=None,
+                    symb_map="tf-idf",
                     verbose=True):
         if(symb_map is None):
             symb_map=BasicMap()
@@ -113,7 +113,7 @@ class Labeling(seq.Seq):
     def unique(self):
         return list(set(self))
 
-    def as_symbols(self,symb_map):
+    def as_symbols(self,symb_map=None):
         return [ symb_map(label) 
                   for label in self]
     
@@ -185,11 +185,11 @@ class DictMap(object):
         for cat_i,pairs_i in cat_dict.items():
             cls_i,score_i=zip(*pairs_i)
             score_i=np.array(score_i)
-            symb_i=letters[cat_i]
+            symb_i=str(cat_i+1) #letters[cat_i]
             indexes=np.argsort(score_i)[::-1]
             for j in indexes:
                 cls_j=cls_i[j]
-                cls_dict[cls_j]=f"{symb_i}{j}"
+                cls_dict[cls_j]=f"{symb_i}_{letters[j]}"
         return cls(cls_dict)
 
 def save_by_labels( label_path,
