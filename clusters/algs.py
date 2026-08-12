@@ -1,6 +1,11 @@
 import numpy as np
 from sklearn.cluster import KMeans
 from sklearn.cluster import SpectralClustering
+
+from sklearn.neighbors import kneighbors_graph
+from scipy.sparse.csgraph import connected_components
+
+
 import clusters.core 
 
 def kmeans_alg(preclustr,
@@ -14,17 +19,6 @@ def kmeans_alg(preclustr,
     	                 labels=kmeans.labels_,
                          dynamic=dynamic)
 
-def spectral_alg(preclustr,
-               n_clusters=2):
-    alg = SpectralClustering(n_clusters=n_clusters, 
-                             assign_labels="kmeans",
-                             n_neighbors=10,
-                             random_state=0)
-    alg.fit(preclustr.frames)
-    return ClusterAsig(  preclustr=preclustr,
-                         labels=alg.labels_,
-                         dynamic=None)
-
 class DynamicKmeans(object):
     def __init__(self,centroids):
         self.centroids=centroids
@@ -35,3 +29,35 @@ class DynamicKmeans(object):
             return np.argmin(dist)
         return [ helper(frame_i)
                    for frame_i in feat_seq]
+
+def spectral_alg(preclustr,
+               n_clusters=2):
+    alg = SpectralClustering(n_clusters=n_clusters,
+                              affinity="nearest_neighbors", 
+                             assign_labels="kmeans",
+                             n_neighbors=10,
+                             random_state=0)
+    alg.fit(preclustr.frames)
+    return clusters.core.ClusterAsig(  preclustr=preclustr,
+                         labels=alg.labels_,
+                         dynamic=None)
+
+class CustomSpectral(object):
+    def __call__( self,
+                  preclustr,
+                  n_clusters=2):
+        graph = kneighbors_graph( preclustr.frames, 
+                                  
+                                  n_neighbors=10, 
+                                  include_self=False)
+        n_components, labels = connected_components(graph, directed=False)
+        if(n_components>1):
+            raise Exception(n_components,n_clusters)
+        alg= SpectralClustering(#affinity=graph,
+                                 affinity="nearest_neighbors",
+                                  n_clusters=n_clusters,
+                                  n_neighbors=10,
+                                  random_state=0)
+        alg.fit(preclustr.frames)
+        raise Exception(max(alg.labels_))
+

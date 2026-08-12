@@ -36,6 +36,9 @@ def multi_bag(dir_path,alg):
     pairs=[ eval_bag(path_i,verbose=False) 
             for path_i in paths]
     acc,clust=zip(*pairs)
+    best=np.argmax(acc)
+    print(f"Best n_clust:{clust[best]}")
+    print(f"Acc:{acc[best]:.4f}")
     plot.scatter( clust, acc, 
                   title="Bag",
                   xlabel="n_clust",
@@ -46,7 +49,7 @@ if __name__ == '__main__':
     parser.add_argument("--main_dir", type=str,default="MSR")
     parser.add_argument("--nn", type=str,default="ae")
     parser.add_argument("--layer", type=int,default=1)
-    parser.add_argument("--alg", type=str,default="kmeans")
+    parser.add_argument("--alg", type=str,default="spectral")
     parser.add_argument("--n_clust", type=int,default=0)
     args=parser.parse_args()
     layer=f"layer_{args.layer}"

@@ -39,9 +39,12 @@ class LayerDir(object):
 def make_clust( seqs,
                 layer_path,
                 n_clusters=None,
-                alg_type="kmeans"):
-    train,test=seqs.split()
-#    train,test=seqs,seqs
+                alg_type="spectral"):
+
+    if(alg_type=="spectral"):   
+        train,test=seqs,seqs
+    else:
+         train,test=seqs.split()
     alg=clusters.get_cluster_alg(alg_type)
     precluster=train.as_precluster()
     if( type(n_clusters)==int):
@@ -56,7 +59,7 @@ def make_clust( seqs,
 
 def eval_clust( layer_dir,
                 alg_type="kmeans",
-                score_type="adj_mutual"):
+                score_type="silh"):#"adj_mutual"):
     score_fun=clusters.get_score(score_type)
     scores,sizes=[],[]
     for path_i in tqdm(layer_dir.labelings(alg_type)):
@@ -84,7 +87,7 @@ def eval_clust( layer_dir,
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--nn_path", type=str,default="MSR/ae")
-    parser.add_argument("--alg", type=str,default="kmeans")
+    parser.add_argument("--alg", type=str,default="spectral")
     parser.add_argument("--cmd", type=str,default="eval")
     parser.add_argument("--layer", type=int,default=1)
     args=parser.parse_args()

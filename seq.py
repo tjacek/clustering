@@ -56,6 +56,12 @@ class SeqGroup(list):
         for action_i in self:
             all_items.extend(action_i.eval(fun))
         return all_items
+    
+    def flatten_seq(self,fun=None):
+        all_items=[]
+        for seq_i in self:
+            all_items.extend(fun(seq_i))
+        return all_items
 
     def split(self,fun=None):
         if(fun is None):
@@ -114,6 +120,12 @@ class SeqGroup(list):
         for seq_i in tqdm(self):
             new_seq_i=seq_i.map(fun)
             new_seq_i.save(f"{out_path}/{seq_i}")
+
+    def cats(self):
+        def helper(seq_i):
+            return [seq_i.desc.cat for _ in  seq_i]
+        return self.flatten_seq(helper)
+
 
 class Seq(list):
     def __init__( self, 
