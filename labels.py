@@ -85,7 +85,7 @@ class LabelingGroup(seq.SeqGroup):
                     for seq_i in self}
         if(verbose):
             utils.print_dict(symb_dict)
-        return symb_dict
+        return SymbDict(symb_dict)
 
     def tf_idf(self):
         full_hist = self.hist()
@@ -191,6 +191,15 @@ class DictMap(object):
                 cls_j=cls_i[j]
                 cls_dict[cls_j]=f"{symb_i}_{letters[j]}"
         return cls(cls_dict)
+
+class SymbDict(dict):
+    def bigrams(self):
+        bg_dict= defaultdict(lambda:0)
+        for symb_i in self.values():
+            for a,b in zip(symb_i, symb_i[1:]):
+                pair_ij=f"{a}-{b}"
+                bg_dict[pair_ij]+=1
+        return bg_dict
 
 def save_by_labels( label_path,
                     action_path,
