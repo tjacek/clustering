@@ -59,7 +59,7 @@ def make_clust( seqs,
 
 def eval_clust( layer_dir,
                 alg_type="kmeans",
-                score_type="silh"):#"adj_mutual"):
+                score_type="adj_mutual"):
     score_fun=clusters.get_score(score_type)
     scores,sizes=[],[]
     for path_i in tqdm(layer_dir.labelings(alg_type)):

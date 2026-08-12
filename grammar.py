@@ -4,17 +4,22 @@ import labels
 
 def build_grammars(cls_path):
     labeling= labels.LabelingGroup.read(cls_path)
-#    labeling.as_symbols(verbose=True)
-#    return
+    symb_dict=labeling.as_symbols(verbose=False)
     train,test=labeling.split()
-    for cat_i,labeling_i in train.by_cat().items():
+    for cat_i,group_i in train.by_cat().items():
         print(f"Classs:{cat_i}")
         parser_i = Parser()
-        symb_dict= labeling_i.as_symbols("tf-idf",False)
-        for symb_j in symb_dict.values():
+        for label_j in group_i:  #symb_dict.values():
+            symb_j=symb_dict[str(label_j)]
             parser_i.feed(symb_j)
+            parser_i.feed([Mark()])
         grammar = Grammar(parser_i.tree)
-        print(grammar)
+        show_grammar(grammar)
         print("**************************")
 
-build_grammars("MSR/ae/layer_1/kmeans_44")
+def show_grammar(grammar):
+    print(len(grammar))
+    for key_i,value_i in grammar.items():
+        print(f"{key_i}->{value_i}")
+
+build_grammars("MSR/ae/layer_1/spectral_3")
