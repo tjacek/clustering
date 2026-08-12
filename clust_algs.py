@@ -56,7 +56,7 @@ def make_clust( seqs,
 
 def eval_clust( layer_dir,
                 alg_type="kmeans",
-                score_type="silh"):
+                score_type="adj_mutual"):
     score_fun=clusters.get_score(score_type)
     scores,sizes=[],[]
     for path_i in tqdm(layer_dir.labelings(alg_type)):
@@ -69,7 +69,7 @@ def eval_clust( layer_dir,
     plot.scatter( sizes, scores, 
                   title=alg_type,
                   xlabel="n_clusters",
-                  ylabel="Silhouette")    
+                  ylabel=score_type)    
     scores=np.array(scores)
     print(scores)
     best=np.argmax(scores)
