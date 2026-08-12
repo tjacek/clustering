@@ -1,9 +1,8 @@
 import numpy as np
-from sklearn.metrics import silhouette_samples,silhouette_score
-from sklearn.metrics import homogeneity_score
 from tqdm import tqdm
 import argparse
-from clusters import get_cluster_alg
+#from clusters import get_cluster_alg
+import clusters
 import labels,plot,utils
 
 class LayerDir(object):
@@ -43,7 +42,7 @@ def make_clust( seqs,
                 alg_type="kmeans"):
     train,test=seqs.split()
 #    train,test=seqs,seqs
-    alg=get_cluster_alg(alg_type)
+    alg=clusters.get_cluster_alg(alg_type)
     precluster=train.as_precluster()
     if( type(n_clusters)==int):
         n_clusters=[n_clusters]
@@ -55,55 +54,32 @@ def make_clust( seqs,
         clust_name=f"{alg_type}_{k}"
         cls_labels.save(f"{layer_path}/{clust_name}")
 
-
-def outer_metric(layer,labels):
-    return silhouette_score( layer.frames,
-                             labels,
-                             metric='euclidean')
-
-def inner_metric(layer,labels):
-    return homogeneity_score( layer.cats,
-                              labels)
 def eval_clust( layer_dir,
-                alg_type="kmeans"):
+                alg_type="kmeans",
+                score_type="silh"):
+    score_fun=clusters.get_score(score_type)
     scores,sizes=[],[]
-#    frames=np.array(layer_dir.seqs.flatten())
     for path_i in tqdm(layer_dir.labelings(alg_type)):
         labeling_i=labels.LabelingGroup.read(path_i)
         labels_i=labeling_i.flatten()
-        score_i=inner_metric( layer_dir,
-                              labels_i)
+        score_i=score_fun( layer_dir,
+                           labels_i)
         scores.append(score_i)
         sizes.append(len(scores)+1)
     plot.scatter( sizes, scores, 
                   title=alg_type,
                   xlabel="n_clusters",
                   ylabel="Silhouette")    
+    scores=np.array(scores)
     print(scores)
+    best=np.argmax(scores)
+    print(f"Best Clusters:{sizes[best]}")
+    print(f"Score:{scores[best]:.4f}")
 
 #    if(verbose):
 #        plot.show_heatmap( cls_labels.tf_idf(),
 #                           title=clust_name)
 #    cls_labels.as_symbols("tf-idf",verbose=True)
-
-def find_number( precluster,
-	             alg_type="kmeans",
-                 score_type="Silhouette",
-	             max_cluster=50):
-    alg=get_cluster_alg(alg_type)
-    all_scores=[]
-    sizes=np.array(range(max_cluster))+2
-    assig=[ alg(precluster,k) 
-              for k in tqdm(sizes)]
-    scores=np.array([assig_i.score(score_type) 
-    	        for assig_i in tqdm(assig)])
-    print(scores)
-    k=np.argmax(scores)
-    plot.scatter( sizes, scores, 
-                  title=alg_type,
-                  xlabel="n_clusters",
-                  ylabel=score_type)
-    return sizes[k],assig[k]
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
