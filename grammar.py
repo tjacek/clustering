@@ -6,8 +6,8 @@ import labels,utils
 
 def build_grammars(cls_path):
     labeling= labels.LabelingGroup.read(cls_path)
+    labeling=compress(labeling)
     dict_map=labels.DictMap.tf_map(labeling)
-#    symb_dict=labeling.as_symbols(verbose=False)
     train,test=labeling.split()
     for cat_i,group_i in train.by_cat().items():
         print(f"Classs:{cat_i}")
@@ -30,13 +30,32 @@ def print_grammar(grammar):
 def show_symbols(cls_path):
     print(cls_path)
     labeling= labels.LabelingGroup.read(cls_path)
+    labeling=compress(labeling)
     symb_dict=labeling.as_symbols("tf-idf",False)
     utils.print_dict(symb_dict)
+
+def compress(labeling,max_coe=4):
+    def helper(seq_i):
+        count=0
+        current=seq_i[0]
+        new_seq=[current]
+        max_i=max_coe-1
+        for frame_j in seq_i[1:]:
+            if(current!=frame_j):
+                new_seq.append(frame_j)
+                count=0
+                current=frame_j
+                continue
+            if(current==frame_j and  count<max_i):
+                count+=1
+                new_seq.append(frame_j)
+        return new_seq
+    return labeling.map_seq(helper)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--cls_path", type=str,default="MSR/ae/layer_1/spectral_36")
-    parser.add_argument("--cmd", type=str,default="show")
+    parser.add_argument("--cmd", type=str,default="build")
     args=parser.parse_args()
     if(args.cmd=="build"):
         build_grammars(args.cls_path)
