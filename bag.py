@@ -2,6 +2,7 @@ import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report
 from sklearn.metrics import accuracy_score
+import matplotlib.pyplot as plt
 import argparse
 import base,labels,plot,utils
 
@@ -44,11 +45,27 @@ def multi_bag(dir_path,alg):
                   xlabel="n_clust",
                   ylabel="Accuracy")
 
+def bigram_plot(dir_path,alg):
+    regex=alg+r"_\d"
+    paths=utils.find_paths(dir_path,regex)
+    n_bigrams,clust=[],[]
+    for i,path_i in enumerate( paths):
+        label_i=labels.LabelingGroup.read(path_i)
+        symb_i=label_i.as_symbols(verbose=False)
+        n_bigrams.append(len(symb_i.bigrams()))
+        clust.append(label_i.n_clust())
+    plt.plot(clust, clust)
+    plot.scatter( clust, n_bigrams, 
+                  title=alg,
+                  xlabel="n_clust",
+                  ylabel="bigrams")
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--main_dir", type=str,default="MSR")
     parser.add_argument("--nn", type=str,default="ae")
     parser.add_argument("--layer", type=int,default=1)
+    parser.add_argument("--bigrams", action="store_true")
     parser.add_argument("--alg", type=str,default="spectral")
     parser.add_argument("--n_clust", type=int,default=0)
     args=parser.parse_args()
@@ -57,6 +74,8 @@ if __name__ == '__main__':
         alg=f"{args.alg}_{args.n_clust}"    
         path="/".join([args.main_dir,args.nn ,layer,alg])
         eval_bag(path)
-    else:
-        path="/".join([args.main_dir,args.nn ,layer])
-        multi_bag(path,args.alg)
+        exit()
+    path="/".join([args.main_dir,args.nn ,layer])
+    if(args.bigrams):
+        bigram_plot(path,args.alg)
+    multi_bag(path,args.alg)
