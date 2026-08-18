@@ -1,7 +1,44 @@
+import numpy as np
 import sksequitur
 from sksequitur import Grammar, Mark, Parser, parse
+from nltk import PCFG
+import string
 import argparse
 import labels,utils
+
+class GrammarAdapter(object):
+    def __init__(self,grammar):
+        self.grammar=grammar
+        self._letter_dict=None
+    
+    @property
+    def letter_dict(self):
+        if(self._letter_dict is None):
+            self._letter_dict={}
+            n=len(string.ascii_uppercase)
+            for key_i,rule_i in self.grammar.items():
+                key_i=int(key_i)
+                if(key_i==0):
+                    continue
+                k= int(np.floor(key_i/n))
+                nonterm_i=string.ascii_uppercase[key_i%n]
+                nonterm_i+=f"_{k}"
+                self._letter_dict[key_i]=nonterm_i
+        return self._letter_dict
+
+    @classmethod
+    def from_symb(cls,symb_dict):
+        parser_i = Parser()
+        for symb_j in symb_dict.values():
+            parser_i.feed(symb_j)
+            parser_i.feed([Mark()])
+        return cls(Grammar(parser_i.tree))
+    
+    def print(self):
+        print(len(self.grammar))
+        for key_i,value_i in self.grammar.items():
+            print(f"{key_i}->{value_i}")
+
 
 
 def build_grammars(cls_path):
@@ -11,21 +48,17 @@ def build_grammars(cls_path):
     train,test=labeling.split()
     for cat_i,group_i in train.by_cat().items():
         print(f"Classs:{cat_i}")
-        parser_i = Parser()
         symb_dict=group_i.as_symbols( symb_map=dict_map,
                                       verbose=False)
-#        print(len(symb_dict.bigrams()))
-        for symb_j in symb_dict.values():
-            parser_i.feed(symb_j)
-            parser_i.feed([Mark()])
-        grammar_i = Grammar(parser_i.tree)
-        print_grammar(grammar_i)
-        print("**************************")
+        grammar_i= GrammarAdapter.from_symb(symb_dict)
+        print(grammar_i.letter_dict)
+        print(len(grammar_i.letter_dict))
+#        print(list(grammar_i.values())[0])
+#        print_grammar(grammar_i)
+#        print("**************************")
 
-def print_grammar(grammar):
-    print(len(grammar))
-    for key_i,value_i in grammar.items():
-        print(f"{key_i}->{value_i}")
+
+
 
 def show_symbols(cls_path):
     print(cls_path)
