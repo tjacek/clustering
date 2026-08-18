@@ -39,7 +39,35 @@ class GrammarAdapter(object):
         for key_i,value_i in self.grammar.items():
             print(f"{key_i}->{value_i}")
 
-
+    def as_string(self):
+        rules=[]
+        def helper(elem_j):
+            if(isinstance(elem_j,int)):
+                return self.letter_dict[elem_j]
+            if(type(elem_j)==Mark):
+                return "|"
+            else:
+                return f"'{elem_j}'"
+        for key_i,rule_i in self.grammar.items():
+            left_i=" ".join([helper(elem_j) 
+                                for elem_j in rule_i])
+            left_i=left_i.split("|")
+            if(len(left_i)>1):
+                prob_i=f"[{1.0/len(left_i):.4f}]"
+                left_i=[ f"{elem_j} {prob_i} " 
+                           for elem_j in left_i 
+                               if(len(elem_j)>0)]
+                left_i="|".join(left_i)
+            else:
+                left_i=left_i[0]
+                left_i=f"{left_i} [1.0]"
+            if(key_i==0):
+                right_i="START"
+            else:
+                right_i=self.letter_dict[key_i]
+            rule_i=f"{right_i} -> {left_i}"
+            rules.append(rule_i)
+        return "\n".join(rules)            
 
 def build_grammars(cls_path):
     labeling= labels.LabelingGroup.read(cls_path)
@@ -51,14 +79,9 @@ def build_grammars(cls_path):
         symb_dict=group_i.as_symbols( symb_map=dict_map,
                                       verbose=False)
         grammar_i= GrammarAdapter.from_symb(symb_dict)
-        print(grammar_i.letter_dict)
-        print(len(grammar_i.letter_dict))
+        print(grammar_i.as_string())
 #        print(list(grammar_i.values())[0])
-#        print_grammar(grammar_i)
 #        print("**************************")
-
-
-
 
 def show_symbols(cls_path):
     print(cls_path)
