@@ -2,7 +2,7 @@ import numpy as np
 import sksequitur
 from sksequitur import Grammar, Mark, Parser, parse
 import nltk
-from nltk.parse import ViterbiParser
+from nltk.parse import ViterbiParser,InsideChartParser
 #from nltk import PCFG
 import string
 import argparse
@@ -18,14 +18,8 @@ class GrammarEnsemble(dict):
                 prob_vector.append(0)
                 continue
             grammar_i=self[key_i]
-            parser_i=ViterbiParser(grammar_i)            
-            prob_i=[ tree.prob() for tree in parser_i.parse(sentence)]
-            if(len(prob_i)==0):
-                prob_vector.append(0)
-            else:
-                prob_vector.append(np.amax(prob_i))
-#                print(tree)
-#                print("P(tree) =", tree.prob()) 
+            prob_i=viterbi_alg(grammar_i,sentence)
+            prob_vector.append(prob_i)
         prob_vector = np.array(prob_vector)
         return prob_vector/np.sum(prob_vector)
         
@@ -40,6 +34,22 @@ class GrammarEnsemble(dict):
             if(not term_j in covered):
                 return True
         return False
+
+def viterbi_alg(grammar_i,sentence):
+    parser_i=ViterbiParser(grammar_i)            
+    prob_i=[ tree.prob() for tree in parser_i.parse(sentence)]
+    if(len(prob_i)==0):
+        return 0
+    else:
+        return np.amax(prob_i)
+
+def inside_alg(grammar_i,sentence):
+    parser_i=ViterbiParser(grammar_i)            
+    total_prob = 0.0
+    for tree in parser_i.parse(sentence):
+#        print(tree, "->", tree.prob())
+        total_prob += tree.prob()
+    return total_prob
 
 class GrammarAdapter(object):
     def __init__(self,grammar):
@@ -116,19 +126,31 @@ def build_grammars(cls_path):
                                       verbose=False)
         grammar_i= GrammarAdapter.from_symb(symb_dict)
         str_grammar_i=grammar_i.as_string()
-#        print(str_grammar_i)
         prob_gram_i=nltk.PCFG.fromstring(str_grammar_i)
         grammar_ens[cat_i]=prob_gram_i
     symb_test=train.as_symbols(symb_map=dict_map,
                                verbose=False)
+    hard_predic(grammar_ens,symb_test)
+
+def hard_predic(grammar_ens,symb_test):
     error=[]
     for name_i,symb_i in symb_test.items():
         pred_cat=grammar_ens.pred(symb_i)
         desc_i=seq.ActionDesc.from_name(name_i)
         error.append(int(desc_i.cat==pred_cat))
     print(np.mean(error))
-#        print(list(grammar_i.values())[0])
-#        print("**************************")
+
+def soft_predic(grammar_ens,symb_test):
+    n_cats=len(grammar_ens)
+    total_error=0
+    for name_i,symb_i in symb_test.items():
+        desc_i=seq.ActionDesc.from_name(name_i)
+        one_hot=np.zeros((n_cats,))
+        one_hot[desc_i.cat]=1
+        pred_cat=grammar_ens.pred_prob(symb_i)
+        err_i= np.sum(np.abs(pred_cat-one_hot))
+        total_error+=err_i
+    print(total_error/len(symb_test))
 
 def show_symbols(cls_path):
     print(cls_path)
