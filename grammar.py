@@ -3,6 +3,8 @@ import sksequitur
 from sksequitur import Grammar, Mark, Parser, parse
 import nltk
 from nltk.parse import ViterbiParser,InsideChartParser
+from nltk.parse import ChartParser
+from collections import Counter
 #from nltk import PCFG
 import string
 import argparse
@@ -29,11 +31,27 @@ class GrammarEnsemble(dict):
 
     def lack_terminals(self,key_i,sentence):
         grammar_i=self[key_i]
+        raise Exception(dir(grammar_i))
         covered = set(grammar_i._lexical_index.keys()) 
         for term_j in sentence:
             if(not term_j in covered):
                 return True
         return False
+    
+    def count(self,key_i,pos_sent):
+        grammar_i=self[key_i]
+        parser = ChartParser(grammar_i)
+        rule_counts = Counter()
+        for sentence in pos_sent:
+            trees = list(parser.parse(sentence))
+            if not trees:
+               continue
+            tree = trees[0]
+        for production in tree.productions():
+            rule_counts[production] += 1
+        print("Liczności reguł:")
+        for rule, count in rule_counts.items():
+            print(count, rule)
 
 def viterbi_alg(grammar_i,sentence):
     parser_i=ViterbiParser(grammar_i)            
@@ -125,9 +143,12 @@ def build_grammars(cls_path):
         symb_dict=group_i.as_symbols( symb_map=dict_map,
                                       verbose=False)
         grammar_i= GrammarAdapter.from_symb(symb_dict)
+#        raise Exception(dir(grammar_i.grammar))
         str_grammar_i=grammar_i.as_string()
         prob_gram_i=nltk.PCFG.fromstring(str_grammar_i)
         grammar_ens[cat_i]=prob_gram_i
+        grammar_ens.count( cat_i,
+                           list(symb_dict.values()))
     symb_test=train.as_symbols(symb_map=dict_map,
                                verbose=False)
     hard_predic(grammar_ens,symb_test)
