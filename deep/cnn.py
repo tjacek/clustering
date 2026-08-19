@@ -39,16 +39,12 @@ class ConvNN(deep.core.NeuralModel):
             callbacks=callbacks,
             verbose=1,
         )
-
-
-class _ConvNN(deep.core.NeuralModel):
-    def __init__(self,model):
-        self.model=model
-        self._extractor=None
-        self.extractor_layer=None
-
-
-
+    
+    def predict(self,X):
+        X=X.astype("float32") / 255.0
+        prob= self.model.predict(X,verbose=0)
+        return np.argmax(prob,axis=1)
+    
     def eval(self, data):
         X = np.expand_dims(data.X.astype("float32") / 255.0, -1)
 
@@ -57,30 +53,20 @@ class _ConvNN(deep.core.NeuralModel):
 
         return accuracy_score(data.y, y_pred)
     
-
     def extract(self, data, n_layer=1):
         old_X = data.X if(isinstance(data, base.Dataset)) else data
         X = np.expand_dims(old_X.astype("float32") / 255.0, -1)
         extr=self.init_extractor(n_layer)
         feat = self.extr.predict(X, batch_size=256, verbose=0)
         return feat
-
-    def predict(self,X):
-        X=X.astype("float32") / 255.0
-        prob= self.model.predict(X,verbose=0)
-        return np.argmax(prob,axis=1)
     
-    @classmethod
-    def make_model(cls, train,
+    def exp( self, 
+             train,
              test,
-             params=None,
              epochs=50):
-        model=cls.build(params)
-        model.fit(train,epochs=epochs)
-        acc=model.eval(test)
+        self.fit(train,epochs=epochs)
+        acc=self.eval(test)
         print(f"{acc:.4f}")
-        data=base.DataPair(train,test)
-        return model,data   
 
 class AccCallback(tf.keras.callbacks.Callback):
     def __init__(self, acc_thres=0.995):
@@ -139,24 +125,6 @@ class CNNFactory(object):
             hyper=frame_params()
         self.hyper=hyper
 
-    def conv_layer( self, 
-                   n_kerns_i,
-                   sizes_i,
-                   input_shape=None):
-        if(input_shape is None):
-            return Conv2D( filters=n_kerns_i,
-                           kernel_size=sizes_i,
-                           padding="same",
-                           activation="relu",
-                           input_shape=self.input_shape,
-                        )
-        else:
-            return  Conv2D( filters=n_kerns_i,
-                            kernel_size=sizes_i,
-                            padding="same",
-                            activation="relu",
-                          )
-
     def build(self, verbose=False):
         model = Sequential()
         for i in range(self.hyper.n_conv):
@@ -199,14 +167,3 @@ def frame_params(n_cats=20):
             kernel_sizes=[(5, 3),(3,3),(3,3),(3,3)],
             pool_size=[(2, 2),(2, 2),(2, 2)]
         )
-
-def simple_exp(data=None,
-               n_neurons=512):
-    if(data is None):
-        data=base.get_minst_dataset()
-    params=minst_params(n_cats=10)
-    model=make_cnn(params)
-    model.fit(data.train)
-    acc=model.eval(data.test)
-    print(f"{acc:.4f}")
-    return model,data
