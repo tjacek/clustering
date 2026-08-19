@@ -15,7 +15,6 @@ from dataclasses import dataclass
 import deep.core
 import base
 
-
 class ConvNN(deep.core.NeuralModel):
     def fit( self, 
              data, 
@@ -48,11 +47,6 @@ class _ConvNN(deep.core.NeuralModel):
         self._extractor=None
         self.extractor_layer=None
 
-    @classmethod
-    def build(cls, params=None, verbose=False):
-        if(params is None):
-            params=frame_params(n_cats=20)
-        return build_cnn(params, verbose)
 
 
     def eval(self, data):
@@ -110,22 +104,40 @@ class Hyperparams:
     pool_size:list 
     
     def __post_init__(self):
-        assert len(self.n_kerns) == len(self.kernel_sizes), "n_kerns i kernel_sizes muszą mieć tę samą długość"
+        assert len(self.n_kerns) == len(self.kernel_sizes), "n_kerns and kernel_sizes must have the same length"
         assert len(self.pool_size) == len(self.n_kerns) - 1, "pool_size musi mieć o jeden element mniej niż n_kerns"
     
-    def __iter__(self):
-        pairs=zip(self.n_kerns,self.kernel_sizes)
-        for i,(kerns_i,sizes_i) in enumerate(pairs):
-            if(i==0):
-                pool_i=None
-            else:
-                pool_i=self.pool_size[i-1]
-            yield kerns_i,sizes_i,pool_i
+    @property
+    def n_conv(self):
+        return len(self.n_kerns)
+    
+    @property
+    def n_dense(self):
+        return len(self.dense_layers)   
+    
+    def conv_layer(self,i):
+        args={ "filters":self.n_kerns[i],
+               "kernel_size":self.kernel_sizes[i],
+               "padding":"same",
+               "activation":"relu"}
+        if(i==0):
+            args["input_shape"]=self.input_shape
+        return Conv2D(**args)
+
+    def dense_layer(self,i):
+        return Dense( self.dense_layers[i],
+                      activation="relu",
+                      name=f"layer_{i}")
+
+    def pool_layer(self,i):
+        return MaxPooling2D(pool_size=self.pool_size[i])
 
 
 class CNNFactory(object):
-    def __init__(self,hyper):
-        self.hyper
+    def __init__(self,hyper=None):
+        if(hyper is None):
+            hyper=frame_params()
+        self.hyper=hyper
 
     def conv_layer( self, 
                    n_kerns_i,
@@ -138,47 +150,34 @@ class CNNFactory(object):
                            activation="relu",
                            input_shape=self.input_shape,
                         )
-        else
+        else:
             return  Conv2D( filters=n_kerns_i,
                             kernel_size=sizes_i,
                             padding="same",
                             activation="relu",
                           )
 
-    def built(self, verbose=False):
-#    if params is None:
-#        params = minst_params()
-
+    def build(self, verbose=False):
         model = Sequential()
-        for n_kerns_i,sizes_i,pool_i in self.hyper:
-            if(pool_i is None):
-                model.add(self.conv_layer(n_kerns_i,
-                                          sizes_i,
-                                          self.params.input_shape))
-            else:
+        for i in range(self.hyper.n_conv):
+            if(i!=0):
                 model.add(BatchNormalization())
-                model.add(MaxPooling2D(pool_size=pool_i))
-                model.add(self.conv_layer(n_kerns_i,
-                                          sizes_i,
-                                          self.params.input_shape))
-    
+                model.add(self.hyper.pool_layer(i-1))
+            model.add(self.hyper.conv_layer(i))
         model.add(BatchNormalization())
         model.add(GlobalAveragePooling2D())
-
-        for i,dense_i in enumerate(params.dense_layers):
-            model.add(Dense(
-                    dense_i,
-                    activation="relu",
-                    name=f"layer_{i}",
-                  ))
+        
+        for i in range(self.hyper.n_dense):
+            model.add(self.hyper.dense_layer(i))
             model.add(Dropout(0.5))
-        model.add( Dense(self.params.n_cats, 
+
+        model.add( Dense(self.hyper.n_cats, 
                          activation="softmax"))
         if verbose:
            model.summary()
-        meta=core.NNMetaN( "ConvNN",
+        meta=deep.core.NNMeta( "ConvNN",
                            "ConvBuilder",
-                           self.params.__dict__)
+                           self.hyper.__dict__)
         return ConvNN(model,meta)
 
 def minst_params(n_cats=10):
