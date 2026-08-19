@@ -16,9 +16,10 @@ from tensorflow.keras.layers import (
 )
 from dataclasses import dataclass
 import re
+import deep.core
 import base,utils
 
-class ConvAE(base.NeuralModel): 
+class ConvAE(deep.core.NeuralModel): 
     def __init__(self, model, encoder):
         self.model = model
         self.encoder = encoder

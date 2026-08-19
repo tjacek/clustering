@@ -12,9 +12,10 @@ from tensorflow.keras.layers import (
 from tensorflow.keras import Model
 from sklearn.metrics import accuracy_score
 from dataclasses import dataclass
+import deep.core
 import base
 
-class ConvNN(base.NeuralModel):
+class ConvNN(deep.core.NeuralModel):
     def __init__(self,model):
         self.model=model
         self._extractor=None
