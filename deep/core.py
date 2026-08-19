@@ -26,9 +26,35 @@ class NeuralModel(object):
                   nn_meta ):
         self.model=model
         self.nn_meta=nn_meta
-        self._extractor = None
+        self.extractor = None
         self.extractor_layer = None
-        
+
+    def save(self,out_path):
+        if(len(out_path.split("."))<2):
+            out_path+=".keras"
+        self.model.save(out_path)
+        self.nn_meta.save(f"{out_path}/meta")
+    
+
+    def init_extractor(self,n_layer=0):   
+        if(self.extractor is None or 
+              self.extractor_layer!=n_layer):
+            layer = self.model.get_layer(f"layer_{n_layer}")
+            self.extractor = Model(
+                                inputs=self.model.inputs,
+                                outputs=layer.output,
+                              )
+            self.n_layer=n_layer
+        return self.extractor
+    
+    def names(self):
+        return [ layer_i.name 
+                for layer_i in self.model.layers]
+
+    def find_layers(self,regex=r'^layer_\d+'):
+        return  [name_i 
+                    for name_i in self.names()
+                        if( re.match(regex,name_i))]
     @classmethod
     def get_model(cls,out_path,data=None):
         if(os.path.exists(out_path)):
@@ -47,19 +73,7 @@ class NeuralModel(object):
         model = load_model(in_path)
         return cls(model)
 
-    def save(self,out_path):
-        if(len(out_path.split("."))<2):
-            out_path+=".keras"
-        self.model.save(out_path)
 
-    def names(self):
-        return [ layer_i.name 
-                for layer_i in self.model.layers]
-
-    def find_layers(self,regex=r'^layer_\d+'):
-        return  [name_i 
-                    for name_i in self.names()
-                        if( re.match(regex,name_i))]
     
 
 #class NNFactory(object):

@@ -15,26 +15,19 @@ from dataclasses import dataclass
 import deep.core
 import base
 
+
 class ConvNN(deep.core.NeuralModel):
-    def __init__(self,model):
-        self.model=model
-        self._extractor=None
-        self.extractor_layer=None
-
-    @classmethod
-    def build(cls, params=None, verbose=False):
-        if(params is None):
-            params=frame_params(n_cats=20)
-        return build_cnn(params, verbose)
-
-    def fit(self, data, epochs=50, batch_size=64):
+    def fit( self, 
+             data, 
+             epochs=50, 
+             batch_size=64):
         self.model.compile(
             optimizer=tf.keras.optimizers.Adam(1e-3),
             loss="sparse_categorical_crossentropy",
             metrics=["accuracy"],
         )
         
-        callbacks = [SimpleCallback()]
+        callbacks = [AccCallback()]
 
         X = np.expand_dims(data.X.astype("float32") / 255.0, -1)
 
@@ -48,6 +41,20 @@ class ConvNN(deep.core.NeuralModel):
             verbose=1,
         )
 
+
+class _ConvNN(deep.core.NeuralModel):
+    def __init__(self,model):
+        self.model=model
+        self._extractor=None
+        self.extractor_layer=None
+
+    @classmethod
+    def build(cls, params=None, verbose=False):
+        if(params is None):
+            params=frame_params(n_cats=20)
+        return build_cnn(params, verbose)
+
+
     def eval(self, data):
         X = np.expand_dims(data.X.astype("float32") / 255.0, -1)
 
@@ -60,18 +67,8 @@ class ConvNN(deep.core.NeuralModel):
     def extract(self, data, n_layer=1):
         old_X = data.X if(isinstance(data, base.Dataset)) else data
         X = np.expand_dims(old_X.astype("float32") / 255.0, -1)
-
-
-        if(self._extractor is None or 
-              self.extractor_layer!=n_layer):
-            layer = self.model.get_layer(f"layer_{n_layer}")
-            self._extractor = Model(
-                                inputs=self.model.inputs,
-                                outputs=layer.output,
-                              )
-            self.n_layer=n_layer
-
-        feat = self._extractor.predict(X, batch_size=256, verbose=0)
+        extr=self.init_extractor(n_layer)
+        feat = self.extr.predict(X, batch_size=256, verbose=0)
         return feat
 
     def predict(self,X):
@@ -91,56 +88,17 @@ class ConvNN(deep.core.NeuralModel):
         data=base.DataPair(train,test)
         return model,data   
 
-class SimpleCallback(tf.keras.callbacks.Callback):
+class AccCallback(tf.keras.callbacks.Callback):
+    def __init__(self, acc_thres=0.995):
+        self.acc_thres=acc_thres
+
     def on_epoch_end(self, epoch, logs=None):
         logs = logs or {}
         acc = logs.get("accuracy")
 
-        if acc is not None and acc > 0.995:
+        if acc is not None and acc > self.acc_thres:
             print("\nReached 99.5% accuracy, stopping training.")
             self.model.stop_training = True
-
-def built_cnn(params=None, verbose=False):
-    if params is None:
-        params = minst_params()
-
-    model = Sequential()
-    for n_kerns_i,sizes_i,pool_i in params:
-        if(pool_i is None):
-            model.add(Conv2D(
-                          filters=n_kerns_i,
-                          kernel_size=sizes_i,
-                          padding="same",
-                          activation="relu",
-                          input_shape=params.input_shape,
-                      ))
-        else:
-            model.add(BatchNormalization())
-            model.add(MaxPooling2D(pool_size=pool_i))
-
-            model.add(Conv2D(
-                          filters=n_kerns_i,
-                          kernel_size=sizes_i,
-                          padding="same",
-                          activation="relu",
-                     ))
-    
-    model.add(BatchNormalization())
-    model.add(GlobalAveragePooling2D())
-
-    for i,dense_i in enumerate(params.dense_layers):
-        model.add(Dense(
-                    dense_i,
-                    activation="relu",
-                    name=f"layer_{i}",
-                  ))
-        model.add(Dropout(0.5))
-    model.add( Dense(params.n_cats, 
-                     activation="softmax"))
-    if verbose:
-        model.summary()
-
-    return ConvNN(model)
 
 @dataclass(frozen=True)
 class Hyperparams:
@@ -163,6 +121,65 @@ class Hyperparams:
             else:
                 pool_i=self.pool_size[i-1]
             yield kerns_i,sizes_i,pool_i
+
+
+class CNNFactory(object):
+    def __init__(self,hyper):
+        self.hyper
+
+    def conv_layer( self, 
+                   n_kerns_i,
+                   sizes_i,
+                   input_shape=None):
+        if(input_shape is None):
+            return Conv2D( filters=n_kerns_i,
+                           kernel_size=sizes_i,
+                           padding="same",
+                           activation="relu",
+                           input_shape=self.input_shape,
+                        )
+        else
+            return  Conv2D( filters=n_kerns_i,
+                            kernel_size=sizes_i,
+                            padding="same",
+                            activation="relu",
+                          )
+
+    def built(self, verbose=False):
+#    if params is None:
+#        params = minst_params()
+
+        model = Sequential()
+        for n_kerns_i,sizes_i,pool_i in self.hyper:
+            if(pool_i is None):
+                model.add(self.conv_layer(n_kerns_i,
+                                          sizes_i,
+                                          self.params.input_shape))
+            else:
+                model.add(BatchNormalization())
+                model.add(MaxPooling2D(pool_size=pool_i))
+                model.add(self.conv_layer(n_kerns_i,
+                                          sizes_i,
+                                          self.params.input_shape))
+    
+        model.add(BatchNormalization())
+        model.add(GlobalAveragePooling2D())
+
+        for i,dense_i in enumerate(params.dense_layers):
+            model.add(Dense(
+                    dense_i,
+                    activation="relu",
+                    name=f"layer_{i}",
+                  ))
+            model.add(Dropout(0.5))
+        model.add( Dense(self.params.n_cats, 
+                         activation="softmax"))
+        if verbose:
+           model.summary()
+        meta=core.NNMetaN( "ConvNN",
+                           "ConvBuilder",
+                           self.params.__dict__)
+        return ConvNN(model,meta)
 
 def minst_params(n_cats=10):
     return Hyperparams(
