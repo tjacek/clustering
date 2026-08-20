@@ -15,7 +15,8 @@ from tensorflow.keras.layers import (
     GlobalAveragePooling2D,
     Reshape,
 )
-import deep.core
+from tensorflow.keras.models import load_model 
+import deep.core,utils
 
 class ConvAE(deep.core.NeuralModel): 
     def __init__(  self, 
@@ -61,6 +62,25 @@ class ConvAE(deep.core.NeuralModel):
         self.fit(train,epochs=epochs)
         mse=self.eval(test)
         print(f"MSE{mse:.4f}")
+
+    def encode(self, data):
+        old_X = data.X if isinstance(data, base.Dataset) else data
+        X = np.expand_dims(old_X.astype("float32") / 255.0, -1)
+        return self.encoder.predict(X, batch_size=256, verbose=0)
+    
+    def save(self, out_path):
+        utils.make_dir(out_path)
+        self.nn_meta.save(f"{out_path}/{self.META_FILE}")
+        self.model.save(f"{out_path}/{self.MODEL_FILE}")
+        self.encoder.save(f"{out_path}/encoder.keras")
+
+
+    @classmethod
+    def read(cls,in_path):
+        nn_meta=deep.core.NNMeta.read(f"{in_path}/{cls.META_FILE}")
+        model = load_model(f"{in_path}/{cls.MODEL_FILE}")
+        encoder = load_model(f"{in_path}/{cls.MODEL_FILE}")
+        return cls(model,encoder,nn_meta)
 
 class MSECallback(tf.keras.callbacks.Callback):
  
@@ -164,79 +184,3 @@ class AEFactory(deep.core.NNFactory):
 
         meta = deep.core.NNMeta("ConvAE", "AEFactory", self.__dict__)
         return ConvAE(autoencoder, encoder, meta)
-
-
-
-class _AEFactory(object):
-    def __init__(self, hyper=None):
-        if hyper is None:
-            hyper = deep.core.frame_params()
-        self.hyper = hyper
-
-    def build(self, verbose=True):
-        hyper = self.hyper
-
-        inputs = hyper.input_layer()
-        x = inputs
-        x = hyper.conv_layer(0)(x)
-        for i in range(hyper.n_conv-1):
-            x = hyper.conv_layer(i+1)(x)
-            x = BatchNormalization()(x)
-#            if i < hyper.n_conv - 1:
-            x = hyper.pool_layer(i)(x)
-
-        pre_bottleneck_shape = x.shape[1:]
-        x = Flatten()(x)
-
-        for i in range(hyper.n_dense):
-            x = hyper.dense_layer(i)(x)
-            x = Dropout(0.3)(x)
-
-        bottleneck = bottleneck_layer(64)(x)
-        encoder = Model(inputs=inputs, outputs=bottleneck, name="encoder")
-
-        # --- Dekoder (odbicie lustrzane enkodera) ---
-        x = bottleneck
-        for i in range(hyper.n_dense):
-            j = hyper.n_dense - 1 - i
-            x = Dense(hyper.dense_layers[j], activation="relu", name=f"dec_layer_{i}")(x)
-            x = Dropout(0.3)(x)
-
-        x = Dense(int(np.prod(pre_bottleneck_shape)), activation="relu")(x)
-        x = Reshape(pre_bottleneck_shape)(x)
-
-        rev_kerns = hyper.rev_kerns()
-        rev_sizes = hyper.rev_sizes()
-        rev_pool_idx = hyper.rev_pool_indices()
-
-        for i, (filters_i, size_i, pool_idx_i) in enumerate(
-                zip(rev_kerns, rev_sizes, rev_pool_idx)):
-            if pool_idx_i is not None:
-                x = hyper.upsample_layer(pool_idx_i)(x)
-            x = deconv_layer(i,filters_i, size_i)(x)#hyper.deconv_layer(i, filters_i, size_i)(x)
-            x = BatchNormalization()(x)
-
-        n_channels = hyper.input_shape[-1]
-        outputs = Conv2DTranspose(
-                    filters=n_channels,
-                    kernel_size=(3, 3),
-                    padding="same",
-                    activation="sigmoid",   # wyjście w [0,1], zgodnie z normalizacją /255.0
-                    name="reconstruction",
-        )(x)
- 
-#        outputs = hyper.output_layer()(x)
-
-        autoencoder = Model(inputs=inputs, outputs=outputs, name="autoencoder")
-
-        if verbose:
-            encoder.summary()
-            autoencoder.summary()
-
-        meta = deep.core.NNMeta("ConvAE", "AEFactory", hyper.__dict__)
-        return ConvAE(autoencoder, encoder, meta)
-
-
-def bottleneck_layer(latent_dim):
-	return Dense(latent_dim, activation="relu", name="bottleneck")
-
