@@ -80,7 +80,7 @@ class NeuralModel(object):
 @dataclass
 class NNFactory:
     input_shape:tuple
-    n_cats:int
+#    n_cats:int
     dense_layers:list 
     n_kerns:list 
     kernel_sizes:list
@@ -180,23 +180,3 @@ class _Hyperparams:
     
     def upsample_layer(self, i):
         return UpSampling2D(size=self.pool_size[i])
-
-def minst_params(n_cats=10):
-    return Hyperparams(
-            input_shape=(28,28,1),
-            n_cats=n_cats,
-            dense_layers=[1024,512],
-            n_kerns=[32,32,64],
-            kernel_sizes=[(3,3),(3,3),(3,3)],
-            pool_size=[(2,2),(2,2)]
-        )
-
-def frame_params(n_cats=20):
-    return Hyperparams(
-            input_shape=(240, 80, 1),
-            n_cats=n_cats,
-            dense_layers=[1024,128],
-            n_kerns=[32,64,128,256],
-            kernel_sizes=[(5, 3),(3,3),(3,3),(3,3)],
-            pool_size=[(2, 2),(2, 2),(2, 2)]
-        )

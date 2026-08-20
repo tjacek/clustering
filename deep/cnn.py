@@ -82,6 +82,7 @@ class AccCallback(tf.keras.callbacks.Callback):
             self.model.stop_training = True
 
 class CNNFactory(deep.core.NNFactory):
+    n_cats: int = 0
     def build(self, verbose=False):
         model = Sequential()
         model.add(self.input_layer())
@@ -105,35 +106,4 @@ class CNNFactory(deep.core.NNFactory):
         meta=deep.core.NNMeta( "ConvNN",
                            "ConvBuilder",
                            self.__dict__)
-        return ConvNN(model,meta)
-
-class _CNNFactory(object):
-    def __init__(self,hyper=None):
-        if(hyper is None):
-            hyper=deep.core.frame_params()
-        self.hyper=hyper
-
-    def build(self, verbose=False):
-        model = Sequential()
-        model.add(self.hyper.input_layer())
-        model.add(self.hyper.conv_layer(0))
-
-        for i in range(self.hyper.n_conv-1):
-            model.add(BatchNormalization())
-            model.add(self.hyper.pool_layer(i))
-            model.add(self.hyper.conv_layer(i+1))
-        model.add(BatchNormalization())
-        model.add(GlobalAveragePooling2D())
-        
-        for i in range(self.hyper.n_dense):
-            model.add(self.hyper.dense_layer(i))
-            model.add(Dropout(0.5))
-
-        model.add( Dense(self.hyper.n_cats, 
-                         activation="softmax"))
-        if verbose:
-           model.summary()
-        meta=deep.core.NNMeta( "ConvNN",
-                           "ConvBuilder",
-                           self.hyper.__dict__)
         return ConvNN(model,meta)

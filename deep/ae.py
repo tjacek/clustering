@@ -19,6 +19,7 @@ from tensorflow.keras.models import load_model
 import deep.core,utils
 
 class ConvAE(deep.core.NeuralModel): 
+    ENCODER_FILE="encoder.keras"
     def __init__(  self, 
     	           model, 
     	           encoder,
@@ -29,7 +30,7 @@ class ConvAE(deep.core.NeuralModel):
     def fit( self, 
     	     data, 
     	     epochs=50, 
-    	     batch_size=64):
+    	     batch_size=32):
         self.model.compile(
             optimizer=tf.keras.optimizers.Adam(1e-3),
             loss="mse",
@@ -68,18 +69,22 @@ class ConvAE(deep.core.NeuralModel):
         X = np.expand_dims(old_X.astype("float32") / 255.0, -1)
         return self.encoder.predict(X, batch_size=256, verbose=0)
     
+    def predict(self, X):
+        X = np.expand_dims(X.astype("float32") / 255.0, -1)
+        return self.model.predict(X, verbose=0)
+    
     def save(self, out_path):
         utils.make_dir(out_path)
         self.nn_meta.save(f"{out_path}/{self.META_FILE}")
         self.model.save(f"{out_path}/{self.MODEL_FILE}")
-        self.encoder.save(f"{out_path}/encoder.keras")
+        self.encoder.save(f"{out_path}/{self.ENCODER_FILE}")
 
 
     @classmethod
     def read(cls,in_path):
         nn_meta=deep.core.NNMeta.read(f"{in_path}/{cls.META_FILE}")
         model = load_model(f"{in_path}/{cls.MODEL_FILE}")
-        encoder = load_model(f"{in_path}/{cls.MODEL_FILE}")
+        encoder = load_model(f"{in_path}/{cls.ENCODER_FILE}")
         return cls(model,encoder,nn_meta)
 
 class MSECallback(tf.keras.callbacks.Callback):
