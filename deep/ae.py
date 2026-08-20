@@ -2,7 +2,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.models import Model
-
+from dataclasses import dataclass
 from tensorflow.keras.layers import (
 #    Conv2D,
     Dense,
@@ -10,6 +10,7 @@ from tensorflow.keras.layers import (
     BatchNormalization,
     Flatten,
     Conv2DTranspose,
+    UpSampling2D,
 #    MaxPooling2D,
     GlobalAveragePooling2D,
     Reshape,
@@ -59,7 +60,7 @@ class ConvAE(deep.core.NeuralModel):
              epochs=50):
         self.fit(train,epochs=epochs)
         mse=self.eval(test)
-        print(f"MSE{acc:.4f}")
+        print(f"MSE{mse:.4f}")
 
 class MSECallback(tf.keras.callbacks.Callback):
  
@@ -85,7 +86,88 @@ class MSECallback(tf.keras.callbacks.Callback):
                 print(f"\nBrak poprawy przez {self.patience} epok, zatrzymuję trening.")
                 self.model.stop_training = True
 
-class AEFactory(object):
+@dataclass
+class AEFactory(deep.core.NNFactory):
+    latent_dim: int
+    
+    def get_bottleneck(self):
+        return Dense(self.latent_dim, activation="relu", name="bottleneck")
+    
+    def get_dec_dense(self, i):
+        j = self.n_dense - 1 - i
+        return deep.core.dense_layer(self.dense_layers[j], f"dec_layer_{i}")
+    
+    def rev_kerns(self):
+        return list(reversed(self.n_kerns))
+
+    def rev_sizes(self):
+        return list(reversed(self.kernel_sizes))
+
+    def rev_pool_indices(self):
+        return list(reversed(range(len(self.pool_size)))) + [None]    
+    def get_upsample(self, i):
+        return UpSampling2D(size=self.pool_size[i])
+    
+    def build(self, verbose=False):
+        inputs = self.input_layer()
+        x = self.get_conv(0)(inputs)
+        x = BatchNormalization()(x)
+        for i in range(self.n_conv - 1):
+            x = self.get_pool(i)(x)
+            x = self.get_conv(i + 1)(x)
+            x = BatchNormalization()(x)
+
+        pre_bottleneck_shape = x.shape[1:]
+        x = Flatten()(x)
+
+        for i in range(self.n_dense):
+            x = self.get_dense(i)(x)
+            x = Dropout(0.3)(x)
+
+        bottleneck = self.get_bottleneck()(x)
+        encoder = Model(inputs=inputs, outputs=bottleneck, name="encoder")
+
+        # --- Dekoder ---
+        x = bottleneck
+        for i in range(self.n_dense):
+            x = self.get_dec_dense(i)(x)
+            x = Dropout(0.3)(x)
+
+        x = Dense(int(np.prod(pre_bottleneck_shape)), activation="relu")(x)
+        x = Reshape(pre_bottleneck_shape)(x)
+
+        rev_kerns = self.rev_kerns()
+        rev_sizes = self.rev_sizes()
+        rev_pool_idx = self.rev_pool_indices()
+
+        for i, (filters_i, size_i, pool_idx_i) in enumerate(
+                zip(rev_kerns, rev_sizes, rev_pool_idx)):
+            if pool_idx_i is not None:
+                x = self.get_upsample(pool_idx_i)(x)
+            x = deep.core.deconv_layer(i, filters_i, size_i)(x)
+            x = BatchNormalization()(x)
+
+        n_channels = self.input_shape[-1]
+        outputs = Conv2DTranspose(
+                                  filters=n_channels,
+                                  kernel_size=(3, 3),
+                                  padding="same",
+                                  activation="sigmoid",   # wyjście w [0,1], zgodnie z normalizacją /255.0
+                                  name="reconstruction",
+                  )(x)
+
+        autoencoder = Model(inputs=inputs, outputs=outputs, name="autoencoder")
+
+        if verbose:
+            encoder.summary()
+            autoencoder.summary()
+
+        meta = deep.core.NNMeta("ConvAE", "AEFactory", self.__dict__)
+        return ConvAE(autoencoder, encoder, meta)
+
+
+
+class _AEFactory(object):
     def __init__(self, hyper=None):
         if hyper is None:
             hyper = deep.core.frame_params()
@@ -158,11 +240,3 @@ class AEFactory(object):
 def bottleneck_layer(latent_dim):
 	return Dense(latent_dim, activation="relu", name="bottleneck")
 
-def deconv_layer(i,filters, kernel_size):
-    return Conv2DTranspose(
-            filters=filters,
-            kernel_size=kernel_size,
-            padding="same",
-            activation="relu",
-            name=f"dec_conv_{i}",
-        )

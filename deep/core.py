@@ -7,6 +7,7 @@ from tensorflow.keras.layers import (
 #    BatchNormalization,
     MaxPooling2D,
     UpSampling2D,
+    Conv2DTranspose,
 #    GlobalAveragePooling2D,
 )
 
@@ -76,9 +77,68 @@ class NeuralModel(object):
         model = load_model(f"{in_path}/{cls.MODEL_FILE}")
         return cls(model,nn_meta)
 
+@dataclass
+class NNFactory:
+    input_shape:tuple
+    n_cats:int
+    dense_layers:list 
+    n_kerns:list 
+    kernel_sizes:list
+    pool_size:list 
+
+    def __post_init__(self):
+        err1= "n_kerns and kernel_sizes must have the same length"
+        assert len(self.n_kerns) == len(self.kernel_sizes),err1
+        err2="pool_size musi mieć o jeden element mniej niż n_kerns"
+        assert len(self.pool_size) == len(self.n_kerns) - 1,err2
+
+    @property
+    def n_conv(self):
+        return len(self.n_kerns)
+    
+    @property
+    def n_dense(self):
+        return len(self.dense_layers)   
+    
+    def input_layer(self):
+        return Input(shape=self.input_shape)     
+    
+    def get_pool(self,i):
+        return MaxPooling2D(pool_size=self.pool_size[i])
+
+    def get_conv(self,i):
+        return conv_layer( i,
+                           self.n_kerns[i],
+                           self.kernel_sizes[i])
+    def get_dense(self,i):
+        return dense_layer( self.dense_layers[i],
+                            f"layer_{i}")
+
+def conv_layer( i,
+                n_kerns,
+                kernel_sizes):
+    return Conv2D(filters=n_kerns,
+                  kernel_size=kernel_sizes,
+                  padding="same",
+                  activation="relu",
+                  name=f"enc_conv_{i}")
+
+def deconv_layer( i,n_kerns, kernel_size):
+    return Conv2DTranspose(
+            filters=n_kerns,
+            kernel_size=kernel_size,
+            padding="same",
+            activation="relu",
+            name=f"dec_conv_{i}")
+
+def dense_layer(dense,name):
+    return Dense( dense,
+                  activation="relu",
+                  name=name)
+
 
 @dataclass(frozen=True)
-class Hyperparams:
+class _Hyperparams:
     input_shape:tuple
     n_cats:int
     dense_layers:list 
@@ -86,9 +146,7 @@ class Hyperparams:
     kernel_sizes:list
     pool_size:list 
     
-    def __post_init__(self):
-        assert len(self.n_kerns) == len(self.kernel_sizes), "n_kerns and kernel_sizes must have the same length"
-        assert len(self.pool_size) == len(self.n_kerns) - 1, "pool_size musi mieć o jeden element mniej niż n_kerns"
+
     
     @property
     def n_conv(self):
@@ -101,14 +159,7 @@ class Hyperparams:
     def input_layer(self):
         return Input(shape=self.input_shape)
     
-    def conv_layer(self,i):
-        args={ "filters":self.n_kerns[i],
-               "kernel_size":self.kernel_sizes[i],
-               "padding":"same",
-               "activation":"relu"}
-#        if(i==0):
-#            args["input_shape"]=self.input_shape
-        return Conv2D(**args)
+   
 
     def dense_layer(self,i):
         return Dense( self.dense_layers[i],

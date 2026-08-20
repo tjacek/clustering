@@ -81,7 +81,33 @@ class AccCallback(tf.keras.callbacks.Callback):
             print("\nReached 99.5% accuracy, stopping training.")
             self.model.stop_training = True
 
-class CNNFactory(object):
+class CNNFactory(deep.core.NNFactory):
+    def build(self, verbose=False):
+        model = Sequential()
+        model.add(self.input_layer())
+        model.add(self.get_conv(0))
+
+        for i in range(self.n_conv-1):
+            model.add(BatchNormalization())
+            model.add(self.get_pool(i))
+            model.add(self.get_conv(i+1))
+        model.add(BatchNormalization())
+        model.add(GlobalAveragePooling2D())
+
+        for i in range(self.n_dense):
+            model.add(self.get_dense(i))
+            model.add(Dropout(0.5))
+
+        model.add( Dense(self.n_cats, 
+                         activation="softmax"))
+        if verbose:
+           model.summary()
+        meta=deep.core.NNMeta( "ConvNN",
+                           "ConvBuilder",
+                           self.__dict__)
+        return ConvNN(model,meta)
+
+class _CNNFactory(object):
     def __init__(self,hyper=None):
         if(hyper is None):
             hyper=deep.core.frame_params()
@@ -93,7 +119,6 @@ class CNNFactory(object):
         model.add(self.hyper.conv_layer(0))
 
         for i in range(self.hyper.n_conv-1):
-#            if(i!=0):
             model.add(BatchNormalization())
             model.add(self.hyper.pool_layer(i))
             model.add(self.hyper.conv_layer(i+1))
