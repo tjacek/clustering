@@ -4,17 +4,10 @@ import deep.ae
 import argparse
 import seq,labels,utils
 
-#def get_nn(nn_type):
-#	if(nn_type=="ae"):
-#		return deep.ae.ConvAE
-#	if(nn_type=="cnn"):
-#		return deep.cnn.ConvNN
-
 def train( in_path,
            out_path,
            nn_type="ae",
            epochs=5):#200):
-#    nn=get_nn(nn_type)
     actions=seq.ActionGroup.read(in_path)
     train,test=actions.split()
     model=deep.make_model(nn_type)
@@ -46,7 +39,7 @@ def extract( frame_path,
              dir_path,
              nn_type="ae",
              layer=0):
-    nn=get_nn(nn_type)
+    nn=deep.NN_TYPES[nn_type]
     nn_path=f"{dir_path}/{nn_type}"
     model_path=f"{nn_path}/model"
     model=nn.read(model_path)
@@ -75,7 +68,7 @@ if __name__ == '__main__':
     parser.add_argument("--frame_path", type=str,default="MSR/scaled")
     parser.add_argument("--dir_path", type=str,default="MSR")
     parser.add_argument("--nn_type", type=str,default="cnn")
-    parser.add_argument("--cmd", type=str,default="train")
+    parser.add_argument("--cmd", type=str,default="extract")
     parser.add_argument("--layer", type=int,default=1)
     args=parser.parse_args()
     if(args.cmd=="train"):

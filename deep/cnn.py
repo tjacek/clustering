@@ -39,7 +39,8 @@ class ConvNN(deep.core.NeuralModel):
             callbacks=callbacks,
             verbose=1,
         )
-    
+        self.nn_meta.n_epochs+=epoch
+
     def predict(self,X):
         X=X.astype("float32") / 255.0
         prob= self.model.predict(X,verbose=0)
@@ -57,7 +58,7 @@ class ConvNN(deep.core.NeuralModel):
         old_X = data.X if(isinstance(data, base.Dataset)) else data
         X = np.expand_dims(old_X.astype("float32") / 255.0, -1)
         extr=self.init_extractor(n_layer)
-        feat = self.extr.predict(X, batch_size=256, verbose=0)
+        feat = extr.predict(X, batch_size=256, verbose=0)
         return feat
     
     def exp( self, 
