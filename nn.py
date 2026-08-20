@@ -67,8 +67,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--frame_path", type=str,default="MSR/scaled")
     parser.add_argument("--dir_path", type=str,default="MSR")
-    parser.add_argument("--nn_type", type=str,default="cnn")
-    parser.add_argument("--cmd", type=str,default="extract")
+    parser.add_argument("--nn_type", type=str,default="ae")
+    parser.add_argument("--cmd", type=str,default="train")
     parser.add_argument("--layer", type=int,default=1)
     args=parser.parse_args()
     if(args.cmd=="train"):
