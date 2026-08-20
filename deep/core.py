@@ -1,7 +1,10 @@
 import os,re
 import json
+from tensorflow.keras import Input, Model
+from tensorflow.keras.models import load_model 
 from dataclasses import dataclass, asdict
 import utils
+
 @dataclass(frozen=True)
 class NNMeta:
     nn_type: str
@@ -21,6 +24,8 @@ class NNMeta:
         return cls(**data)
 
 class NeuralModel(object):
+    MODEL_FILE="model.keras"
+    META_FILE="meta.json"
     def __init__( self,
                   model,
                   nn_meta ):
@@ -31,8 +36,8 @@ class NeuralModel(object):
 
     def save(self,out_path):
         utils.make_dir(out_path)
-        self.nn_meta.save(f"{out_path}/meta")
-        self.model.save(f"{out_path}/model.keras")
+        self.nn_meta.save(f"{out_path}/{self.META_FILE}")
+        self.model.save(f"{out_path}/{self.MODEL_FILE}")
     
     def init_extractor(self,n_layer=0):   
         if(self.extractor is None or 
@@ -56,5 +61,6 @@ class NeuralModel(object):
 
     @classmethod
     def read(cls,in_path):
-        model = load_model(in_path)
-        return cls(model)
+        nn_meta=NNMeta.read(f"{in_path}/{cls.META_FILE}")
+        model = load_model(f"{in_path}/{cls.MODEL_FILE}")
+        return cls(model,nn_meta)
