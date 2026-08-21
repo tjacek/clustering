@@ -1,3 +1,4 @@
+import numpy as np
 import os,re
 import json
 from tensorflow.keras.layers import (
@@ -14,6 +15,7 @@ from tensorflow.keras.layers import (
 from tensorflow.keras import Input, Model
 from tensorflow.keras.models import load_model 
 from dataclasses import dataclass, asdict
+import base
 import utils
 
 @dataclass#(frozen=True)
@@ -61,6 +63,13 @@ class NeuralModel(object):
                               )
             self.n_layer=n_layer
         return self.extractor
+    
+    def extract(self, data, n_layer=1):
+        old_X = data.X if(isinstance(data, base.Dataset)) else data
+        X = np.expand_dims(old_X.astype("float32") / 255.0, -1)
+        extr=self.init_extractor(n_layer)
+        feat = extr.predict(X, batch_size=256, verbose=0)
+        return feat
     
     def names(self):
         return [ layer_i.name 
