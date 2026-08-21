@@ -11,6 +11,57 @@ class SeqGroup(list):
         if(actions is None):
             actions=[]
         super().__init__(actions)
+ 
+    @classmethod
+    def dtype(cls):
+        return Seq
+    
+    @classmethod
+    def read(cls,in_path):
+        dtype=cls.dtype()
+        seqs=[  dtype.read(path_i) 
+                    for path_i in utils.top_files(in_path)]
+        return cls(seqs)
+    
+    def save(self,out_path):
+        utils.make_dir(out_path)
+        for seq_i in self:
+            seq_i.save(f"{out_path}/{seq_i}")    
+    
+    def indexed_frames(self):
+        get_index=GetIndex()
+        def helper(frame):
+            i=get_index()
+            return (i,frame)
+        pairs=self.flatten(helper)
+        index,frames= zip(*pairs)
+        return index,frames
+   
+    def flatten(self,fun=None):
+        if(fun is None):
+            fun=identity
+        all_items=[]
+        for action_i in self:
+            all_items.extend(action_i.eval(fun))
+        return all_items
+
+    def indexed_map(self,fun):
+        get_index=GetIndex()
+        def helper(frame):
+            i=get_index()
+            return fun(i,frame)
+        return self.map(helper)
+    
+    def map(self,fun):
+        seqs=[seq_i.map(fun) 
+                   for seq_i in tqdm(self)]
+        return self.__class__(seqs)
+
+class _SeqGroup(list):
+    def __init__(self, actions=None):
+        if(actions is None):
+            actions=[]
+        super().__init__(actions)
     
     @classmethod
     def dtype(cls):
@@ -37,12 +88,7 @@ class SeqGroup(list):
                         for seq_i in self]
         return group_type(raw_values)
 
-    @classmethod
-    def read(cls,in_path):
-        dtype=cls.dtype()
-        seqs=[  dtype.read(path_i) 
-                    for path_i in utils.top_files(in_path)]
-        return cls(seqs)
+
 
     def save(self,out_path):
         utils.make_dir(out_path)
