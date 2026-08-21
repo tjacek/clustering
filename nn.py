@@ -9,7 +9,8 @@ def train( in_path,
            out_path,
            nn_type="ae",
            epochs=200):
-    actions=seq.ActionGroup.read(in_path)
+    action_group=seq.get_group("actions")
+    actions=action_group.read(in_path)
     train,test=actions.split()
     model=deep.make_model(nn_type)
     model.exp( train.as_dataset(),
@@ -26,7 +27,8 @@ def reconstruct( frame_path,
     nn_path=f"{dir_path}/ae"
     model_path=f"{nn_path}/model"
     model=nn.read(model_path)
-    actions=seq.ActionGroup.read(frame_path)
+    action_group=seq.get_group("actions")
+    actions=action_group.read(frame_path)
     def helper(old_frame):
         frame=model.predict(np.expand_dims(old_frame, 0))
         frame=frame.squeeze(axis=(0, 3))
@@ -55,12 +57,13 @@ def extract( frame_path,
 def eval( frame_path,
           dir_path,
           nn_type="ae"):
-    nn=get_nn(nn_type)
+    nn=deep.NN_TYPES[nn_type]
     nn_path=f"{dir_path}/{nn_type}"
     model_path=f"{nn_path}/model"
     model=nn.read(model_path)
     model.model.summary()
-    actions=seq.ActionGroup.read(frame_path)
+    action_group=seq.get_group("actions")
+    actions=action_group.read(frame_path)
     train,test=actions.split()
     score=model.eval(test.as_dataset())
     print(f"metric:{score:.4f}")
@@ -70,7 +73,7 @@ if __name__ == '__main__':
     parser.add_argument("--frame_path", type=str,default="MSR/scaled")
     parser.add_argument("--dir_path", type=str,default="MSR")
     parser.add_argument("--nn_type", type=str,default="ae")
-    parser.add_argument("--cmd", type=str,default="extract")
+    parser.add_argument("--cmd", type=str,default="eval")
     parser.add_argument("--layer", type=int,default=1)
     args=parser.parse_args()
     if(args.cmd=="train"):
