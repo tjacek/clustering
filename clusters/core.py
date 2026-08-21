@@ -1,5 +1,3 @@
-import labels
-
 class ClusterAsig(object):
     def __init__( self,
                 preclustr,

@@ -26,7 +26,7 @@ class FeatSeq(seq.core.Seq):
     @classmethod
     def read(cls,in_path):
         arr=np.load(in_path)
-        desc=seq.ActionDesc.from_path(in_path)
+        desc=seq.core.ActionDesc.from_path(in_path)
         return cls(arr,desc)
 
     def save(self,out_path):
@@ -105,7 +105,7 @@ class Labeling(seq.core.Seq):
     @classmethod
     def read(cls,in_path):
         arr=np.loadtxt(in_path).astype(int)
-        desc=seq.ActionDesc.from_path(in_path)
+        desc=seq.core.ActionDesc.from_path(in_path)
         return cls(arr,desc)
     
     def save(self,out_path):
@@ -142,13 +142,13 @@ class Preclustering:
         def helper(i,frames_i,desc):
             return (i,frames_i,desc.cat)
         tuple_seqs=feat_seqs.map_with_index(helper,
-                                            seq.SeqGroup)
+                                            seq.core.SeqGroup)
         tuples=tuple_seqs.flatten()
         indexes,frames,cats=zip(*tuples)
         return cls( np.array(frames),
                     np.array(indexes),
                     np.array(cats),
-                    tuple_seqs.eval(seq.Proj(0),
+                    tuple_seqs.eval(seq.core.Proj(0),
                                     LabelingGroup))
 
 class BasicMap(object):
@@ -218,19 +218,3 @@ def save_by_labels( label_path,
             group_i.mean_img(out_i)
         else:
             group_i.save(out_i)
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--action_path", type=str,default="MSR/scaled")
-    parser.add_argument("--nn_path", type=str,default="MSR/cnn")
-    parser.add_argument("--layer", type=int,default=0)
-    args=parser.parse_args()
-    model_path=f"{args.nn_path}/model.keras"
-    if(not os.path.exists(model_path)):
-        train(args.action_path,model_path)
-    seqs=FeatSeqGroup.from_actions(args.action_path,
-                                   model_path,
-                                   n_layer=args.layer)
-    layer_path=f"{args.nn_path}/layer_{args.layer}"
-    utils.make_dir(layer_path)
-    seqs.save(f"{layer_path}")

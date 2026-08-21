@@ -1,9 +1,10 @@
 import numpy as np
 from tqdm import tqdm
 import argparse
-#from clusters import get_cluster_alg
 import clusters
-import labels,plot,utils
+import seq
+import plot
+import utils
 
 class LayerDir(object):
     def __init__(self,path):
@@ -19,8 +20,8 @@ class LayerDir(object):
     @property
     def seqs(self):
         if(self._seqs is None):
-            read=labels.FeatSeqGroup.read
-            self._seqs=read(f"{self.path}/seqs")
+            label_group=seq.get_group("feat")
+            self._seqs=label_group.read(f"{self.path}/seqs")
         return self._seqs
     
     @property
@@ -61,9 +62,10 @@ def eval_clust( layer_dir,
                 alg_type="kmeans",
                 score_type="adj_mutual"):
     score_fun=clusters.get_score(score_type)
+    label_group=seq.get_group("labels")
     scores,sizes=[],[]
     for path_i in tqdm(layer_dir.labelings(alg_type)):
-        labeling_i=labels.LabelingGroup.read(path_i)
+        labeling_i=label_group.read(path_i)
         labels_i=labeling_i.flatten()
         score_i=score_fun( layer_dir,
                            labels_i)
@@ -79,11 +81,6 @@ def eval_clust( layer_dir,
     print(f"Best Clusters:{sizes[best]}")
     print(f"Score:{scores[best]:.4f}")
 
-#    if(verbose):
-#        plot.show_heatmap( cls_labels.tf_idf(),
-#                           title=clust_name)
-#    cls_labels.as_symbols("tf-idf",verbose=True)
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--nn_path", type=str,default="MSR/ae")
@@ -92,7 +89,8 @@ if __name__ == '__main__':
     parser.add_argument("--layer", type=int,default=1)
     args=parser.parse_args()
     layer_path=f"{args.nn_path}/layer_{args.layer}"
-    seqs= labels.FeatSeqGroup.read(f"{layer_path}/seqs")
+    feat_group=seq.get_group("feat")
+    seqs=feat_group.read(f"{layer_path}/seqs")
     if(args.cmd=="make"):
         make_clust( seqs,
                 layer_path,
