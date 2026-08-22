@@ -8,7 +8,8 @@ from collections import Counter
 #from nltk import PCFG
 import string
 import argparse
-import labels,seq,utils
+import seq
+import utils
 
 class GrammarEnsemble(dict):
     def pred_prob(self,sentence):
@@ -133,15 +134,22 @@ class GrammarAdapter(object):
         return "\n".join(rules)            
 
 def build_grammars(cls_path):
-    labeling= labels.LabelingGroup.read(cls_path)
+    label_group=seq.get_group("labels")
+    labeling= label_group.read(cls_path)
     labeling=compress(labeling)
-    dict_map=labels.DictMap.tf_map(labeling)
-    train,test=labeling.split()
+    symbols=labeling.as_symbols()
+    train,test=symbols.split()
     grammar_ens=GrammarEnsemble()
-    for cat_i,group_i in train.by_cat().items():
+    for cat_i,group_i in symbols.by_cat().items():
         print(f"Classs:{cat_i}")
-        symb_dict=group_i.as_symbols( symb_map=dict_map,
-                                      verbose=False)
+    raise Exception(len(symbols))
+#    dict_map=labels.DictMap.tf_map(labeling)
+#    train,test=labeling.split()
+#    grammar_ens=GrammarEnsemble()
+    for cat_i,group_i in train.by_cat().items():
+#        print(f"Classs:{cat_i}")
+#        symb_dict=group_i.as_symbols( symb_map=dict_map,
+#                                      verbose=False)
         grammar_i= GrammarAdapter.from_symb(symb_dict)
 #        raise Exception(dir(grammar_i.grammar))
         str_grammar_i=grammar_i.as_string()

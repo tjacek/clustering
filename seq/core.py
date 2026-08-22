@@ -56,6 +56,33 @@ class SeqGroup(list):
         seqs=[seq_i.map(fun) 
                    for seq_i in tqdm(self)]
         return self.__class__(seqs)
+    
+    def map_seq(self,fun,group_type=None):
+        if(group_type is None):
+            group_type=self.__class__
+        dtype=group_type.dtype()
+        new_seqs=[ dtype( fun(seq_i),
+                          seq_i.desc)
+                     for seq_i in self]
+        return group_type(new_seqs)
+    
+    def split(self,fun=None):
+        if(fun is None):
+            fun= lambda desc: (desc.person % 2)==1
+        train,test=self.__class__([]), self.__class__([])
+        for action_i in self:
+            if(fun(action_i.desc)):
+                train.append(action_i)
+            else:
+                test.append(action_i)
+        return train,test
+    
+    def by_cat(self):
+        cat_dict = defaultdict(lambda: self.__class__())
+        for seq_i in self:
+            cat_i=seq_i.desc.cat
+            cat_dict[cat_i].append(seq_i)
+        return cat_dict
 
 class _SeqGroup(list):
     def __init__(self, actions=None):
@@ -72,14 +99,7 @@ class _SeqGroup(list):
                    for seq_i in tqdm(self)]
         return self.__class__(seqs)
     
-    def map_seq(self,fun,group_type=None):
-        if(group_type is None):
-            group_type=self.__class__
-        dtype=group_type.dtype()
-        new_seqs=[ dtype( fun(seq_i),
-                          seq_i.desc)
-                     for seq_i in self]
-        return group_type(new_seqs)
+
 
     def eval(self,fun,group_type):
         dtype=group_type.dtype()
@@ -109,16 +129,7 @@ class _SeqGroup(list):
             all_items.extend(fun(seq_i))
         return all_items
 
-    def split(self,fun=None):
-        if(fun is None):
-            fun= lambda desc: (desc.person % 2)==1
-        train,test=self.__class__([]), self.__class__([])
-        for action_i in self:
-            if(fun(action_i.desc)):
-                train.append(action_i)
-            else:
-                test.append(action_i)
-        return train,test
+
     
     def as_dataset(self):
         X,y=[],[]
@@ -143,12 +154,7 @@ class _SeqGroup(list):
             seqs.append(seq_i)
         return seqs
 
-    def by_cat(self):
-        cat_dict = defaultdict(lambda: self.__class__())
-        for seq_i in self:
-            cat_i=seq_i.desc.cat
-            cat_dict[cat_i].append(seq_i)
-        return cat_dict
+
 
     def map_with_index(self,fun,dtype=None):
         get_index=GetIndex()

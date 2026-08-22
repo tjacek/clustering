@@ -80,17 +80,32 @@ class LabelingGroup(seq.core.SeqGroup):
         return np.array(list(set(labels)))
 
     def as_symbols( self,
-                    symb_map="tf-idf",
-                    verbose=True):
+                    symb_map="tf-idf"):
+#                    verbose=True):
         if(symb_map is None):
             symb_map=BasicMap()
         if(symb_map=="tf-idf"):
             symb_map=DictMap.tf_map(self)
-        symb_dict={ str(seq_i): seq_i.as_symbols(symb_map) 
-                    for seq_i in self}
-        if(verbose):
-            utils.print_dict(symb_dict)
-        return SymbDict(symb_dict)
+        symb_seq=[]
+        for seq_i in self:
+            desc_i=seq_i.desc
+            values_i=seq_i.as_symbols(symb_map)
+            symb_i=SymbolSeq(values_i,desc_i)
+            symb_seq.append(SymbolSeq(symb_i,desc_i))
+        return SymbGroup(symb_seq)
+
+#    def as_symbols( self,
+#                    symb_map="tf-idf",
+#                    verbose=True):
+#        if(symb_map is None):
+#            symb_map=BasicMap()
+#        if(symb_map=="tf-idf"):
+#            symb_map=DictMap.tf_map(self)
+#        symb_dict={ str(seq_i): seq_i.as_symbols(symb_map) 
+#                    for seq_i in self}
+#        if(verbose):
+#            utils.print_dict(symb_dict)
+#        return SymbDict(symb_dict)
 
     def tf_idf(self):
         full_hist = self.hist()
@@ -127,6 +142,17 @@ class Labeling(seq.core.Seq):
     
     def hist(self,n_clusters=None):
         return hist_fun(self,n_clusters)
+
+
+class SymbGroup(seq.core.SeqGroup):
+    @classmethod
+    def dtype(cls):
+        return Labeling
+
+class SymbolSeq(seq.core.Seq):
+    def bigrams(self):
+        n=len(self)-1
+        return [ (self[i],self[i+1]) for i in range(n)] 
 
 def hist_fun(arr,n_clusters):
     hist=np.zeros((n_clusters,))
