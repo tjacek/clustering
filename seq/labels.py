@@ -2,7 +2,6 @@ import numpy as np
 import string
 from collections import defaultdict
 from dataclasses import dataclass
-#import argparse,os
 import seq.core
 import utils
 
@@ -34,6 +33,11 @@ class FeatSeq(seq.core.Seq):
     
     def as_numpy(self):
         return np.array(self,dtype=float)
+
+    def distance(self):
+        n=len(self)-1
+        return [ np.linalg.norm(self[i+1]-self[i],ord=2) 
+                  for i in range(n)]
 
 class LabelingGroup(seq.core.SeqGroup):
     @classmethod

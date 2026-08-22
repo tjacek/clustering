@@ -1,6 +1,9 @@
+import numpy as np
 from sklearn.manifold import SpectralEmbedding
 import argparse
 import seq
+import plot
+import utils
 
 def reduce_dim( in_path,
                 out_path,
@@ -16,14 +19,32 @@ def reduce_dim( in_path,
         return reduced_frames[i]
     reduced_seqs= feat_seqs.indexed_map(helper)
     reduced_seqs.save(out_path)
-    print(len(reduced_seqs))
+
+def make_plot(in_path,out_path):
+    feat_seqs=seq.get_group("feat").read(in_path)
+    utils.make_dir(out_path)
+    for seq_i in feat_seqs:
+        dist_i=seq_i.distance()
+        cum_i=np.cumsum(dist_i)
+        plot.scatter( x=None, 
+                      y=cum_i, 
+                      title=str(seq_i),
+                      xlabel="t",
+                      ylabel="distance",
+                      out_path=out_path)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--in_path", type=str,default="MSR/ae/layer_1/seqs")
-    parser.add_argument("--out_path", type=str,default="MSR/ae/layer_1/spectral_seq")
+    parser.add_argument("--out_path", type=str,default="MSR/ae/layer_1/seqs")
     parser.add_argument("--n_clusters", type=int,default=46)
+    parser.add_argument("--plot_path", type=str,default="plots")
+    parser.add_argument("--cmd", type=str,default="plot")
     args=parser.parse_args()
-    reduce_dim( args.in_path,
-                args.out_path,
-                args.n_clusters)
+    if(args.cmd=="compute"):
+        reduce_dim( args.in_path,
+                    args.out_path,
+                    args.n_clusters)
+    if(args.cmd=="plot"):
+        make_plot(args.out_path,
+                  args.plot_path)
