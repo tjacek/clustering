@@ -84,6 +84,10 @@ class SeqGroup(list):
             cat_dict[cat_i].append(seq_i)
         return cat_dict
 
+    def as_dict(self):
+        return { seq_i.desc.name:seq_i
+                    for seq_i in self}
+
 class _SeqGroup(list):
     def __init__(self, actions=None):
         if(actions is None):
@@ -140,10 +144,6 @@ class _SeqGroup(list):
         return base.Dataset(X=np.array(X),
                             y=np.array(y))
     
-    def as_dict(self):
-        return { seq_i.desc.name:seq_i
-                    for seq_i in self}
-
     @classmethod
     def _from_actions( cls, action_path, model, fun):
         actions = ActionGroup.read(action_path)

@@ -9,6 +9,7 @@ from collections import Counter
 import string
 import argparse
 import seq
+import seq.core
 import utils
 
 class GrammarEnsemble(dict):
@@ -32,7 +33,6 @@ class GrammarEnsemble(dict):
 
     def lack_terminals(self,key_i,sentence):
         grammar_i=self[key_i]
-        raise Exception(dir(grammar_i))
         covered = set(grammar_i._lexical_index.keys()) 
         for term_j in sentence:
             if(not term_j in covered):
@@ -66,7 +66,6 @@ def inside_alg(grammar_i,sentence):
     parser_i=ViterbiParser(grammar_i)            
     total_prob = 0.0
     for tree in parser_i.parse(sentence):
-#        print(tree, "->", tree.prob())
         total_prob += tree.prob()
     return total_prob
 
@@ -91,9 +90,9 @@ class GrammarAdapter(object):
         return self._letter_dict
 
     @classmethod
-    def from_symb(cls,symb_dict):
+    def from_symb(cls,symb_group):
         parser_i = Parser()
-        for symb_j in symb_dict.values():
+        for symb_j in symb_group:#dict.values():
             parser_i.feed(symb_j)
             parser_i.feed([Mark()])
         return cls(Grammar(parser_i.tree))
@@ -142,30 +141,19 @@ def build_grammars(cls_path):
     grammar_ens=GrammarEnsemble()
     for cat_i,group_i in symbols.by_cat().items():
         print(f"Classs:{cat_i}")
-    raise Exception(len(symbols))
-#    dict_map=labels.DictMap.tf_map(labeling)
-#    train,test=labeling.split()
-#    grammar_ens=GrammarEnsemble()
-    for cat_i,group_i in train.by_cat().items():
-#        print(f"Classs:{cat_i}")
-#        symb_dict=group_i.as_symbols( symb_map=dict_map,
-#                                      verbose=False)
-        grammar_i= GrammarAdapter.from_symb(symb_dict)
-#        raise Exception(dir(grammar_i.grammar))
+        grammar_i= GrammarAdapter.from_symb(group_i)
         str_grammar_i=grammar_i.as_string()
         prob_gram_i=nltk.PCFG.fromstring(str_grammar_i)
         grammar_ens[cat_i]=prob_gram_i
-        grammar_ens.count( cat_i,
-                           list(symb_dict.values()))
-    symb_test=train.as_symbols(symb_map=dict_map,
-                               verbose=False)
-    hard_predic(grammar_ens,symb_test)
+        grammar_ens.count( cat_i,group_i)
+    hard_predic(grammar_ens,test)
 
 def hard_predic(grammar_ens,symb_test):
     error=[]
-    for name_i,symb_i in symb_test.items():
+    symb_dict=symb_test.as_dict()
+    for name_i,symb_i in symb_dict.items():
         pred_cat=grammar_ens.pred(symb_i)
-        desc_i=seq.ActionDesc.from_name(name_i)
+        desc_i=seq.core.ActionDesc.from_name(name_i)
         error.append(int(desc_i.cat==pred_cat))
     print(np.mean(error))
 
