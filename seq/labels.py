@@ -147,7 +147,12 @@ class Labeling(seq.core.Seq):
 class SymbGroup(seq.core.SeqGroup):
     @classmethod
     def dtype(cls):
-        return Labeling
+        return SymbolSeq
+
+    def print(self):
+        for seq_i in self:
+            print(seq_i.desc)
+            print(list(seq_i))
 
 class SymbolSeq(seq.core.Seq):
     def bigrams(self):

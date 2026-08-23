@@ -137,6 +137,7 @@ def build_grammars(cls_path):
     labeling= label_group.read(cls_path)
     labeling=compress(labeling)
     symbols=labeling.as_symbols()
+    symbols.print()
     train,test=symbols.split()
     grammar_ens=GrammarEnsemble()
     for cat_i,group_i in symbols.by_cat().items():
@@ -169,12 +170,7 @@ def soft_predic(grammar_ens,symb_test):
         total_error+=err_i
     print(total_error/len(symb_test))
 
-def show_symbols(cls_path):
-    print(cls_path)
-    labeling= labels.LabelingGroup.read(cls_path)
-    labeling=compress(labeling)
-    symb_dict=labeling.as_symbols("tf-idf",False)
-    utils.print_dict(symb_dict)
+
 
 def compress(labeling,max_coe=4):
     def helper(seq_i):
