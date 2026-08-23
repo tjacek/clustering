@@ -157,7 +157,11 @@ class SymbGroup(seq.core.SeqGroup):
 class SymbolSeq(seq.core.Seq):
     def bigrams(self):
         n=len(self)-1
-        return [ (self[i],self[i+1]) for i in range(n)] 
+        return [ (self[i],self[i+1]) for i in range(n)]
+
+    def ngrams(self,k):
+        n=len(self)-k
+        return [ (self[i:i+k]) for i in range(n)]
 
 def hist_fun(arr,n_clusters):
     hist=np.zeros((n_clusters,))
