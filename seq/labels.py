@@ -94,19 +94,6 @@ class LabelingGroup(seq.core.SeqGroup):
             symb_seq.append(SymbolSeq(symb_i,desc_i))
         return SymbGroup(symb_seq)
 
-#    def as_symbols( self,
-#                    symb_map="tf-idf",
-#                    verbose=True):
-#        if(symb_map is None):
-#            symb_map=BasicMap()
-#        if(symb_map=="tf-idf"):
-#            symb_map=DictMap.tf_map(self)
-#        symb_dict={ str(seq_i): seq_i.as_symbols(symb_map) 
-#                    for seq_i in self}
-#        if(verbose):
-#            utils.print_dict(symb_dict)
-#        return SymbDict(symb_dict)
-
     def tf_idf(self):
         full_hist = self.hist()
         n_clusters=full_hist.shape[0]
@@ -145,6 +132,7 @@ class Labeling(seq.core.Seq):
 
 
 class SymbGroup(seq.core.SeqGroup):
+    SEP="|"
     @classmethod
     def dtype(cls):
         return SymbolSeq
@@ -153,6 +141,14 @@ class SymbGroup(seq.core.SeqGroup):
         for seq_i in self:
             print(seq_i.desc)
             print(list(seq_i))
+
+    def ngram_dict(self,k):
+        ngram_dict=defaultdict(lambda :0)
+        for seq_i in self:
+            for ngram_j in seq_i.ngrams(k):
+                ngram_id=self.SEP.join(ngram_j)
+                ngram_dict[ngram_id]+=1
+        return ngram_dict
 
 class SymbolSeq(seq.core.Seq):
     def bigrams(self):

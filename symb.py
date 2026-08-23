@@ -6,9 +6,11 @@ def markov(cls_path):
     label_group=seq.get_group("labels")
     labeling= label_group.read(cls_path)
     symbols=labeling.as_symbols()
-    for seq_i in symbols:
-        print(list(seq_i))
-        print(seq_i.ngrams(4))
+#    print(symbols.ngram_dict(3))
+    for cat_i,group_i in symbols.by_cat().items():
+    	ngram_i=group_i.ngram_dict(3)
+    	print(cat_i)
+    	print(ngram_i)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
