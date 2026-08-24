@@ -150,23 +150,6 @@ class SymbGroup(seq.core.SeqGroup):
                 ngram_dict[ngram_id]+=1
         return ngram_dict
 
-    def dist(self,k):
-        fun=lambda :defaultdict(lambda :0)
-        ngram_dict=defaultdict(fun)
-        for seq_i in self:
-            ngrams_i=seq_i.ngrams(k+1)
-            for ngram_j in ngrams_i:
-                start_j=ngram_j[:-1]
-                start_j=self.SEP.join(start_j)
-                end_j=ngram_j[-1]
-                ngram_dict[start_j][end_j]+=1
-        for state_i,dict_i in ngram_dict.items():
-            print(state_i)
-            norm_const=sum(list(dict_i.values()))
-            norm_dict_i={ ngram_j:(value_j/norm_const) 
-                          for ngram_j,value_j in dict_i.items()}
-            print(norm_dict_i)
-
 class SymbolSeq(seq.core.Seq):
     def bigrams(self):
         n=len(self)-1

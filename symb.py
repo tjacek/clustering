@@ -1,6 +1,7 @@
 import grammar.core
 import seq
 import argparse
+from grammar.markov import MarkovChain
 
 def markov(cls_path):
     label_group=seq.get_group("labels")
@@ -8,7 +9,9 @@ def markov(cls_path):
     symbols=labeling.as_symbols()
 
     for cat_i,group_i in symbols.by_cat().items():
-    	group_i.dist(1)
+        dist_i=MarkovChain.make(group_i)
+        print(dist_i.states())
+#    	group_i.dist(1)
  #   	ngram_i=group_i.ngram_dict(2)
  #   	print(cat_i)
  #   	print(ngram_i)
