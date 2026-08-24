@@ -3,31 +3,38 @@ from collections import defaultdict
 import utils
 
 class MarkovChain(object):
-    def __init__(self,dist,k=1):
+    def __init__( self,
+                  dist,
+                  order=1):
         self.dist=dist
-        self.k=k
-
+        self.order=order
+        self._states=None
+        self._terms=None
+    
+    @property
     def states(self):
-        states = list(self.dist.keys())
-        states.sort()
-        return states
-
-    def terminals(self):
-        terms=[]
-        for dict_i in self.dist.values():
-            terms+= list(dict_i.keys())
-        terms=list(set(terms))
-        terms=sorted(terms,key=utils.natural_keys)        
-        return terms
+        if(self._terms is None):
+            states = list(self.dist.keys())
+            states.sort()
+            self._states=utils.sort(states)
+        return self._states
+    
+    @property
+    def terms(self):
+        if(self._terms is None):
+            terms=[]
+            for dict_i in self.dist.values():
+                terms+= list(dict_i.keys())
+            terms=list(set(terms))
+            self._terms=utils.sort(terms)      
+        return self._terms
 
     def as_matrix(self):
-        states=self.states()
-        terms=self.terminals()
         matrix=[]
-        for state_i in states:
+        for state_i in self.states:
             dict_i=self.dist[state_i]
             row_i=[]
-            for term_i in terms:
+            for term_i in self.terms:
                 if(term_i in dict_i):
                 	row_i.append(dict_i[term_i])
                 else:

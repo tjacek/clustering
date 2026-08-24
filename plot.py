@@ -21,10 +21,16 @@ def scatter( x,
         plt.close()
     else:
         plt.show()
-def show_heatmap(matrix,title):
+
+def show_heatmap( matrix,
+                  title,
+                  x_axis='auto',
+                  y_axis='auto'):
     sn.heatmap( matrix,
                 cmap="YlGnBu",
-                annot=False)#,
+                annot=False,
+                xticklabels=x_axis,
+                yticklabels=y_axis)
     plt.title(title)
     plt.tight_layout()
     plt.show()

@@ -2,6 +2,7 @@ import grammar.core
 import seq
 import argparse
 from grammar.markov import MarkovChain
+import plot
 
 def markov(cls_path):
     label_group=seq.get_group("labels")
@@ -10,11 +11,11 @@ def markov(cls_path):
 
     for cat_i,group_i in symbols.by_cat().items():
         dist_i=MarkovChain.make(group_i)
-        print(dist_i.as_matrix())
-#    	group_i.dist(1)
- #   	ngram_i=group_i.ngram_dict(2)
- #   	print(cat_i)
- #   	print(ngram_i)
+        arr=dist_i.as_matrix()
+        plot.show_heatmap(arr,
+                          title=cat_i,
+                          x_axis=dist_i.states,
+                          y_axis=dist_i.terms)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

@@ -12,6 +12,9 @@ def natural_keys(text):
 def atoi(text):
     return int(text) if text.isdigit() else text
 
+def sort(items):
+    return sorted(items,key=natural_keys)
+
 def iter_files(path):
     if(type(path)==str):
          path=[path]
@@ -41,6 +44,8 @@ def print_dict(d):
         print(value_i)
 
 def find_paths(in_path,regex=r'^layer_\d+'):
-    return  [path_i 
+    paths= [path_i 
                 for id_i,path_i in iter_files(in_path)
                     if( re.match(regex,id_i))]
+    paths=sorted(paths,key=natural_keys)
+    return paths
