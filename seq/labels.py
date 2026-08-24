@@ -149,6 +149,12 @@ class SymbGroup(seq.core.SeqGroup):
                 ngram_id=self.SEP.join(ngram_j)
                 ngram_dict[ngram_id]+=1
         return ngram_dict
+    
+    def unique(self):
+        labels=[]
+        for seq_i in self:
+            labels+=seq_i.unique()
+        return np.array(list(set(labels)))
 
 class SymbolSeq(seq.core.Seq):
     def bigrams(self):
@@ -158,6 +164,9 @@ class SymbolSeq(seq.core.Seq):
     def ngrams(self,k):
         n=len(self)-k
         return [ (self[i:i+k]) for i in range(n)]
+    
+    def unique(self):
+        return list(set(self))
 
 def hist_fun(arr,n_clusters):
     hist=np.zeros((n_clusters,))
