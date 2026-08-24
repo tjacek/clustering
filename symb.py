@@ -10,7 +10,7 @@ def markov(cls_path):
 
     for cat_i,group_i in symbols.by_cat().items():
         dist_i=MarkovChain.make(group_i)
-        print(dist_i.states())
+        print(dist_i.as_matrix())
 #    	group_i.dist(1)
  #   	ngram_i=group_i.ngram_dict(2)
  #   	print(cat_i)
