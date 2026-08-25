@@ -3,6 +3,7 @@ from collections import defaultdict
 import utils
 
 class MarkovChain(object):
+    EPS=0.01
     def __init__( self,
                   dist,
                   order=1):
@@ -29,7 +30,8 @@ class MarkovChain(object):
             self._terms=utils.sort(terms)      
         return self._terms
 
-    def as_matrix(self):
+    def as_matrix(self,irred=False):
+        default= self.EPS if(irred) else 0
         matrix=[]
         for state_i in self.states:
             dict_i=self.dist[state_i]
@@ -38,9 +40,20 @@ class MarkovChain(object):
                 if(term_i in dict_i):
                 	row_i.append(dict_i[term_i])
                 else:
-                	row_i.append(0)
+                	row_i.append(default)
+            row_i=np.array(row_i)
+            if(irred):
+                row_i/=np.sum(row_i)
             matrix.append(row_i)
         return np.array(matrix)
+    
+    def stationary_dist(self):
+        trans=self.as_matrix(irred=True)
+        eig_values,eig_vectors=np.linalg.eig(trans.T)
+        ones_index=np.argmin(np.abs(eig_values - 1.0))
+        raw_vector=eig_vectors[:, ones_index].real
+        stationary_dist= raw_vector / np.sum(raw_vector)
+        return stationary_dist
 
     @classmethod
     def make(cls,symbols,k=1):
