@@ -12,48 +12,48 @@ def markov(cls_path):
     symbols=labeling.as_symbols()
     for cat_i,group_i in symbols.by_cat().items():
         dist_i=MarkovChain.make(group_i)
-        print(cat_i)
-        print(dist_i.states)
-        print(dist_i.stationary_dist())
         arr=dist_i.as_matrix()
         plot.show_heatmap(arr,
                           title=cat_i,
                           x_axis=dist_i.states,
                           y_axis=dist_i.terms)
 
-def diver(cls_path):
+def diver(cls_path,verbose=True):
+    def helper(group,states):
+        markov=MarkovChain.make(group)
+        dist= markov.stationary_dist( states=states,
+                                      terms=states)
+        return dist
+    cats,entr=[],[]
+    for i,(train_i,test_i) in diver_iter(helper,cls_path):
+        if(verbose):
+            print(i)
+            print(train_i)
+            print(test_i)
+        entr_i=entropy( train_i,
+                        test_i)
+        cats.append(i)
+        entr.append(entr_i)
+    entr=np.array(entr)
+    indices=np.argsort(entr)
+    print(entr)
+    print(indices)
+
+def diver_iter(fun,cls_path):
     label_group=seq.get_group("labels")
     labeling= label_group.read(cls_path)
     symbols=labeling.as_symbols()
     for cat_i,group_i in symbols.by_cat().items():
+        states=group_i.unique()
         train_i,test_i=group_i.split()
-        train_dist_i=train_i.ngram_dict(1)
-        test_dist_i=test_i.ngram_dict(1)
-        terms=group_i.unique()
-        train_arr=to_array(terms,train_dist_i)
-        test_arr=to_array(terms,test_dist_i)
-        print(cat_i)
-        eps=np.ones(test_arr.shape)/(10**6)
-        print(entropy(train_arr+eps,
-                      test_arr+eps))
-        print(train_arr)
-        print(test_arr)
-
-def to_array(terms,dist):
-    arr=[]
-    for term_i in terms:
-        if(term_i in dist):
-            arr.append(dist[term_i])
-        else:
-            arr.append(0)
-    arr=np.array(arr,dtype=float)
-    arr/=np.sum(arr)
-    return arr
+        train_value=fun(train_i,states)
+        test_value=fun(test_i,states)
+        yield cat_i,(train_value,test_value)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--cls_path", type=str,default="MSR/ae/layer_1/spectral_36")
-    parser.add_argument("--cmd", type=str,default="markov")
+    parser.add_argument("--cmd", type=str,default="diver")
     args=parser.parse_args()
     if(args.cmd=="build"):
         grammar.core.build_grammars(args.cls_path)
