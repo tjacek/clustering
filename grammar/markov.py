@@ -12,6 +12,8 @@ class MarkovChain(object):
         self._states=None
         self._terms=None
     
+    def __call__(self,x,y):
+        return self.dist[y][x]
 
     def __getitem__(self,key):
         if(not (key in self.dist)):
@@ -32,7 +34,7 @@ class MarkovChain(object):
         if(self._terms is None):
             terms=[]
             for dict_i in self.dist.values():
-                terms+= list(dict_i.keys())
+                terms+= dict_i.terms()#list(dict_i.keys())
             terms=list(set(terms))
             self._terms=utils.sort(terms)      
         return self._terms
@@ -41,6 +43,9 @@ class MarkovChain(object):
                    states=None,
                    terms=None,
                    irred=False):
+        if(self.order!=1):
+            msg="Tras matrix only suported for order=1"
+            raise Exception(msg)
         if(states is None):
             states=self.states
         if(terms is None):
@@ -87,6 +92,22 @@ class MarkovChain(object):
         ngram_dict={ state_i:dist_i.norm()
                 for state_i,dist_i in ngram_dict.items()}
         return cls(ngram_dict,order=k)
+    
+    def kl_divergence(self,Q,states):
+        pi=self.stationary_dist(states,states)
+        p=self.as_matrix(states=states,
+                         terms=states,
+                         irred=True)
+        q=Q.as_matrix(states=states,
+                         terms=states,
+                         irred=True)
+        h=0
+        for x,_ in enumerate(states):
+            row_x=0
+            for y,_ in enumerate(states):
+                row_x+=p[y][x]*np.log(p[y][x]/q[y][x])
+            h+=pi[x] * row_x
+        return h 
 
 class Dist1D(object):
     DEFAULT=0
@@ -96,6 +117,9 @@ class Dist1D(object):
             dist_dict={}
         self.dist_dict=dist_dict
     
+    def terms(self):
+        return list(self.dist_dict.keys())
+
     def add(self,item):
         if(item in self.dist_dict):
             self.dist_dict[item]+=1
