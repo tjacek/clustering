@@ -94,13 +94,21 @@ class SeqGroup(list):
         for seq_i in self:
             labeling_i=label_dict[seq_i.desc.name]
             for label_j,frame_j in zip(labeling_i,seq_i):
-                frame_dict[label_j].append(frame_j)
-        dtype=self.dtype()
-        desc=ActionDesc.from_name
-        frame_dict={ i:dtype(frames=frames_i,
-                             desc=desc(f"0_0_0"))
-                        for i,frames_i in frame_dict.items()}
-        return frame_dict
+                pair_i=(frame_j,seq_i.desc.cat)
+                frame_dict[label_j].append(pair_i)
+        data_dict={}
+        for i,raw_i in frame_dict.items():
+            frames_i,y_i= list(zip(*raw_i))
+            frames_i=np.array(frames_i)
+            data_i=base.Dataset(frames_i,y_i)
+            data_dict[i]=data_i
+        return data_dict
+#        dtype=self.dtype()
+#        desc=ActionDesc.from_name
+#        frame_dict={ i:dtype(frames=frames_i,
+#                             desc=desc(f"0_0_0"))
+#                        for i,frames_i in frame_dict.items()}
+#        return frame_dict
 
 class _SeqGroup(list):
     def __init__(self, actions=None):
