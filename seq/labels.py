@@ -55,21 +55,6 @@ class LabelingGroup(seq.core.SeqGroup):
             n_clusters=np.amax(raw)+1
         return hist_fun(raw,n_clusters)
 
-    def by_labels(self, seq_group):
-        frame_dict=defaultdict(lambda :[])
-        label_dict=self.as_dict()
-        for seq_i in seq_group:
-            labeling_i=label_dict[seq_i.desc.name]
-            for label_j,frame_j in zip(labeling_i,seq_i):
-                frame_dict[int(label_j)].append(frame_j)
-        
-        dtype=seq_group.dtype()
-        desc=seq.ActionDesc.from_name
-        frame_dict={ i:dtype(frames=frames_i,
-                             desc=desc(f"{i+1}_0_0"))
-                        for i,frames_i in frame_dict.items()}
-        return frame_dict
-
     def n_clust(self):
         return np.amax(self.unique())+1
     
@@ -81,7 +66,6 @@ class LabelingGroup(seq.core.SeqGroup):
 
     def as_symbols( self,
                     symb_map="tf-idf"):
-#                    verbose=True):
         if(symb_map is None):
             symb_map=BasicMap()
         if(symb_map=="tf-idf"):

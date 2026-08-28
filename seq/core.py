@@ -4,7 +4,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 import argparse
 from tqdm import tqdm
-import base,utils#,cnn,utils
+import base,utils
 
 class SeqGroup(list):
     def __init__(self, actions=None):
@@ -87,6 +87,20 @@ class SeqGroup(list):
     def as_dict(self):
         return { seq_i.desc.name:seq_i
                     for seq_i in self}
+
+    def by_labels(self, label_group):
+        frame_dict=defaultdict(lambda :[])
+        label_dict=label_group.as_dict()
+        for seq_i in self:
+            labeling_i=label_dict[seq_i.desc.name]
+            for label_j,frame_j in zip(labeling_i,seq_i):
+                frame_dict[label_j].append(frame_j)
+        dtype=self.dtype()
+        desc=ActionDesc.from_name
+        frame_dict={ i:dtype(frames=frames_i,
+                             desc=desc(f"0_0_0"))
+                        for i,frames_i in frame_dict.items()}
+        return frame_dict
 
 class _SeqGroup(list):
     def __init__(self, actions=None):
