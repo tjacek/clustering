@@ -3,7 +3,6 @@ from sklearn import manifold
 import argparse
 import seq
 import plot
-import matplotlib.pyplot as plt
 
 def cluster_stats( label_path,
 	               seq_path):
@@ -23,15 +22,10 @@ def cluster_stats( label_path,
                                random_state=0,
                               )
         X_tsne = t_sne.fit_transform(data_i.X)
-        for i,y_i in enumerate(data_i.y):
-            plt.text(X_tsne[i][0],
-                     X_tsne[i][1],
-                     y_i)
-        plt.show()
-#            print(X_tsne[i][0])
-#        plot.scatter(x=X_tsne[:,0],
-#                     y=X_tsne[:,1],
-#                     title=label_i)
+        plot.text_plot(x=X_tsne[:,0],
+                       y=X_tsne[:,1],
+                       label=data_i.y,
+                       title=label_i)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

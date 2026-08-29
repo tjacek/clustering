@@ -1,3 +1,4 @@
+import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sn
 
@@ -21,6 +22,21 @@ def scatter( x,
         plt.close()
     else:
         plt.show()
+
+def text_plot( x,
+               y,
+               label,
+               title):
+    for i,label_i in enumerate(label):
+        plt.text(x[i],y[i],label_i)
+    plt.xlim(compute_lim(x))
+    plt.ylim(compute_lim(y)) 
+    plt.title(title)
+    plt.show()
+
+def compute_lim(x):
+    delta=0.25*np.min(np.abs(x))
+    return [min(x)-delta,max(x)+delta]
 
 def show_heatmap( matrix,
                   title,
