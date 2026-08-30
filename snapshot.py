@@ -14,7 +14,6 @@ def cluster_stats( label_path,
     by_labels=seqs.by_labels(symbols)
     for label_i,data_i in by_labels.items():
         print(f"Cat:{label_i}")
-#        print(len(group_i))
         t_sne = manifold.TSNE( n_components=2,
                                perplexity=min(30,len(data_i)-1),
                                init="random",
@@ -22,7 +21,7 @@ def cluster_stats( label_path,
                                random_state=0,
                               )
         X_tsne = t_sne.fit_transform(data_i.X)
-        plot.text_plot(x=X_tsne[:,0],
+        plot.adno_plot(x=X_tsne[:,0],
                        y=X_tsne[:,1],
                        label=data_i.y,
                        title=label_i)
