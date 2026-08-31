@@ -1,6 +1,7 @@
 import numpy as np
 from sklearn import manifold
 from sklearn.decomposition import PCA
+import umap
 import argparse
 import seq
 import plot
@@ -35,15 +36,20 @@ def cluster_stats( label_path,
     print(by_labels.n_frames())
     for label_i,data_i in by_labels:
         print(f"Cat:{label_i}")
-        X_tsne=pca_reduct(data_i)
+        X_tsne=umap_reduct(data_i)
         plot.adno_plot(x=X_tsne[:,0],
                        y=X_tsne[:,1],
                        label=data_i.y,
                        title=label_i)
 
 def pca_reduct(data_i):
-    pca = PCA(n_components=2)
-    return pca.fit_transform(data_i.X)
+    reducer = PCA(n_components=2)
+    return reducer.fit_transform(data_i.X)
+
+def umap_reduct(data_i):
+    reducer = umap.UMAP( n_components=2,
+                         random_state=0)
+    return reducer.fit_transform(data_i.X)
 
 def tsne_reduct(data_i):
     t_sne = manifold.TSNE( n_components=2,
