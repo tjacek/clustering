@@ -1,5 +1,8 @@
 import numpy as np
 from sklearn.manifold import SpectralEmbedding
+from sklearn import manifold
+from sklearn.decomposition import PCA
+import umap
 import argparse
 import seq
 import plot
@@ -11,10 +14,7 @@ def reduce_dim( in_path,
     feat_group=seq.get_group("feat")
     feat_seqs=feat_group.read(in_path)
     indexes,frames=feat_seqs.indexed_frames()
-    spectral = SpectralEmbedding( n_components=n_clusters, 
-                                  n_neighbors=10, 
-                                  random_state=42)
-    reduced_frames = spectral.fit_transform(frames)
+    reduced_frames=spectral_reduct(n_components=2)
     def helper(i,frame):
         return reduced_frames[i]
     reduced_seqs= feat_seqs.indexed_map(helper)
@@ -32,6 +32,30 @@ def make_plot(in_path,out_path):
                       xlabel="t",
                       ylabel="distance",
                       out_path=out_path)
+
+def spectral_reduct(n_components=2):
+    spectral = SpectralEmbedding( n_components=n_components, 
+                                  n_neighbors=10, 
+                                  random_state=42)
+    return spectral.fit_transform(frames)
+
+def pca_reduct(data_i):
+    reducer = PCA(n_components=2)
+    return reducer.fit_transform(data_i.X)
+
+def umap_reduct(data_i):
+    reducer = umap.UMAP( n_components=2,
+                         random_state=0)
+    return reducer.fit_transform(data_i.X)
+
+def tsne_reduct(data_i):
+    t_sne = manifold.TSNE( n_components=2,
+                           perplexity=min(30,len(data_i)-1),
+                           init="random",
+                           max_iter=250,
+                           random_state=0,
+                        )
+    return t_sne.fit_transform(data_i.X)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

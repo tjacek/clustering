@@ -1,7 +1,5 @@
 import numpy as np
-from sklearn import manifold
-from sklearn.decomposition import PCA
-import umap
+import reduct
 import argparse
 import seq
 import plot
@@ -10,6 +8,9 @@ class GroupedClust(object):
     def __init__( self,
                   by_labels):
         self.by_labels=by_labels
+
+    def names(self):
+        return list(self.by_labels.keys())
     
     def __iter__(self):
         return iter(self.by_labels.items())
@@ -36,29 +37,13 @@ def cluster_stats( label_path,
     print(by_labels.n_frames())
     for label_i,data_i in by_labels:
         print(f"Cat:{label_i}")
-        X_tsne=umap_reduct(data_i)
+        X_tsne=reduct.umap_reduct(data_i)
         plot.adno_plot(x=X_tsne[:,0],
                        y=X_tsne[:,1],
                        label=data_i.y,
                        title=label_i)
 
-def pca_reduct(data_i):
-    reducer = PCA(n_components=2)
-    return reducer.fit_transform(data_i.X)
 
-def umap_reduct(data_i):
-    reducer = umap.UMAP( n_components=2,
-                         random_state=0)
-    return reducer.fit_transform(data_i.X)
-
-def tsne_reduct(data_i):
-    t_sne = manifold.TSNE( n_components=2,
-                           perplexity=min(30,len(data_i)-1),
-                           init="random",
-                           max_iter=250,
-                           random_state=0,
-                        )
-    return t_sne.fit_transform(data_i.X)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
