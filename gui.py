@@ -2,6 +2,8 @@ import tkinter as tk
 from tkinter import messagebox
 import argparse
 import snapshot
+import plot 
+import reduct
 
 class GuiApp:
     def __init__( self, 
@@ -43,7 +45,13 @@ class GuiApp:
         selected_indices = self.listbox.curselection()
         if selected_indices:
             selected_value = self.listbox.get(selected_indices[0])
-            messagebox.showinfo("Potwierdzenie", f"Zatwierdzono wybór: {selected_value}")
+            data_i=self.by_labels[selected_value]
+            X_tsne=reduct.umap_reduct(data_i)
+            plot.adno_plot(x=X_tsne[:,0],
+                           y=X_tsne[:,1],
+                           label=data_i.y,
+                           title=selected_value)
+#            messagebox.showinfo("Potwierdzenie", f"Zatwierdzono wybór: {selected_value}")
         else:
             messagebox.showwarning("Uwaga", "Nie wybrano żadnego elementu z listy!")
  

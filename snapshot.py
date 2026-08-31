@@ -15,6 +15,9 @@ class GroupedClust(object):
     def __iter__(self):
         return iter(self.by_labels.items())
     
+    def __getitem__(self,item):
+        return self.by_labels[item]
+    
     def n_frames(self):
         sizes=[len(data_i) for i,data_i in self]
         return sum(sizes)
