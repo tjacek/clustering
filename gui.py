@@ -6,55 +6,103 @@ import plot
 import reduct
 
 class GuiApp:
-    def __init__( self, 
-    	          root,
-    	          by_labels):
+    def __init__(self,
+                 root,
+                 by_labels):
         self.root = root
         self.root.title("Frame Clusters")
-        self.root.geometry("400x400")
+        self.root.geometry("500x450")
         self.root.resizable(False, False)
-        self.by_labels=by_labels
+        self.by_labels = by_labels
+        self.current_data = None
+        self.selected_cluster = None
+        self.selected_alg = None
+ 
         title_label = tk.Label(root, text="Clusters:", font=("Arial", 12))
         title_label.pack(pady=10)
  
-        list_frame = tk.Frame(root)
-        list_frame.pack(pady=5)
+        lists_container = tk.Frame(root)
+        lists_container.pack(pady=5)
  
-        scrollbar = tk.Scrollbar(list_frame)
+        cluster_frame = tk.Frame(lists_container)
+        cluster_frame.pack(side=tk.LEFT, padx=10)
+ 
+        scrollbar = tk.Scrollbar(cluster_frame)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
  
-        self.listbox = tk.Listbox(
-            list_frame,
-            width=30,
-            height=10,
+        self.cluster_list = tk.Listbox(
+            cluster_frame,
+            width=25,
+            height=12,
             selectmode=tk.SINGLE,
             yscrollcommand=scrollbar.set,
+            exportselection=False,
             font=("Arial", 11)
         )
  
         for item in self.by_labels.names():
-            self.listbox.insert(tk.END, item)
+            self.cluster_list.insert(tk.END, item)
  
-        self.listbox.pack(side=tk.LEFT)
-        scrollbar.config(command=self.listbox.yview)
-  
+        self.cluster_list.pack(side=tk.LEFT)
+        scrollbar.config(command=self.cluster_list.yview)
+ 
+        self.cluster_list.bind("<<ListboxSelect>>", self.set_selected_cluster)
+ 
+        algs_frame = tk.Frame(lists_container)
+        algs_frame.pack(side=tk.LEFT, padx=10)
+ 
+        algs_scrollbar = tk.Scrollbar(algs_frame)
+        algs_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+ 
+        self.algs_list = tk.Listbox(
+            algs_frame,
+            width=25,
+            height=12,
+            selectmode=tk.SINGLE,
+            yscrollcommand=algs_scrollbar.set,
+            exportselection=False,
+            font=("Arial", 11)
+        )
+ 
+        for item in reduct.ALGS.keys():
+            self.algs_list.insert(tk.END, item)
+ 
+        self.algs_list.pack(side=tk.LEFT)
+        algs_scrollbar.config(command=self.algs_list.yview)
+ 
+        self.algs_list.bind("<<ListboxSelect>>", self.set_selected_alg)
+ 
         confirm_button = tk.Button(root, text="Show cluster", command=self.confirm_selection)
         confirm_button.pack(pady=10)
  
-    def confirm_selection(self):
-        selected_indices = self.listbox.curselection()
+    def set_selected_cluster(self, event):
+        selected_indices = self.cluster_list.curselection()
         if selected_indices:
-            selected_value = self.listbox.get(selected_indices[0])
-            data_i=self.by_labels[selected_value]
-            X_tsne=reduct.umap_reduct(data_i)
-            plot.adno_plot(x=X_tsne[:,0],
-                           y=X_tsne[:,1],
-                           label=data_i.y,
-                           title=selected_value)
-#            messagebox.showinfo("Potwierdzenie", f"Zatwierdzono wybór: {selected_value}")
-        else:
-            messagebox.showwarning("Uwaga", "Nie wybrano żadnego elementu z listy!")
+            self.selected_cluster = self.cluster_list.get(selected_indices[0])
  
+    def set_selected_alg(self, event):
+        selected_indices = self.algs_list.curselection()
+        if selected_indices:
+            self.selected_alg = self.algs_list.get(selected_indices[0])
+ 
+    def confirm_selection(self):
+        if not self.selected_cluster:
+            messagebox.showwarning("Uwaga", "Nie wybrano żadnego elementu z listy klastrów!")
+            return
+ 
+        if not self.selected_alg:
+            messagebox.showwarning("Uwaga", "Nie wybrano żadnego algorytmu redukcji!")
+            return
+ 
+        data_i = self.by_labels[self.selected_cluster]
+        reduct_func = reduct.ALGS[self.selected_alg]
+        X_reduced = reduct_func(data_i)
+ 
+        plot.adno_plot(x=X_reduced[:, 0],
+                       y=X_reduced[:, 1],
+                       label=data_i.y,
+                       title=f"{self.selected_cluster} ({self.selected_alg})")
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--cls_path", type=str,default="MSR/ae/layer_1/spectral_36")

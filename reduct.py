@@ -33,7 +33,7 @@ def make_plot(in_path,out_path):
                       ylabel="distance",
                       out_path=out_path)
 
-def spectral_reduct(n_components=2):
+def spectral_reduct(data_i,n_components=2):
     spectral = SpectralEmbedding( n_components=n_components, 
                                   n_neighbors=10, 
                                   random_state=42)
@@ -56,6 +56,11 @@ def tsne_reduct(data_i):
                            random_state=0,
                         )
     return t_sne.fit_transform(data_i.X)
+
+ALGS={ "spectral":spectral_reduct,
+       "pca":pca_reduct,
+       "umap":umap_reduct,
+       "tsne":tsne_reduct}
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
