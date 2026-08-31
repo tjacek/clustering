@@ -1,5 +1,6 @@
 import numpy as np
 from sklearn import manifold
+from sklearn.decomposition import PCA
 import argparse
 import seq
 import plot
@@ -34,11 +35,15 @@ def cluster_stats( label_path,
     print(by_labels.n_frames())
     for label_i,data_i in by_labels:
         print(f"Cat:{label_i}")
-        X_tsne=tsne_reduct(data_i)
+        X_tsne=pca_reduct(data_i)
         plot.adno_plot(x=X_tsne[:,0],
                        y=X_tsne[:,1],
                        label=data_i.y,
                        title=label_i)
+
+def pca_reduct(data_i):
+    pca = PCA(n_components=2)
+    return pca.fit_transform(data_i.X)
 
 def tsne_reduct(data_i):
     t_sne = manifold.TSNE( n_components=2,
@@ -51,8 +56,8 @@ def tsne_reduct(data_i):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--cls_path", type=str,default="MSR/spectral_36")
-    parser.add_argument("--seq_path", type=str,default="MSR/seqs")
+    parser.add_argument("--cls_path", type=str,default="MSR/ae/layer_1/spectral_36")
+    parser.add_argument("--seq_path", type=str,default="MSR/ae/layer_1/seqs")
     args=parser.parse_args()
     cluster_stats( args.cls_path,
 	               args.seq_path)
