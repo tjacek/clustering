@@ -88,7 +88,9 @@ class SeqGroup(list):
         return { seq_i.desc.name:seq_i
                     for seq_i in self}
 
-    def by_labels(self, label_group):
+    def by_labels( self, 
+                   label_group,
+                   as_data=True):
         frame_dict=defaultdict(lambda :[])
         label_dict=label_group.as_dict()
         for seq_i in self:
@@ -96,17 +98,24 @@ class SeqGroup(list):
             for label_j,frame_j in zip(labeling_i,seq_i):
                 pair_i=(frame_j,seq_i.desc.cat)
                 frame_dict[label_j].append(pair_i)
+        if(as_data):
+            def helper(i,frames,y_i):
+                frames_i=np.array(frames_i)
+                return base.Dataset(frames_i,y_i)
+        else:
+            dtype=self.dtype()
+            def helper(i,frames_i,y_i):
+                return dtype( frames=frames_i,
+                              desc=ActionDesc(i))
         data_dict={}
         for i,raw_i in frame_dict.items():
             frames_i,y_i= list(zip(*raw_i))
-            frames_i=np.array(frames_i)
-            data_i=base.Dataset(frames_i,y_i)
-            data_dict[i]=data_i
+            data_dict[i]=helper(i,frames_i,y_i)
         return data_dict
-#        dtype=self.dtype()
-#        desc=ActionDesc.from_name
-#        frame_dict={ i:dtype(frames=frames_i,
-#                             desc=desc(f"0_0_0"))
+        
+        
+#        frame_dict={ i:dtype(frames=frames_i[0],
+#                             desc=ActionDesc(i))
 #                        for i,frames_i in frame_dict.items()}
 #        return frame_dict
 
@@ -220,8 +229,8 @@ class Seq(list):
 @dataclass(frozen=True)
 class ActionDesc:
     name:str
-    cat:int
-    person:int  
+    cat:int = 0
+    person:int = 0  
     
     @classmethod
     def from_path(cls,path):
@@ -230,6 +239,7 @@ class ActionDesc:
 
     @classmethod
     def from_name(cls,name):
+        name=name.split(".")[0]
         raw=name.split("_")
         return cls(name=name,
                    cat=int(raw[0])-1, 

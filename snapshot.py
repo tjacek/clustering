@@ -3,6 +3,7 @@ import reduct
 import argparse
 import seq
 import plot
+import utils
 
 class GroupedClust(object):
     def __init__( self,
@@ -47,11 +48,31 @@ def cluster_stats( label_path,
                        title=label_i)
 
 
+def split_frames( action_path,
+                  cls_path,
+                  out_path="out"):
+    action_group=seq.get_group("actions")
+    actions=action_group.read(action_path)
+    label_group=seq.get_group("labels")
+    labeling= label_group.read(cls_path)
+    symbols=labeling.as_symbols(symb_map="tf-idf")
+    by_labels=actions.by_labels(symbols,as_data=False)
+    utils.make_dir(out_path)
+    for i,cls_i in by_labels.items():
+        cls_i.save(f"{out_path}/{i}")
+#        print(i)
+#        print(type(cls_i))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--cls_path", type=str,default="MSR/ae/layer_1/spectral_36")
     parser.add_argument("--seq_path", type=str,default="MSR/ae/layer_1/seqs")
+    parser.add_argument("--action_path", type=str,default="MSR/scaled")
+    parser.add_argument("--cmd", type=str,default="split")
     args=parser.parse_args()
-    cluster_stats( args.cls_path,
-	               args.seq_path)
+    if(args.cmd=="stats"):
+        cluster_stats( args.cls_path,
+	                   args.seq_path)
+    if(args.cmd=="split"):
+        split_frames( args.action_path,
+                      args.cls_path)
