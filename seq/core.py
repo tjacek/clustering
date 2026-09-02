@@ -121,33 +121,15 @@ class SeqGroup(list):
 
     def by_labels( self, 
                    label_group,
-                   as_data=True):
+                   fun=None):
         frame_dict,info_dict=self.group(label_group)
         frame_dict=base.SmartDict(frame_dict)       
-#        data_dict={}
-        if(as_data):
-            def helper(i,frames_i):
-                info_i=info_dict[i]
-                _,y_i,_=list(zip(*info_i))
-                frames_i=np.array(frames_i)
-                return base.Dataset(frames_i,y_i)
-        else:
+        if(fun is None):
             dtype=self.dtype()
-            def helper(i,frames_i):
+            def fun(i,frames_i):
                 return dtype( frames=frames_i,
                               desc=ActionDesc(i))
-
-#            for i,frames_i in frame_dict.items():
-#                info_i=info_dict[i]
-#                _,y_i,_=list(zip(*info_i))
-#                frames_i=np.array(frames_i)
-#                data_dict[i]=base.Dataset(frames_i,y_i)
-#        else:
-#            dtype=self.dtype()
-#            for i,frames_i in frame_dict.items():
-#                data_dict[i]=dtype( frames=frames_i,
-#                                    desc=ActionDesc(i))
-        return frame_dict.map(helper)#data_dict
+        return frame_dict.map(fun)
 
 class _SeqGroup(list):
     def __init__(self, actions=None):
@@ -164,8 +146,6 @@ class _SeqGroup(list):
                    for seq_i in tqdm(self)]
         return self.__class__(seqs)
     
-
-
     def eval(self,fun,group_type):
         dtype=group_type.dtype()
         raw_values= [ dtype(frames=seq_i.eval(fun),
