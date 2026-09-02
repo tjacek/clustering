@@ -66,83 +66,10 @@ class DataPair(object):
         return DataPair(self.train.subsample(p),
                         self.test.subsample(p))
 
-
-class Features(np.ndarray):
-    def __new__( cls,
-                 input_array, 
-                 info=None,
-                 feat_type="base"):
-        obj = np.asarray(input_array).view(cls)
-        if(type(info)==Dataset):
-            info={"data":info}
-        obj.info=info
-        obj.feat_type=feat_type
-        return obj
-
-    def __array_finalize__(self, obj):
-        if obj is None: return
-        self.info = getattr(obj, 'info', None)
-        self.feat_type = getattr(obj, 'feat_type', None)
-    
-    def __call__(self,name):
-        if(name in self.info):
-            return self.info[name]
-        if(name=="X"):
-            return self.info["data"].X 
-        if(name=="y"):
-            return self.info["data"].y
-
-    def select(self,indices):
-        X=self("X")[indices]
-        y=self("y")[indices]
-        feat=self[indices]
-        data=Dataset(X,y)
-        return Features(feat,data)
-
-    def to_pca(self):
-        pca = PCA(n_components=None)
-        feats=pca.fit_transform(self)
-        info=self.info.copy()
-        info["var"]=pca.explained_variance_
-        return PcaFeatures( feats,info,"PCA")
-
-    def n_cats(self):
-        return self.info["data"].n_cats()
-
-    def mean_norm(self):
-        dist=0
-        for x_i in self:
-            dist+=l0_norm(x_i)
-        return dist/len(self)
-
-class PcaFeatures(Features):
-    def cum_var(self):
-        var=self.info["var"]
-        return np.cumsum(var/np.sum(var))
-
-    def plot(self,i,j):
-        x,y=self[:,i],self[:,j]
-        labels=self.info["data"].y
-        fig, ax = plt.subplots()
-        colors=["b",'g','r','c','m',"y",
-                "orange",'pink','gray','brown']
-        point_colors=[colors[i % len(colors)]  
-                         for i in labels]
-        ax.scatter(x, y,c=point_colors)
-        for i, txt in enumerate(labels):
-            
-            ax.annotate(str(txt), (x[i], y[i]))
-        plt.show()
-
-class Split(object):
-    def __init__(self,train_index,test_index):
-        self.train_index=train_index
-        self.test_index=test_index
-
-    def eval(self,data,clf):
-        return data.eval(train_index=self.train_index,
-                         test_index=self.test_index,
-                         clf=clf)
+class SmartDict(dict):
+    def map(self,fun):
+        return { key_i:fun(key_i,value_i)
+                 for key_i,value_i in self.items()}
 
 class Experiment(object):
     def __init__(self,dataset,model):
