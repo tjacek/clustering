@@ -27,37 +27,7 @@ class SeqGroup(list):
         utils.make_dir(out_path)
         for seq_i in self:
             seq_i.save(f"{out_path}/{seq_i}")    
-    
-    def indexed_frames(self):
-        get_index=GetIndex()
-        def helper(frame):
-            i=get_index()
-            return (i,frame)
-        pairs=self.flatten(helper)
-        index,frames= zip(*pairs)
-        return index,frames
-   
-    def flatten(self,fun=None):
-        if(fun is None):
-            fun=identity
-        all_items=[]
-        for action_i in self:
-            all_items.extend(action_i.eval(fun))
-        return all_items
-    
-    def flatten_seq(self,fun=None):
-        all_items=[]
-        for seq_i in self:
-            all_items.extend(fun(seq_i))
-        return all_items
-        
-    def indexed_map(self,fun):
-        get_index=GetIndex()
-        def helper(frame):
-            i=get_index()
-            return fun(i,frame)
-        return self.map(helper)
-    
+
     def map(self,fun):
         seqs=[seq_i.map(fun) 
                    for seq_i in tqdm(self)]
@@ -72,6 +42,36 @@ class SeqGroup(list):
                      for seq_i in self]
         return group_type(new_seqs)
     
+    def flatten(self,fun=None):
+        if(fun is None):
+            fun=identity
+        all_items=[]
+        for action_i in self:
+            all_items.extend(action_i.eval(fun))
+        return all_items
+    
+    def flatten_seq(self,fun=None):
+        all_items=[]
+        for seq_i in self:
+            all_items.extend(fun(seq_i))
+        return all_items
+
+    def indexed_frames(self):
+        get_index=GetIndex()
+        def helper(frame):
+            i=get_index()
+            return (i,frame)
+        pairs=self.flatten(helper)
+        index,frames= zip(*pairs)
+        return index,frames
+           
+    def indexed_map(self,fun):
+        get_index=GetIndex()
+        def helper(frame):
+            i=get_index()
+            return fun(i,frame)
+        return self.map(helper)
+        
     def split(self,fun=None):
         if(fun is None):
             fun= lambda desc: (desc.person % 2)==1
@@ -102,29 +102,39 @@ class SeqGroup(list):
         return { seq_i.desc.name:seq_i
                     for seq_i in self}
 
+    def group(  self,
+                label_group):
+        frame_dict=defaultdict(list)
+        info_dict=defaultdict(list)
+        label_dict=label_group.as_dict()
+        for seq_i in self:
+            desc_i=seq_i.desc
+            labeling_i=label_dict[desc_i.name]
+            info_i=[desc_i.cat,desc_i.person]
+            n_frames=len(seq_i)
+            for j,frame_j in enumerate(seq_i):
+                info_j= tuple([j/n_frames]+info_i)
+                label_j=labeling_i[j]
+                frame_dict[label_j].append(frame_j)
+                info_dict[label_j].append(info_j)
+        return frame_dict,info_dict
+
     def by_labels( self, 
                    label_group,
                    as_data=True):
-        frame_dict=defaultdict(lambda :[])
-        label_dict=label_group.as_dict()
-        for seq_i in self:
-            labeling_i=label_dict[seq_i.desc.name]
-            for label_j,frame_j in zip(labeling_i,seq_i):
-                pair_i=(frame_j,seq_i.desc.cat)
-                frame_dict[label_j].append(pair_i)
+        frame_dict,info_dict=self.group(label_group)
+        data_dict={}
         if(as_data):
-            def helper(i,frames,y_i):
+            for i,frames_i in frame_dict.items():
+                info_i=info_dict[i]
+                _,y_i,_=list(zip(*info_i))
                 frames_i=np.array(frames_i)
-                return base.Dataset(frames_i,y_i)
+                data_dict[i]=base.Dataset(frames_i,y_i)
         else:
             dtype=self.dtype()
-            def helper(i,frames_i,y_i):
-                return dtype( frames=frames_i,
-                              desc=ActionDesc(i))
-        data_dict={}
-        for i,raw_i in frame_dict.items():
-            frames_i,y_i= list(zip(*raw_i))
-            data_dict[i]=helper(i,frames_i,y_i)
+            for i,frames_i in frame_dict.items():
+                data_dict[i]=dtype( frames=frames_i,
+                                    desc=ActionDesc(i))
         return data_dict
 
 class _SeqGroup(list):
@@ -157,32 +167,7 @@ class _SeqGroup(list):
         utils.make_dir(out_path)
         for seq_i in self:
             seq_i.save(f"{out_path}/{seq_i}")
-   
-    def flatten(self,fun=None):
-        if(fun is None):
-            fun=identity
-        all_items=[]
-        for action_i in self:
-            all_items.extend(action_i.eval(fun))
-        return all_items
-    
-    def flatten_seq(self,fun=None):
-        all_items=[]
-        for seq_i in self:
-            all_items.extend(fun(seq_i))
-        return all_items
-
-
-    
-    def as_dataset(self):
-        X,y=[],[]
-        for action_i in self:
-            for frame_j in action_i:
-                X.append(frame_j)
-                y.append(action_i.desc.cat)
-        return base.Dataset(X=np.array(X),
-                            y=np.array(y))
-    
+       
     @classmethod
     def _from_actions( cls, action_path, model, fun):
         actions = ActionGroup.read(action_path)
