@@ -44,7 +44,13 @@ class SeqGroup(list):
         for action_i in self:
             all_items.extend(action_i.eval(fun))
         return all_items
-
+    
+    def flatten_seq(self,fun=None):
+        all_items=[]
+        for seq_i in self:
+            all_items.extend(fun(seq_i))
+        return all_items
+        
     def indexed_map(self,fun):
         get_index=GetIndex()
         def helper(frame):
@@ -76,7 +82,15 @@ class SeqGroup(list):
             else:
                 test.append(action_i)
         return train,test
-    
+
+    def as_dataset(self):
+        def helper(seq_i):
+            cat=seq_i.desc.cat
+            return [(frame_i,cat) for frame_i in seq_i]
+        pairs=self.flatten_seq(helper)
+        X,y=list(zip(*pairs))
+        return base.Dataset(X=np.array(X),
+                            y=np.array(y))
     def by_cat(self):
         cat_dict = defaultdict(lambda: self.__class__())
         for seq_i in self:
@@ -112,12 +126,6 @@ class SeqGroup(list):
             frames_i,y_i= list(zip(*raw_i))
             data_dict[i]=helper(i,frames_i,y_i)
         return data_dict
-        
-        
-#        frame_dict={ i:dtype(frames=frames_i[0],
-#                             desc=ActionDesc(i))
-#                        for i,frames_i in frame_dict.items()}
-#        return frame_dict
 
 class _SeqGroup(list):
     def __init__(self, actions=None):
