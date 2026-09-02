@@ -11,7 +11,7 @@ class GuiApp:
                  by_labels):
         self.root = root
         self.root.title("Frame Clusters")
-        self.root.geometry("500x450")
+        self.root.geometry("600x350")
         self.root.resizable(False, False)
         self.by_labels = by_labels
         self.current_data = None
@@ -20,16 +20,25 @@ class GuiApp:
  
         title_label = tk.Label(root, text="Clusters:", font=("Arial", 12))
         title_label.pack(pady=10)
- 
+        
         lists_container = tk.Frame(root)
         lists_container.pack(pady=5)
+
+        self.init_cluster_list(root,lists_container)
+        self.init_alg_list(root,lists_container)
+        self.init_labels_list(root,lists_container)
+
+        confirm_button = tk.Button(root, text="Show cluster", command=self.confirm_selection)
+        confirm_button.pack(pady=10)
+
+    def init_cluster_list(self,root,lists_container):
  
         cluster_frame = tk.Frame(lists_container)
         cluster_frame.pack(side=tk.LEFT, padx=10)
  
         scrollbar = tk.Scrollbar(cluster_frame)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
- 
+
         self.cluster_list = tk.Listbox(
             cluster_frame,
             width=25,
@@ -47,7 +56,8 @@ class GuiApp:
         scrollbar.config(command=self.cluster_list.yview)
  
         self.cluster_list.bind("<<ListboxSelect>>", self.set_selected_cluster)
- 
+
+    def init_alg_list(self,root,lists_container):
         algs_frame = tk.Frame(lists_container)
         algs_frame.pack(side=tk.LEFT, padx=10)
  
@@ -71,10 +81,29 @@ class GuiApp:
         algs_scrollbar.config(command=self.algs_list.yview)
  
         self.algs_list.bind("<<ListboxSelect>>", self.set_selected_alg)
- 
-        confirm_button = tk.Button(root, text="Show cluster", command=self.confirm_selection)
-        confirm_button.pack(pady=10)
- 
+    
+    def init_labels_list(self,root,lists_container):
+        label_frame = tk.Frame(lists_container)
+        label_frame.pack(side=tk.BOTTOM, padx=10)
+        
+        label_scrollbar = tk.Scrollbar(label_frame)
+        label_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+       
+        self.label_list = tk.Listbox(
+            label_frame,
+            width=25,
+            height=12,
+            selectmode=tk.SINGLE,
+            yscrollcommand=label_scrollbar.set,
+            exportselection=False,
+            font=("Arial", 11)
+        )
+        
+        for item in self.by_labels.info_types():
+            self.label_list.insert(tk.END, item)
+        self.label_list.pack(side=tk.BOTTOM)
+        label_scrollbar.config(command=self.label_list.yview)
+
     def set_selected_cluster(self, event):
         selected_indices = self.cluster_list.curselection()
         if selected_indices:

@@ -68,8 +68,12 @@ class DataPair(object):
 
 class SmartDict(dict):
     def map(self,fun):
-        return { key_i:fun(key_i,value_i)
-                 for key_i,value_i in self.items()}
+        return SmartDict({ key_i:fun(key_i,value_i)
+                 for key_i,value_i in self.items()})
+    
+    def dtype(self):
+        values=list(self.values())
+        return values[0].__class__
 
 class Experiment(object):
     def __init__(self,dataset,model):

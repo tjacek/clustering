@@ -10,6 +10,10 @@ class GroupedClust(object):
                   by_labels):
         self.by_labels=by_labels
 
+    def info_types(self):
+#        dtype=self.by_labels.dtype()
+        return ["y","order","person"]
+
     def names(self):
         return list(self.by_labels.keys())
     
@@ -32,7 +36,7 @@ class GroupedClust(object):
         symbols=labeling.as_symbols(symb_map="tf-idf")
         seq_group=seq.get_group("feat")
         seqs= seq_group.read(seq_path)
-        by_labels=seqs.by_labels(symbols)
+        by_labels=seqs.group_info(symbols)
         return cls(by_labels)
 
 def cluster_stats( label_path,
