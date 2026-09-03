@@ -14,7 +14,8 @@ def reduce_dim( in_path,
     feat_group=seq.get_group("feat")
     feat_seqs=feat_group.read(in_path)
     indexes,frames=feat_seqs.indexed_frames()
-    reduced_frames=spectral_reduct(n_components=2)
+    reduced_frames=spectral_reduct( frames,
+                                    n_components=2)
     def helper(i,frame):
         return reduced_frames[i]
     reduced_seqs= feat_seqs.indexed_map(helper)
@@ -33,29 +34,29 @@ def make_plot(in_path,out_path):
                       ylabel="distance",
                       out_path=out_path)
 
-def spectral_reduct(data_i,n_components=2):
+def spectral_reduct(X,n_components=2):
     spectral = SpectralEmbedding( n_components=n_components, 
                                   n_neighbors=10, 
                                   random_state=42)
     return spectral.fit_transform(frames)
 
-def pca_reduct(data_i):
+def pca_reduct(X):
     reducer = PCA(n_components=2)
-    return reducer.fit_transform(data_i.X)
+    return reducer.fit_transform(X)
 
-def umap_reduct(data_i):
+def umap_reduct(X):
     reducer = umap.UMAP( n_components=2,
                          random_state=0)
-    return reducer.fit_transform(data_i.X)
+    return reducer.fit_transform(X)
 
-def tsne_reduct(data_i):
+def tsne_reduct(X):
     t_sne = manifold.TSNE( n_components=2,
-                           perplexity=min(30,len(data_i)-1),
+                           perplexity=min(30,len(X)-1),
                            init="random",
                            max_iter=250,
                            random_state=0,
                         )
-    return t_sne.fit_transform(data_i.X)
+    return t_sne.fit_transform(X)
 
 ALGS={ "spectral":spectral_reduct,
        "pca":pca_reduct,

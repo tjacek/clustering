@@ -20,7 +20,9 @@ class GroupedClust(object):
         return iter(self.by_labels.items())
     
     def __getitem__(self,item):
-        return self.by_labels[item]
+        frame_info= self.by_labels[item]
+        frame_info.discretize(n=10)
+        return frame_info
     
     def n_frames(self):
         sizes=[len(data_i) for i,data_i in self]

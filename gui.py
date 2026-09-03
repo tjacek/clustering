@@ -97,8 +97,8 @@ class GuiApp:
             messagebox.showwarning("Uwaga", "Nie wybrano etykiet!")
             return
         data_i = self.by_labels[self.selected_cluster]
-        label_i = data_i._asdict()[self.selected_label]
-        print(max(label_i))
+        label_i = data_i.__dict__[self.selected_label]
+
         reduct_func = reduct.ALGS[self.selected_alg]
         X_reduced = reduct_func(data_i.frames)
  

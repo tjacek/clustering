@@ -2,7 +2,7 @@ import numpy as np
 import string
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import NamedTuple
+#from typing import NamedTuple
 import seq.core
 import base
 import utils
@@ -29,7 +29,7 @@ class FeatSeqGroup(seq.core.SeqGroup):
         frame_dict=base.SmartDict(frame_dict)  
         def helper(i,frames_i):
             info_i=info_dict[i]
-            cat,order,person=list(zip(*info_i))
+            order,cat,person=list(zip(*info_i))
             cat=np.array(cat,dtype=int)
             frames_i=np.array(frames_i)
             return FrameInfo(frames_i,cat,order,person)
@@ -53,11 +53,17 @@ class FeatSeq(seq.core.Seq):
         return [ np.linalg.norm(self[i+1]-self[i],ord=2) 
                   for i in range(n)]
 
-class FrameInfo(NamedTuple):
+@dataclass
+class FrameInfo:
     frames:np.ndarray
     cat: list
     order:list
     person: list
+
+    def discretize(self,n=10):
+        self.order=n*np.array(self.order)
+        self.order=np.floor(self.order)
+        self.order=self.order.astype(int)
 
 class LabelingGroup(seq.core.SeqGroup):
     @classmethod

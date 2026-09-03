@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
 import seaborn as sn
 
 class ColorMap(object):
@@ -15,6 +16,10 @@ class ColorMap(object):
     
     def __call__(self,i):
         return self.colors[i % len(self)]
+    
+    def get_handlers(self):
+        return [plt.Rectangle((0,0),1,1, color=color_i) 
+                    for color_i in self.colors]
 
 def scatter( x, 
              y, 
@@ -59,6 +64,17 @@ def adno_plot( x,
         plt.annotate( label_i,
                       (x[i],y[i]),
                       color=color_map(label_i))
+    unique_labels = sorted(set(label))
+    legend_handles = [
+        Line2D([0], [0],
+               marker='o',
+               color='w',
+               markerfacecolor=color_map(lbl),
+               markersize=8,
+               label=lbl)
+        for lbl in unique_labels
+    ]
+    plt.legend(handles=legend_handles, title="Etykiety", loc="best")
     plt.xlim(compute_lim(x))
     plt.ylim(compute_lim(y)) 
     plt.title(title)
