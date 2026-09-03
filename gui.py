@@ -17,30 +17,42 @@ class GuiApp:
         self.current_data = None
         self.selected_cluster = None
         self.selected_alg = None
- 
+        self.selected_label = None
+
         title_label = tk.Label(root, text="Clusters:", font=("Arial", 12))
         title_label.pack(pady=10)
         
         lists_container = tk.Frame(root)
         lists_container.pack(pady=5)
-
-        self.init_cluster_list(root,lists_container)
-        self.init_alg_list(root,lists_container)
-        self.init_labels_list(root,lists_container)
+ 
+        self.cluster_list = self.create_listbox( lists_container, 
+                                                 self.by_labels.names(),
+                                                 side=tk.LEFT, 
+                                                 on_select=self.set_selected_cluster
+                                                )
+        self.algs_list = self.create_listbox( lists_container, 
+                                              reduct.ALGS.keys(),
+                                              side=tk.LEFT, 
+                                              on_select=self.set_selected_alg
+                                            )
+        self.label_list = self.create_listbox( lists_container, 
+                                               self.by_labels.info_types(),
+                                               side=tk.BOTTOM,
+                                               on_select=self.set_selected_label
+                                             )
 
         confirm_button = tk.Button(root, text="Show cluster", command=self.confirm_selection)
         confirm_button.pack(pady=10)
 
-    def init_cluster_list(self,root,lists_container):
+    def create_listbox(self, parent, items, side, on_select=None):
+        frame = tk.Frame(parent)
+        frame.pack(side=side, padx=10)
  
-        cluster_frame = tk.Frame(lists_container)
-        cluster_frame.pack(side=tk.LEFT, padx=10)
- 
-        scrollbar = tk.Scrollbar(cluster_frame)
+        scrollbar = tk.Scrollbar(frame)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-
-        self.cluster_list = tk.Listbox(
-            cluster_frame,
+ 
+        listbox = tk.Listbox(
+            frame,
             width=25,
             height=12,
             selectmode=tk.SINGLE,
@@ -48,61 +60,16 @@ class GuiApp:
             exportselection=False,
             font=("Arial", 11)
         )
+        for item in items:
+            listbox.insert(tk.END, item)
  
-        for item in self.by_labels.names():
-            self.cluster_list.insert(tk.END, item)
+        listbox.pack(side=side)
+        scrollbar.config(command=listbox.yview)
  
-        self.cluster_list.pack(side=tk.LEFT)
-        scrollbar.config(command=self.cluster_list.yview)
+        if on_select:
+            listbox.bind("<<ListboxSelect>>", on_select)
  
-        self.cluster_list.bind("<<ListboxSelect>>", self.set_selected_cluster)
-
-    def init_alg_list(self,root,lists_container):
-        algs_frame = tk.Frame(lists_container)
-        algs_frame.pack(side=tk.LEFT, padx=10)
- 
-        algs_scrollbar = tk.Scrollbar(algs_frame)
-        algs_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
- 
-        self.algs_list = tk.Listbox(
-            algs_frame,
-            width=25,
-            height=12,
-            selectmode=tk.SINGLE,
-            yscrollcommand=algs_scrollbar.set,
-            exportselection=False,
-            font=("Arial", 11)
-        )
- 
-        for item in reduct.ALGS.keys():
-            self.algs_list.insert(tk.END, item)
- 
-        self.algs_list.pack(side=tk.LEFT)
-        algs_scrollbar.config(command=self.algs_list.yview)
- 
-        self.algs_list.bind("<<ListboxSelect>>", self.set_selected_alg)
-    
-    def init_labels_list(self,root,lists_container):
-        label_frame = tk.Frame(lists_container)
-        label_frame.pack(side=tk.BOTTOM, padx=10)
-        
-        label_scrollbar = tk.Scrollbar(label_frame)
-        label_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-       
-        self.label_list = tk.Listbox(
-            label_frame,
-            width=25,
-            height=12,
-            selectmode=tk.SINGLE,
-            yscrollcommand=label_scrollbar.set,
-            exportselection=False,
-            font=("Arial", 11)
-        )
-        
-        for item in self.by_labels.info_types():
-            self.label_list.insert(tk.END, item)
-        self.label_list.pack(side=tk.BOTTOM)
-        label_scrollbar.config(command=self.label_list.yview)
+        return listbox
 
     def set_selected_cluster(self, event):
         selected_indices = self.cluster_list.curselection()
@@ -113,23 +80,31 @@ class GuiApp:
         selected_indices = self.algs_list.curselection()
         if selected_indices:
             self.selected_alg = self.algs_list.get(selected_indices[0])
- 
+    
+    def set_selected_label(self, event):
+        selected_indices = self.label_list.curselection()
+        if selected_indices:
+            self.selected_label = self.label_list.get(selected_indices[0]) 
+    
     def confirm_selection(self):
         if not self.selected_cluster:
-            messagebox.showwarning("Uwaga", "Nie wybrano żadnego elementu z listy klastrów!")
+            messagebox.showwarning("Uwaga", "Nie wybrano klastra!")
             return
- 
         if not self.selected_alg:
-            messagebox.showwarning("Uwaga", "Nie wybrano żadnego algorytmu redukcji!")
+            messagebox.showwarning("Uwaga", "Nie wybrano algorytmu redukcji!")
             return
- 
+        if not self.selected_label:
+            messagebox.showwarning("Uwaga", "Nie wybrano etykiet!")
+            return
         data_i = self.by_labels[self.selected_cluster]
+        label_i = data_i._asdict()[self.selected_label]
+        print(max(label_i))
         reduct_func = reduct.ALGS[self.selected_alg]
-        X_reduced = reduct_func(data_i)
+        X_reduced = reduct_func(data_i.frames)
  
         plot.adno_plot(x=X_reduced[:, 0],
                        y=X_reduced[:, 1],
-                       label=data_i.y,
+                       label=label_i,
                        title=f"{self.selected_cluster} ({self.selected_alg})")
 
 if __name__ == "__main__":

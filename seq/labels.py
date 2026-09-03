@@ -54,8 +54,8 @@ class FeatSeq(seq.core.Seq):
                   for i in range(n)]
 
 class FrameInfo(NamedTuple):
-    X:np.ndarray
-    y: list
+    frames:np.ndarray
+    cat: list
     order:list
     person: list
 

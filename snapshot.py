@@ -11,8 +11,7 @@ class GroupedClust(object):
         self.by_labels=by_labels
 
     def info_types(self):
-#        dtype=self.by_labels.dtype()
-        return ["y","order","person"]
+        return ["cat","order","person"]
 
     def names(self):
         return list(self.by_labels.keys())
