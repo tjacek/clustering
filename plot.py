@@ -6,9 +6,10 @@ import seaborn as sn
 class ColorMap(object):
     def __init__(self,colors=None):
         if(colors is None):
-            colors=['lime','red','blue','tomato',
-                    'orange','skyblue','peachpuff',
-                    'yellow','black' ]
+            colors=[ 'red', 'blue', 'lime', 'orange',
+                     'purple', 'cyan', 'magenta', 'gold',
+                     'brown', 'black', 'deepskyblue', 'crimson',
+                     'forestgreen', 'darkorange', 'navy', 'hotpink']
         self.colors=colors
 
     def __len__(self):
@@ -17,9 +18,13 @@ class ColorMap(object):
     def __call__(self,i):
         return self.colors[i % len(self)]
     
-    def get_handlers(self):
-        return [plt.Rectangle((0,0),1,1, color=color_i) 
-                    for color_i in self.colors]
+    def get_handler(self,i):
+        return Line2D( [0], [0],
+                       marker='o',
+                       color='w',
+                       markerfacecolor=self(i),
+                       markersize=8,
+                       label=i )
 
 def scatter( x, 
              y, 
@@ -56,28 +61,26 @@ def text_plot( x,
 def adno_plot( x,
                y, 
                label,
-               title,               
+               color=None,
+               title=None,               
                color_map=None):
+    if(color is None):
+        color=label
     if(color_map is None):
         color_map=ColorMap()
     for i,label_i in enumerate(label):
+        color_i=color_map(color[i])
         plt.annotate( label_i,
                       (x[i],y[i]),
-                      color=color_map(label_i))
-    unique_labels = sorted(set(label))
-    legend_handles = [
-        Line2D([0], [0],
-               marker='o',
-               color='w',
-               markerfacecolor=color_map(lbl),
-               markersize=8,
-               label=lbl)
-        for lbl in unique_labels
-    ]
+                      color=color_i)
+    unique_colors = sorted(set(color))
+    legend_handles = [ color_map.get_handler(c)
+                        for c in unique_colors]
     plt.legend(handles=legend_handles, title="Etykiety", loc="best")
     plt.xlim(compute_lim(x))
     plt.ylim(compute_lim(y)) 
-    plt.title(title)
+    if(title):
+        plt.title(title)
     plt.show()
     
 def compute_lim(x):

@@ -98,13 +98,15 @@ class GuiApp:
             return
         data_i = self.by_labels[self.selected_cluster]
         label_i = data_i.__dict__[self.selected_label]
+        cat_i = data_i.__dict__["cat"]
 
         reduct_func = reduct.ALGS[self.selected_alg]
         X_reduced = reduct_func(data_i.frames)
- 
+        
         plot.adno_plot(x=X_reduced[:, 0],
                        y=X_reduced[:, 1],
-                       label=label_i,
+                       label=cat_i,
+                       color=label_i,
                        title=f"{self.selected_cluster} ({self.selected_alg})")
 
 if __name__ == "__main__":
