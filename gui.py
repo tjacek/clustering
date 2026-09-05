@@ -22,17 +22,21 @@ class ClusterGui:
         self.lists_container = tk.Frame(root)
         self.lists_container.pack(pady=5)
 
-        self.cluster_list = self.create_listbox( self.lists_container, 
+        self.cluster_list = self.create_listbox( #self.lists_container, 
                                                  self.by_labels.names(),
                                                  side=tk.LEFT, 
                                                  on_select=self.set_selected_cluster)
-        self.label_list = self.create_listbox( self.lists_container, 
+        self.label_list = self.create_listbox( #self.lists_container, 
                                                self.by_labels.info_types(),
-                                               side=tk.BOTTOM,
+                                               side=tk.LEFT,
                                                on_select=self.set_selected_label)
     
-    def create_listbox(self, parent, items, side, on_select=None):
-        frame = tk.Frame(parent)
+    def create_listbox( self, 
+#                        parent, 
+                        items, 
+                        side, 
+                        on_select=None):
+        frame = tk.Frame(self.lists_container)
         frame.pack(side=side, padx=10)
  
         scrollbar = tk.Scrollbar(frame)
@@ -77,9 +81,9 @@ class ReductionGui(ClusterGui):
         super(ReductionGui, self).__init__( root,
                                             by_labels)
         self.selected_alg = None
-        self.algs_list = self.create_listbox( self.lists_container, 
+        self.algs_list = self.create_listbox( #self.lists_container, 
                                               reduct.ALGS.keys(),
-                                              side=tk.LEFT, 
+                                              side=tk.RIGHT, 
                                               on_select=self.set_selected_alg)
         confirm_button = tk.Button(root, text="Show cluster", command=self.confirm_selection)
         confirm_button.pack(pady=10)
