@@ -56,6 +56,9 @@ class FrameInfo:
     order:list
     person: list
 
+    def __getitem__(self,item):
+        return getattr(self,item)
+
     def discretize(self,n=10):
         self.order=n*np.array(self.order)
         self.order=np.floor(self.order)

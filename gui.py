@@ -122,19 +122,37 @@ class HisogramGui(ClusterGui):
                   by_labels):
         super(HisogramGui, self).__init__( root,
                                             by_labels)
+        self.field_guard=MissingFieldGuard({"selected_cluster": "Nie wybrano klastra!",
+                                            "selected_label":"Nie wybrano etykiet!"})
         confirm_button = tk.Button( root, 
                                     text="Show hisogram", 
                                     command=self.confirm_selection)
         confirm_button.pack(pady=10)
+    
+    def confirm_selection(self):
+        if(self.field_guard(self)):
+            return
+        data_i = self.by_labels[self.selected_cluster]
+        desc_i=data_i[self.selected_label]
+
+        plot.hist( desc_i,
+                   value=self.selected_label,
+                   title=self.selected_cluster)
+#        raise Exception(label_i)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--cls_path", type=str,default="MSR/ae/layer_1/spectral_36")
     parser.add_argument("--seq_path", type=str,default="MSR/ae/layer_1/seqs")
+    parser.add_argument("--cmd", type=str,default="hist")
     args=parser.parse_args()
     by_labels=snapshot.GroupedClust.make(args.cls_path,
     	                                 args.seq_path)
     root = tk.Tk()
-    app = ReductionGui( root,
-    	                by_labels)
+    if(args.cmd=="redu"):
+        app = ReductionGui( root,
+    	                    by_labels)
+    if(args.cmd=="hist"):
+        app = HisogramGui( root,
+                           by_labels)
     root.mainloop()

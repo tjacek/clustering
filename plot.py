@@ -99,3 +99,13 @@ def show_heatmap( matrix,
     plt.title(title)
     plt.tight_layout()
     plt.show()
+
+def hist( arr,
+          value,
+          title):
+    n_bins=len(set(arr))
+    plt.hist(arr, bins=n_bins, color='skyblue', edgecolor='black')
+    plt.xlabel(value)
+    plt.ylabel("Frequency")
+    plt.title(title)
+    plt.show()
