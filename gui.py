@@ -12,7 +12,7 @@ class ClusterGui:
         self.root = root
         self.root.title("Frame Clusters")
         self.root.geometry("600x350")
-#        self.root.resizable(False, False)
+        self.root.resizable(False, False)
         self.by_labels = by_labels
         self.selected_cluster = None
         self.selected_label = None
@@ -22,17 +22,14 @@ class ClusterGui:
         self.lists_container = tk.Frame(root)
         self.lists_container.pack(pady=5)
 
-        self.cluster_list = self.create_listbox( #self.lists_container, 
-                                                 self.by_labels.names(),
+        self.cluster_list = self.create_listbox( self.by_labels.names(),
                                                  side=tk.LEFT, 
                                                  on_select=self.set_selected_cluster)
-        self.label_list = self.create_listbox( #self.lists_container, 
-                                               self.by_labels.info_types(),
+        self.label_list = self.create_listbox( self.by_labels.info_types(),
                                                side=tk.LEFT,
                                                on_select=self.set_selected_label)
     
     def create_listbox( self, 
-#                        parent, 
                         items, 
                         side, 
                         on_select=None):
@@ -73,6 +70,14 @@ class ClusterGui:
         if selected_indices:
             self.selected_label = self.label_list.get(selected_indices[0]) 
 
+class MissingFieldGuard(dict):
+    def __call__(self,obj):
+        for attr_i,msg_i in self.items():
+            value_i=getattr(obj,attr_i)
+            if not value_i:
+                messagebox.showwarning("Uwaga", msg_i)
+                return True
+        return False
 
 class ReductionGui(ClusterGui):
     def __init__( self,
@@ -81,10 +86,12 @@ class ReductionGui(ClusterGui):
         super(ReductionGui, self).__init__( root,
                                             by_labels)
         self.selected_alg = None
-        self.algs_list = self.create_listbox( #self.lists_container, 
-                                              reduct.ALGS.keys(),
+        self.algs_list = self.create_listbox( reduct.ALGS.keys(),
                                               side=tk.RIGHT, 
                                               on_select=self.set_selected_alg)
+        self.field_guard=MissingFieldGuard({"selected_cluster": "Nie wybrano klastra!",
+                                            "selected_label":"Nie wybrano etykiet!",
+                                            "selected_alg":"Nie wybrano algorytmu redukcji!"})
         confirm_button = tk.Button(root, text="Show cluster", command=self.confirm_selection)
         confirm_button.pack(pady=10)
 
@@ -94,14 +101,7 @@ class ReductionGui(ClusterGui):
             self.selected_alg = self.algs_list.get(selected_indices[0])
     
     def confirm_selection(self):
-        if not self.selected_cluster:
-            messagebox.showwarning("Uwaga", "Nie wybrano klastra!")
-            return
-        if not self.selected_alg:
-            messagebox.showwarning("Uwaga", "Nie wybrano algorytmu redukcji!")
-            return
-        if not self.selected_label:
-            messagebox.showwarning("Uwaga", "Nie wybrano etykiet!")
+        if(self.field_guard(self)):
             return
         data_i = self.by_labels[self.selected_cluster]
         label_i = data_i.__dict__[self.selected_label]
@@ -115,6 +115,17 @@ class ReductionGui(ClusterGui):
                        label=cat_i,
                        color=label_i,
                        title=f"{self.selected_cluster} ({self.selected_alg})")
+
+class HisogramGui(ClusterGui):
+    def __init__( self,
+                  root,
+                  by_labels):
+        super(HisogramGui, self).__init__( root,
+                                            by_labels)
+        confirm_button = tk.Button( root, 
+                                    text="Show hisogram", 
+                                    command=self.confirm_selection)
+        confirm_button.pack(pady=10)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
