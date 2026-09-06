@@ -2,6 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 import seaborn as sn
+from collections import Counter
+
 
 class ColorMap(object):
     def __init__(self,colors=None):
@@ -103,8 +105,14 @@ def show_heatmap( matrix,
 def hist( arr,
           value,
           title):
-    n_bins=len(set(arr))
-    plt.hist(arr, bins=n_bins, color='skyblue', edgecolor='black')
+    bins=Counter(arr)
+    keys=list(bins.keys())
+    keys.sort()
+    height=[bins[key_i] for key_i in keys] 
+    plt.bar( keys,
+             height, 
+             color="skyblue", 
+             edgecolor="black")
     plt.xlabel(value)
     plt.ylabel("Frequency")
     plt.title(title)
