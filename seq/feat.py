@@ -1,5 +1,6 @@
 import numpy as np
 from dataclasses import dataclass
+from collections import namedtuple
 import seq.core
 import base
 
@@ -58,6 +59,16 @@ class FrameInfo:
 
     def __getitem__(self,item):
         return getattr(self,item)
+    
+    def unique(self,item):
+        return list(set(self[item]))
+    
+    def info(self,item):
+        data=self[item]
+        unique=self.unique(item)
+        index={ type_i:i for i,type_i in enumerate(unique)}
+        Info=namedtuple("Info",["data", "unique","index"])
+        return Info(data,unique,index)
 
     def discretize(self,n=10):
         self.order=n*np.array(self.order)

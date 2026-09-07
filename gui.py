@@ -1,3 +1,4 @@
+import numpy as np
 import tkinter as tk
 from tkinter import messagebox
 from functools import partial
@@ -114,6 +115,10 @@ class HisogramGui(ClusterGui):
                   by_labels):
         super(HisogramGui, self).__init__( root,
                                             by_labels)
+        self.selected_info = None
+        self.info_list = self.create_listbox( self.by_labels.info_types(),
+                                               side=tk.LEFT,
+                                               on_select="selected_info")
         self.field_guard=MissingFieldGuard({"selected_cluster": "Nie wybrano klastra!",
                                             "selected_label":"Nie wybrano etykiet!"})
         
@@ -125,12 +130,40 @@ class HisogramGui(ClusterGui):
     def confirm_selection(self):
         if(self.field_guard(self)):
             return
+        if(self.selected_info):
+            self.show_matrix()
+        else:
+            self.show_hist()
+
+    def show_hist(self):
         data_i = self.by_labels[self.selected_cluster]
         desc_i=data_i[self.selected_label]
-
         plot.hist( desc_i,
                    value=self.selected_label,
                    title=self.selected_cluster)
+
+    def show_matrix(self):
+        clust = self.by_labels[self.selected_cluster]
+#        info_x=clust[self.selected_label]
+#        info_y=clust[self.selected_info]
+        x=clust.info(self.selected_label)
+        y=clust.info(self.selected_info)
+
+#        unique_x=clust.unique(self.selected_label)
+#        unique_y=clust.unique(self.selected_info)
+        matrix=np.zeros((len(x.unique),len(y.unique)))
+        print(x.unique)
+        print(y.unique)
+        for x_i in x.data:
+            for y_i in y.data:
+                a=x.index[x_i]
+                b=y.index[y_i]
+                matrix[a][b]+=1
+        plot.show_heatmap( matrix,
+                           self.selected_cluster,
+                           x_axis=x.unique,
+                           y_axis=y.unique)
+#        print(matrix)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
