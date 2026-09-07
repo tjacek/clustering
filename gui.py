@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
+from functools import partial
 import argparse
 import snapshot
 import plot 
@@ -12,7 +13,8 @@ class ClusterGui:
         self.root = root
         self.root.title("Frame Clusters")
         self.root.geometry("600x350")
-        self.root.resizable(False, False)
+#        self.root.resizable(False, False)
+        self.root.resizable(True, True)
         self.by_labels = by_labels
         self.selected_cluster = None
         self.selected_label = None
@@ -24,10 +26,10 @@ class ClusterGui:
 
         self.cluster_list = self.create_listbox( self.by_labels.names(),
                                                  side=tk.LEFT, 
-                                                 on_select=self.set_selected_cluster)
+                                                 on_select="selected_cluster")
         self.label_list = self.create_listbox( self.by_labels.info_types(),
                                                side=tk.LEFT,
-                                               on_select=self.set_selected_label)
+                                               on_select="selected_label")
     
     def create_listbox( self, 
                         items, 
@@ -55,20 +57,15 @@ class ClusterGui:
         scrollbar.config(command=listbox.yview)
  
         if on_select:
-            listbox.bind("<<ListboxSelect>>", on_select)
+            listbox.bind("<<ListboxSelect>>", 
+                        partial(self.on_select, listbox, on_select))
  
         return listbox
 
-
-    def set_selected_cluster(self, event):
-        selected_indices = self.cluster_list.curselection()
+    def on_select(self, listbox, attr_name, event):
+        selected_indices = listbox.curselection()
         if selected_indices:
-            self.selected_cluster = self.cluster_list.get(selected_indices[0])
-    
-    def set_selected_label(self, event):
-        selected_indices = self.label_list.curselection()
-        if selected_indices:
-            self.selected_label = self.label_list.get(selected_indices[0]) 
+            setattr(self, attr_name, listbox.get(selected_indices[0]))
 
 class MissingFieldGuard(dict):
     def __call__(self,obj):
@@ -88,24 +85,19 @@ class ReductionGui(ClusterGui):
         self.selected_alg = None
         self.algs_list = self.create_listbox( reduct.ALGS.keys(),
                                               side=tk.RIGHT, 
-                                              on_select=self.set_selected_alg)
+                                              on_select="selected_alg")
         self.field_guard=MissingFieldGuard({"selected_cluster": "Nie wybrano klastra!",
                                             "selected_label":"Nie wybrano etykiet!",
                                             "selected_alg":"Nie wybrano algorytmu redukcji!"})
         confirm_button = tk.Button(root, text="Show cluster", command=self.confirm_selection)
         confirm_button.pack(pady=10)
-
-    def set_selected_alg(self, event):
-        selected_indices = self.algs_list.curselection()
-        if selected_indices:
-            self.selected_alg = self.algs_list.get(selected_indices[0])
     
     def confirm_selection(self):
         if(self.field_guard(self)):
             return
         data_i = self.by_labels[self.selected_cluster]
-        label_i = data_i.__dict__[self.selected_label]
-        cat_i = data_i.__dict__["cat"]
+        label_i = data_i[self.selected_label]
+        cat_i = data_i["cat"]
 
         reduct_func = reduct.ALGS[self.selected_alg]
         X_reduced = reduct_func(data_i.frames)
@@ -124,6 +116,7 @@ class HisogramGui(ClusterGui):
                                             by_labels)
         self.field_guard=MissingFieldGuard({"selected_cluster": "Nie wybrano klastra!",
                                             "selected_label":"Nie wybrano etykiet!"})
+        
         confirm_button = tk.Button( root, 
                                     text="Show hisogram", 
                                     command=self.confirm_selection)
@@ -138,7 +131,6 @@ class HisogramGui(ClusterGui):
         plot.hist( desc_i,
                    value=self.selected_label,
                    title=self.selected_cluster)
-#        raise Exception(label_i)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
