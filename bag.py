@@ -4,10 +4,12 @@ from sklearn.metrics import classification_report
 from sklearn.metrics import accuracy_score
 import matplotlib.pyplot as plt
 import argparse
-import base,labels,plot,utils
+import base
+import seq.labels
+import plot,utils
 
 def eval_bag(in_path,verbose=True):
-    label_group=labels.LabelingGroup.read(in_path)
+    label_group=seq.labels.LabelingGroup.read(in_path)
     n_clust=label_group.n_clust()
     train,test=label_group.split()
     train,test= as_bag(train,n_clust),as_bag(test,n_clust)
@@ -67,7 +69,7 @@ if __name__ == '__main__':
     parser.add_argument("--layer", type=int,default=1)
     parser.add_argument("--bigrams", action="store_true")
     parser.add_argument("--alg", type=str,default="spectral")
-    parser.add_argument("--n_clust", type=int,default=0)
+    parser.add_argument("--n_clust", type=int,default=22)
     args=parser.parse_args()
     layer=f"layer_{args.layer}"
     if(args.n_clust>1):
