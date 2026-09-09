@@ -1,5 +1,6 @@
 import deep.cnn
 import deep.ae
+import deep.sim
 
 NN_TYPES = { "ae":deep.ae.ConvAE,
              "cnn":deep.cnn.ConvNN}
@@ -15,6 +16,11 @@ def make_model(nn_type):
         params["latent_dim"]=128
         ae_factory = deep.ae.AEFactory(**params)
         return ae_factory.build()
+    if nn_type == "sim":
+        params=frame_params()
+        params["latent_dim"]=128
+        sim_factory = deep.sim.AEFactory(**params)
+        return sim_factory.build()
 
 def frame_params():
     return  { "input_shape":(240, 80, 1),
