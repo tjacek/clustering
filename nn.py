@@ -5,20 +5,38 @@ import argparse
 import seq#,labels,
 import utils
 
+
+class DirProxy(object):
+    def __init__(self,dir_path):
+        self.dir_path=dir_path
+        utils.make_dir(self.dir_path)
+        self.files={}
+
+    def __getitem__(self,item):
+        if(not item in self.files):
+            path=f"{self.dir_path}/{item}"
+            utils.make_dir(path)
+            self.files[item]=path
+        return self.files[item]
+    
+    @property
+    def model(self):
+        return self["model"]
+
 def train( in_path,
            out_path,
            nn_type="ae",
-           epochs=200):
+           epochs=5):
     action_group=seq.get_group("actions")
     actions=action_group.read(in_path)
     train,test=actions.split()
     model=deep.make_model(nn_type)
+    model.encoder.summary()
     model.exp( train.as_dataset(),
                test.as_dataset(),
                epochs=epochs)
-    nn_path=f"{out_path}/{nn_type}"
-    utils.make_dir(nn_path)
-    model.save(f"{nn_path}/model")
+    nn_dir=DirProxy(f"{out_path}/{nn_type}")
+    model.save(nn_dir.model)
 
 def reconstruct( frame_path,
                  dir_path,
@@ -72,8 +90,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--frame_path", type=str,default="MSR/scaled")
     parser.add_argument("--dir_path", type=str,default="MSR")
-    parser.add_argument("--nn_type", type=str,default="ae")
-    parser.add_argument("--cmd", type=str,default="eval")
+    parser.add_argument("--nn_type", type=str,default="sim")
+    parser.add_argument("--cmd", type=str,default="train")
     parser.add_argument("--layer", type=int,default=1)
     args=parser.parse_args()
     if(args.cmd=="train"):
@@ -92,4 +110,3 @@ if __name__ == '__main__':
         eval( args.frame_path,
               args.dir_path,
               args.nn_type)
-
