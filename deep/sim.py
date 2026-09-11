@@ -9,24 +9,34 @@ from tensorflow.keras.layers import (
     Dropout,
 )
 from sklearn.metrics import accuracy_score
- 
+from tensorflow.keras.models import load_model 
+import keras
 import deep.core as core
-from deep import base
+import base
 
+@keras.saving.register_keras_serializable(package="deep.sim")
 class EuclideanDistance(Layer):
     def call(self, inputs):
         emb_a, emb_b = inputs
         sum_sq = tf.reduce_sum(tf.square(emb_a - emb_b), axis=1, keepdims=True)
         return tf.sqrt(tf.maximum(sum_sq, 1e-9))
 
-def contrastive_loss(margin=1.0):
-    def loss(y_true, y_pred):
+@keras.saving.register_keras_serializable(package="deep.sim")
+class ContrastiveLoss(tf.keras.losses.Loss):
+    def __init__(self, margin=1.0, **kwargs):
+        super().__init__(**kwargs)
+        self.margin = margin
+
+    def call(self, y_true, y_pred):
         y_true = tf.cast(y_true, y_pred.dtype)
         square_pred = tf.square(y_pred)
-        margin_square = tf.square(tf.maximum(margin - y_pred, 0.0))
+        margin_square = tf.square(tf.maximum(self.margin - y_pred, 0.0))
         return tf.reduce_mean(y_true * square_pred + (1 - y_true) * margin_square)
-    return loss
 
+    def get_config(self):
+        config = super().get_config()
+        config.update({"margin": self.margin})
+        return config
 
 def make_pairs(X, y):
     rng = np.random.default_rng()
@@ -55,7 +65,7 @@ def make_pairs(X, y):
         np.array(labels, dtype="float32"),
     )
  
- class DistCallback(tf.keras.callbacks.Callback):
+class DistCallback(tf.keras.callbacks.Callback):
     def __init__(self, loss_thres=0.02):
         self.loss_thres = loss_thres
  
@@ -72,11 +82,18 @@ class SiameseNN(core.NeuralModel):
         super().__init__(model, meta)
         self.encoder = encoder
         self.prototypes = None
+
+    @classmethod
+    def read(cls,in_path):
+        nn_meta=core.NNMeta.read(f"{in_path}/{cls.META_FILE}")
+        model = load_model(f"{in_path}/{cls.MODEL_FILE}")
+        model.summary()
+        raise Exception(nn_meta)
  
     def fit(self, data, epochs=50, batch_size=64, margin=1.0):
         self.model.compile(
             optimizer=tf.keras.optimizers.Adam(1e-3),
-            loss=contrastive_loss(margin=margin),
+            loss=ContrastiveLoss(margin=margin),
         )
  
         callbacks = [DistCallback()]
@@ -136,7 +153,7 @@ class SiameseNN(core.NeuralModel):
         print(f"{acc:.4f}")
 
 class SiameseFactory(core.NNFactory):
-    embedding_dim: int = 20
+#    embedding_dim: int = 20
  
     def build_encoder(self):
         encoder = Sequential(name="shared_encoder")
@@ -154,7 +171,7 @@ class SiameseFactory(core.NNFactory):
             encoder.add(self.get_dense(i))
             encoder.add(Dropout(0.5))
  
-        encoder.add(Dense(self.embedding_dim, name="embedding"))
+#        encoder.add(Dense(self.embedding_dim, name="embedding"))
         return encoder
  
     def build(self, verbose=False):
