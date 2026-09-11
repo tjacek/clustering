@@ -78,18 +78,36 @@ class DistCallback(tf.keras.callbacks.Callback):
             self.model.stop_training = True
 
 class SiameseNN(core.NeuralModel):
-    def __init__(self, model, meta, encoder):
+    PROTO="prototypes.npz"
+    def __init__(  self, 
+                   model, 
+                   meta, 
+                   encoder,
+                   prototypes=None):
         super().__init__(model, meta)
         self.encoder = encoder
-        self.prototypes = None
+        self.prototypes = prototypes
 
     @classmethod
     def read(cls,in_path):
         nn_meta=core.NNMeta.read(f"{in_path}/{cls.META_FILE}")
         model = load_model(f"{in_path}/{cls.MODEL_FILE}")
+        encoder=model.get_layer("shared_encoder")
+        
+        data = np.load(f"{in_path}/{self.PROTO}", allow_pickle=True)
+        prototypes = dict(zip(data["classes"], data["embeddings"]))
         model.summary()
-        raise Exception(nn_meta)
- 
+        return SiameseNN( model,
+                          nn_meta,
+                          encoder,
+                          prototypes)
+    def save(self,out_path):
+        super(SiameseNN, self).save(out_path)
+        embd=list(self.prototypes.values())
+        np.savez(f"{out_path}/{self.PROTO}",
+                 classes=list(self.prototypes.keys()),
+                 embeddings=np.stack(embd))
+
     def fit(self, data, epochs=50, batch_size=64, margin=1.0):
         self.model.compile(
             optimizer=tf.keras.optimizers.Adam(1e-3),
@@ -112,12 +130,12 @@ class SiameseNN(core.NeuralModel):
         )
         self.nn_meta.n_epochs += epochs
  
-        self._fit_prototypes(X, data.y)
+        self.make_prototypes(X, data.y)
  
-    def _fit_prototypes(self, X, y):
+    def make_prototypes(self, X, y):
         emb = self.encoder.predict(X, batch_size=256, verbose=0)
         self.prototypes = {
-            cls: emb[y == cls].mean(axis=0) for cls in np.unique(y)
+            cls_i: emb[y == cls_i].mean(axis=0) for cls_i in np.unique(y)
         }
  
     def predict(self, X):
@@ -153,7 +171,6 @@ class SiameseNN(core.NeuralModel):
         print(f"{acc:.4f}")
 
 class SiameseFactory(core.NNFactory):
-#    embedding_dim: int = 20
  
     def build_encoder(self):
         encoder = Sequential(name="shared_encoder")

@@ -89,7 +89,6 @@ class NeuralModel(object):
 @dataclass
 class NNFactory:
     input_shape:tuple
-#    n_cats:int
     dense_layers:list 
     n_kerns:list 
     kernel_sizes:list
@@ -144,48 +143,3 @@ def dense_layer(dense,name):
     return Dense( dense,
                   activation="relu",
                   name=name)
-
-
-@dataclass(frozen=True)
-class _Hyperparams:
-    input_shape:tuple
-    n_cats:int
-    dense_layers:list 
-    n_kerns:list 
-    kernel_sizes:list
-    pool_size:list 
-    
-
-    
-    @property
-    def n_conv(self):
-        return len(self.n_kerns)
-    
-    @property
-    def n_dense(self):
-        return len(self.dense_layers)   
-    
-    def input_layer(self):
-        return Input(shape=self.input_shape)
-    
-   
-
-    def dense_layer(self,i):
-        return Dense( self.dense_layers[i],
-                      activation="relu",
-                      name=f"layer_{i}")
-
-    def pool_layer(self,i):
-        return MaxPooling2D(pool_size=self.pool_size[i])
-    
-    def rev_kerns(self):
-        return list(reversed(self.n_kerns))
-
-    def rev_sizes(self):
-        return list(reversed(self.kernel_sizes))
-
-    def rev_pool_indices(self):
-        return list(reversed(range(len(self.pool_size)))) + [None]
-    
-    def upsample_layer(self, i):
-        return UpSampling2D(size=self.pool_size[i])
