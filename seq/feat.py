@@ -1,18 +1,26 @@
 import numpy as np
 from dataclasses import dataclass
 from collections import namedtuple
-import seq.core
+import seq.core as core
 import base
 
-class FeatSeqGroup(seq.core.SeqGroup):
+class FeatSeqGroup(core.SeqGroup):
     @classmethod
     def dtype(cls):
         return FeatSeq
 
     @classmethod
-    def from_actions(cls, action_path, model, n_layer=1):
-        return cls._from_actions(action_path, model,
-                                  lambda  X: model.extract(X, n_layer))
+    def from_actions( cls, 
+                      action_path, 
+                      model, 
+                      n_layer=1):
+        def helper(action):
+            X=np.array(action)
+            return model.extract(X, n_layer)
+        return core.lazy_convert( action_path,
+                                  helper,
+                                  new_type=FeatSeqGroup,
+                                  old_type=core.Action)
 
     def as_precluster(self):
         return Preclustering.from_feats(self)
@@ -32,7 +40,7 @@ class FeatSeqGroup(seq.core.SeqGroup):
             return FrameInfo(frames_i,cat,order,person)
         return frame_dict.map(helper)
 
-class FeatSeq(seq.core.Seq):
+class FeatSeq(core.Seq):
     @classmethod
     def read(cls,in_path):
         arr=np.load(in_path)

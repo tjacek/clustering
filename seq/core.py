@@ -131,6 +131,21 @@ class SeqGroup(list):
                               desc=ActionDesc(i))
         return frame_dict.map(fun)
 
+def lazy_convert( in_path,
+                  fun,
+                  new_type,
+                  old_type):
+    seqs = new_type([])
+    seq_type=new_type.dtype()
+    for path_i in tqdm(utils.top_files(in_path)):
+        print(path_i)
+        old_seq=old_type.read(path_i)
+        new_seq=seq_type( frames=fun(old_seq),
+                          desc=old_seq.desc)
+        seqs.append(new_seq)
+    return seqs
+
+
 class _SeqGroup(list):
     def __init__(self, actions=None):
         if(actions is None):
