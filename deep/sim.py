@@ -94,7 +94,7 @@ class SiameseNN(core.NeuralModel):
         model = load_model(f"{in_path}/{cls.MODEL_FILE}")
         encoder=model.get_layer("shared_encoder")
         
-        data = np.load(f"{in_path}/{self.PROTO}", allow_pickle=True)
+        data = np.load(f"{in_path}/{cls.PROTO}", allow_pickle=True)
         prototypes = dict(zip(data["classes"], data["embeddings"]))
         model.summary()
         return SiameseNN( model,
@@ -157,8 +157,15 @@ class SiameseNN(core.NeuralModel):
     def extract(self, data, n_layer=1):
         old_X = data.X if isinstance(data, base.Dataset) else data
         X = np.expand_dims(old_X.astype("float32") / 255.0, -1)
-        extr = self.init_extractor(n_layer)
-        feat = extr.predict(X, batch_size=256, verbose=0)
+        if(self.extractor is None or 
+              self.extractor_layer!=n_layer):
+            layer = self.encoder.get_layer(f"layer_{n_layer}")
+            self.extractor = Model(
+                                inputs=self.encoder.inputs,
+                                outputs=layer.output,
+                              )
+            self.n_layer=n_layer
+        feat = self.extractor.predict(X, batch_size=64, verbose=0)
         return feat
  
     def init_extractor(self, n_layer):
