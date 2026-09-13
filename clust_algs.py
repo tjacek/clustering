@@ -6,7 +6,21 @@ import seq
 import plot
 import utils
 
-class LayerDir(object):
+class LayerDir(utils.DirProxy):
+    
+    def labelings(self,alg_type):
+        regex= rf"{alg_type}_\d+"
+        return utils.find_paths(self.dir_path,regex)
+
+    @classmethod
+    def make(cls,nn_path,layer):
+        return cls(f"{nn_path}/layer_{layer}")
+
+    def seqs(self):
+        feat_group=seq.get_group("feat")
+        return feat_group.read(self["seqs"])
+
+class _LayerDir(object):
     def __init__(self,path):
         self.path=path
         self._seqs=None
@@ -37,11 +51,10 @@ class LayerDir(object):
             self._cats= self.seqs.cats()
         return self._cats
 
-def make_clust( seqs,
-                layer_path,
+def make_clust( layer_dir,
                 n_clusters=None,
                 alg_type="spectral"):
-
+    seqs=layer_dir.seqs()
     if(alg_type=="spectral"):   
         train,test=seqs,seqs
     else:
@@ -55,7 +68,7 @@ def make_clust( seqs,
             continue
         assig=alg(precluster,k)
         cls_labels=assig.get_labels(seqs)
-        clust_name=f"{alg_type}_{k}"
+        clust_name=f"{alg_type}/{k}"
         cls_labels.save(f"{layer_path}/{clust_name}")
 
 def eval_clust( layer_dir,
@@ -83,19 +96,19 @@ def eval_clust( layer_dir,
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--nn_path", type=str,default="MSR/ae")
+    parser.add_argument("--nn_path", type=str,default="MSR/sim")
     parser.add_argument("--alg", type=str,default="spectral")
-    parser.add_argument("--cmd", type=str,default="eval")
+    parser.add_argument("--cmd", type=str,default="make")
     parser.add_argument("--layer", type=int,default=1)
     args=parser.parse_args()
-    layer_path=f"{args.nn_path}/layer_{args.layer}"
-    feat_group=seq.get_group("feat")
-    seqs=feat_group.read(f"{layer_path}/seqs")
+    layer_dir= LayerDir.make(args.nn_path,args.layer)
+#    layer_path=f"{args.nn_path}/layer_{args.layer}"
+#    feat_group=seq.get_group("feat")
+#    seqs=feat_group.read(f"{layer_path}/seqs")
     if(args.cmd=="make"):
-        make_clust( seqs,
-                layer_path,
-                alg_type=args.alg,
-                n_clusters=range(50))
+        make_clust( layer_dir,
+                    alg_type=args.alg,
+                    n_clusters=range(50))
     if(args.cmd=="eval"):
         layer_dir= LayerDir(layer_path)
         eval_clust( layer_dir,

@@ -2,25 +2,26 @@ import numpy as np
 import deep.cnn
 import deep.ae
 import argparse
-import seq#,labels,
+import seq
 import utils
 
 
-class DirProxy(object):
+class NNDir(utils.DirProxy):
     def __init__( self,
                   dir_path,
                   n_layer=0):
-        self.dir_path=dir_path
-        utils.make_dir(self.dir_path)
-        self.files={}
+#        self.dir_path=dir_path
+#        utils.make_dir(self.dir_path)
+#        self.files={}
+        super().__init__(dir_path)
         self.n_layer=n_layer
 
-    def __getitem__(self,item):
-        if(not item in self.files):
-            path=f"{self.dir_path}/{item}"
-            utils.make_dir(path)
-            self.files[item]=path
-        return self.files[item]
+#    def __getitem__(self,item):
+#        if(not item in self.files):
+#            path=f"{self.dir_path}/{item}"
+#            utils.make_dir(path)
+#            self.files[item]=path
+#        return self.files[item]
     
     @property
     def model(self):
@@ -46,14 +47,14 @@ def train( in_path,
     model.exp( train.as_dataset(),
                test.as_dataset(),
                epochs=epochs)
-    nn_dir=DirProxy(f"{out_path}/{nn_type}")
+    nn_dir=NNDir(f"{out_path}/{nn_type}")
     model.save(nn_dir.model)
 
 def reconstruct( frame_path,
                  dir_path,
                  diff=True):
     nn=deep.NN_TYPES["ae"]
-    nn_dir=DirProxy(f"{dir_path}/ae")
+    nn_dir=NNDir(f"{dir_path}/ae")
     model=nn.read(nn_dir.model)
     action_group=seq.get_group("actions")
     actions=action_group.read(frame_path)
@@ -71,7 +72,7 @@ def extract( frame_path,
              nn_type="ae",
              layer=0):
     nn=deep.NN_TYPES[nn_type]
-    nn_dir=DirProxy( f"{dir_path}/{nn_type}",
+    nn_dir=NNDir( f"{dir_path}/{nn_type}",
                      layer)
     model=nn.read(nn_dir.model)
     feat_group=seq.get_group("feat")
@@ -84,7 +85,7 @@ def eval( frame_path,
           dir_path,
           nn_type="ae"):
     nn=deep.NN_TYPES[nn_type]
-    nn_dir=DirProxy(f"{dir_path}/{nn_type}")
+    nn_dir=NNDir(f"{dir_path}/{nn_type}")
     model=nn.read(nn_dir.model)
     model.model.summary()
     action_group=seq.get_group("actions")

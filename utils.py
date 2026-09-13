@@ -49,3 +49,19 @@ def find_paths(in_path,regex=r'^layer_\d+'):
                     if( re.match(regex,id_i))]
     paths=sorted(paths,key=natural_keys)
     return paths
+
+class DirProxy(object):
+    def __init__( self,
+                  dir_path,
+                  n_layer=0):
+        self.dir_path=dir_path
+        make_dir(self.dir_path)
+        self.files={}
+#        self.n_layer=n_layer
+
+    def __getitem__(self,item):
+        if(not item in self.files):
+            path=f"{self.dir_path}/{item}"
+            make_dir(path)
+            self.files[item]=path
+        return self.files[item]
