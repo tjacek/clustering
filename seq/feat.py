@@ -34,7 +34,7 @@ class FeatSeqGroup(core.SeqGroup):
         frame_dict=base.SmartDict(frame_dict)  
         def helper(i,frames_i):
             info_i=info_dict[i]
-            order,cat,person=list(zip(*info_i))
+            order,cat,person,names=list(zip(*info_i))
             cat=np.array(cat,dtype=int)
             frames_i=np.array(frames_i)
             return FrameInfo(frames_i,cat,order,person)
@@ -44,7 +44,7 @@ class FeatSeq(core.Seq):
     @classmethod
     def read(cls,in_path):
         arr=np.load(in_path)
-        desc=seq.core.ActionDesc.from_path(in_path)
+        desc=core.ActionDesc.from_path(in_path)
         return cls(arr,desc)
 
     def save(self,out_path):
@@ -82,3 +82,4 @@ class FrameInfo:
         self.order=n*np.array(self.order)
         self.order=np.floor(self.order)
         self.order=self.order.astype(int)
+

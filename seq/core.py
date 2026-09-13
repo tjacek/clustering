@@ -107,7 +107,6 @@ class SeqGroup(list):
     def as_dict(self):
         return { seq_i.desc.name:seq_i
                     for seq_i in self}
-
     def group(  self,
                 label_group):
         frame_dict=defaultdict(list)
@@ -116,13 +115,10 @@ class SeqGroup(list):
         for seq_i in self:
             desc_i=seq_i.desc
             labeling_i=label_dict[desc_i.name]
-            info_i=[desc_i.cat,desc_i.person]
-            n_frames=len(seq_i)
-            for j,frame_j in enumerate(seq_i):
-                info_j= tuple([j/n_frames]+info_i)
-                label_j=labeling_i[j]
-                frame_dict[label_j].append(frame_j)
-                info_dict[label_j].append(info_j)
+            info_i=seq_i.as_info(relative=True)
+            for j,label_j in enumerate(labeling_i):
+                frame_dict[label_j].append(seq_i[j])
+                info_dict[label_j].append(info_i[j])
         return frame_dict,info_dict
 
     def by_labels( self, 
@@ -136,6 +132,30 @@ class SeqGroup(list):
                 return dtype( frames=frames_i,
                               desc=ActionDesc(i))
         return frame_dict.map(fun)
+
+class Seq(list):
+    def __init__( self, 
+                  frames,
+                  desc):
+        super().__init__(frames)
+        self.desc=desc
+    
+    def __str__(self):
+        return self.desc.name
+    
+    def eval(self,fun):
+        return [ fun(frame_i) for frame_i in self]
+    
+    def map(self,fun):
+        return self.__class__( frames=self.eval(fun),
+                               desc=self.desc )
+
+    def as_info(self,relative=True):
+        info=self.desc.as_list()
+        index=[j for j,_ in enumerate(self)]
+        if(relative):
+            index=[ i/len(self) for i in index]
+        return [ tuple([i]+info) for i in index]
 
 def lazy_convert( in_path,
                   fun,
@@ -211,23 +231,6 @@ class _SeqGroup(list):
             return [seq_i.desc.cat for _ in  seq_i]
         return self.flatten_seq(helper)
 
-
-class Seq(list):
-    def __init__( self, 
-                  frames,
-                  desc):
-        super().__init__(frames)
-        self.desc=desc
-    
-    def __str__(self):
-        return self.desc.name
-    
-    def eval(self,fun):
-        return [ fun(frame_i) for frame_i in self]
-    
-    def map(self,fun):
-        return self.__class__( frames=self.eval(fun),
-                               desc=self.desc )
 @dataclass(frozen=True)
 class ActionDesc:
     name:str
@@ -246,6 +249,9 @@ class ActionDesc:
         return cls(name=name,
                    cat=int(raw[0])-1, 
                    person=int(raw[1]))
+    
+    def as_list(self):
+        return [self.cat,self.person,self.name]
 
 class ActionGroup(SeqGroup):
     @classmethod
