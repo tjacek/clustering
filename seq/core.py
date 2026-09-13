@@ -27,7 +27,13 @@ class SeqGroup(list):
         utils.make_dir(out_path)
         for seq_i in self:
             seq_i.save(f"{out_path}/{seq_i}")    
-
+    
+    def lazy_save(self,fun,out_path):
+        utils.make_dir(out_path)
+        for seq_i in tqdm(self):
+            new_seq_i=seq_i.map(fun)
+            new_seq_i.save(f"{out_path}/{seq_i}")
+    
     def map(self,fun):
         seqs=[seq_i.map(fun) 
                    for seq_i in tqdm(self)]
@@ -168,8 +174,6 @@ class _SeqGroup(list):
                         for seq_i in self]
         return group_type(raw_values)
 
-
-
     def save(self,out_path):
         utils.make_dir(out_path)
         for seq_i in self:
@@ -184,8 +188,6 @@ class _SeqGroup(list):
             seq_i = cls.dtype()(frames=fun(X), desc=action_i.desc)
             seqs.append(seq_i)
         return seqs
-
-
 
     def map_with_index(self,fun,dtype=None):
         get_index=GetIndex()

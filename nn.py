@@ -7,10 +7,13 @@ import utils
 
 
 class DirProxy(object):
-    def __init__(self,dir_path):
+    def __init__( self,
+                  dir_path,
+                  n_layer=0):
         self.dir_path=dir_path
         utils.make_dir(self.dir_path)
         self.files={}
+        self.n_layer=n_layer
 
     def __getitem__(self,item):
         if(not item in self.files):
@@ -22,6 +25,14 @@ class DirProxy(object):
     @property
     def model(self):
         return self["model"]
+
+    @property
+    def layer(self):
+        return self[f"layer_{self.n_layer}"]
+    
+    @property
+    def recon(self):
+        return self["reconst"]
 
 def train( in_path,
            out_path,
@@ -42,9 +53,8 @@ def reconstruct( frame_path,
                  dir_path,
                  diff=True):
     nn=deep.NN_TYPES["ae"]
-    nn_path=f"{dir_path}/ae"
-    model_path=f"{nn_path}/model"
-    model=nn.read(model_path)
+    nn_dir=DirProxy(f"{dir_path}/ae")
+    model=nn.read(nn_dir.model)
     action_group=seq.get_group("actions")
     actions=action_group.read(frame_path)
     def helper(old_frame):
@@ -54,31 +64,28 @@ def reconstruct( frame_path,
         if(diff):
             return np.abs(frame-old_frame)
         return new_frame
-    actions.lazy_save(helper,f"{nn_path}/reconst")
+    actions.lazy_save(helper,nn_dir.recon)
 
 def extract( frame_path,
              dir_path,
              nn_type="ae",
              layer=0):
     nn=deep.NN_TYPES[nn_type]
-    nn_path=f"{dir_path}/{nn_type}"
-    model_path=f"{nn_path}/model"
-    model=nn.read(model_path)
+    nn_dir=DirProxy( f"{dir_path}/{nn_type}",
+                     layer)
+    model=nn.read(nn_dir.model)
     feat_group=seq.get_group("feat")
     seqs=feat_group.from_actions( frame_path,
                                   model,
                                   n_layer=layer)
-    layer_path=f"{nn_path}/layer_{layer}"
-    utils.make_dir(layer_path)
-    seqs.save(f"{layer_path}/seqs")
+    seqs.save(f"{nn_dir.layer}/seqs")
 
 def eval( frame_path,
           dir_path,
           nn_type="ae"):
     nn=deep.NN_TYPES[nn_type]
-    nn_path=f"{dir_path}/{nn_type}"
-    model_path=f"{nn_path}/model"
-    model=nn.read(model_path)
+    nn_dir=DirProxy(f"{dir_path}/{nn_type}")
+    model=nn.read(nn_dir.model)
     model.model.summary()
     action_group=seq.get_group("actions")
     actions=action_group.read(frame_path)
@@ -91,7 +98,7 @@ if __name__ == '__main__':
     parser.add_argument("--frame_path", type=str,default="MSR/scaled")
     parser.add_argument("--dir_path", type=str,default="MSR")
     parser.add_argument("--nn_type", type=str,default="sim")
-    parser.add_argument("--cmd", type=str,default="train")
+    parser.add_argument("--cmd", type=str,default="extract")
     parser.add_argument("--layer", type=int,default=1)
     args=parser.parse_args()
     if(args.cmd=="train"):
