@@ -9,8 +9,8 @@ import utils
 class LayerDir(utils.DirProxy):
     
     def labelings(self,alg_type):
-        regex= rf"{alg_type}_\d+"
-        return utils.find_paths(self.dir_path,regex)
+        return utils.top_files(self[alg_type])
+#        return utils.find_paths(self.dir_path,regex)
 
     @classmethod
     def make(cls,nn_path,layer):
@@ -38,8 +38,9 @@ class _LayerDir(object):
         self._cats=None
 
     def labelings(self,alg_type):
-        regex= rf"{alg_type}_\d+"
-        return utils.find_paths(layer_path,regex )
+        return utils.top_files(self[alg_type])
+#        regex= rf"{alg_type}_\d+"
+#        return utils.find_paths(layer_path,regex )
 
     @property
     def seqs(self):
@@ -88,8 +89,9 @@ def eval_clust( layer_dir,
     scores,sizes=[],[]
     for path_i in tqdm(layer_dir.labelings(alg_type)):
         labeling_i=label_group.read(path_i)
-        labels_i=labeling_i.flatten()
-        score_i=score_fun( layer_dir,
+        labels_i,cats=labeling_i.labels_cats()
+#        labels_i=labeling_i.flatten()
+        score_i=score_fun( cats,
                            labels_i)
         scores.append(score_i)
         sizes.append(len(scores)+1)
@@ -103,22 +105,19 @@ def eval_clust( layer_dir,
     print(f"Best Clusters:{sizes[best]}")
     print(f"Score:{scores[best]:.4f}")
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--nn_path", type=str,default="MSR/sim")
     parser.add_argument("--alg", type=str,default="spectral")
-    parser.add_argument("--cmd", type=str,default="make")
+    parser.add_argument("--cmd", type=str,default="eval")
     parser.add_argument("--layer", type=int,default=1)
     args=parser.parse_args()
     layer_dir= LayerDir.make(args.nn_path,args.layer)
-#    layer_path=f"{args.nn_path}/layer_{args.layer}"
-#    feat_group=seq.get_group("feat")
-#    seqs=feat_group.read(f"{layer_path}/seqs")
     if(args.cmd=="make"):
         make_clust( layer_dir,
                     alg_type=args.alg,
                     n_clusters=range(50))
     if(args.cmd=="eval"):
-        layer_dir= LayerDir(layer_path)
         eval_clust( layer_dir,
                     alg_type=args.alg)

@@ -59,6 +59,13 @@ class LabelingGroup(seq.core.SeqGroup):
                         for i in range(n_cats)])
         return tf_arr
 
+    def labels_cats(self):
+        def helper(seq):
+            cat=seq.desc.cat
+            return [ (label,cat) for label in seq]
+        raw=self.flatten_seq(helper)
+        return list(zip(*raw))
+
 class Labeling(seq.core.Seq):
     @classmethod
     def read(cls,in_path):
