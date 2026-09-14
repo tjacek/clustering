@@ -28,6 +28,7 @@ class FeatSeqGroup(core.SeqGroup):
             info_i=seq_i.as_info(relative=False)
             info+=info_i
             frames+=list(seq_i)
+        info=list(zip(*info))
         return FrameInfo.make(frames,info)
 
     def dim(self):
@@ -76,7 +77,7 @@ class FrameInfo:
     
     def __setitem__(self, item, value):
         self.info_dict[item]=value
-
+    
     def unique(self,item):
         return list(set(self[item]))
     
@@ -94,7 +95,8 @@ class FrameInfo:
 
     @classmethod
     def make(cls,frames,raw_info):
-        info=dict(zip(cls.NAMES,raw_info))
-        info["cat"]=np.array(info["cat"],dtype=int)
+        info=base.SmartDict(zip(cls.NAMES,raw_info))
+        info=info.map(lambda key,value:np.array(value))
+        info["cat"]=info["cat"].astype(int)
         return cls( np.array(frames),
                     info)

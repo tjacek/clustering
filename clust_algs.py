@@ -20,6 +20,16 @@ class LayerDir(utils.DirProxy):
         feat_group=seq.get_group("feat")
         return feat_group.read(self["seqs"])
 
+    def clust( self,
+               alg_type,
+               n_clusters):
+        clust_path=self[alg_type]
+        for k in n_clusters:
+            if(k<8):
+                continue
+            path_k=f"{clust_path}/{k}"
+            yield k,path_k
+
 class _LayerDir(object):
     def __init__(self,path):
         self.path=path
@@ -61,16 +71,14 @@ def make_clust( layer_dir,
          train,test=seqs.split()
     alg=clusters.get_cluster_alg(alg_type)
     precluster=train.info()
-    raise Exception(len(precluster))
     if( type(n_clusters)==int):
         n_clusters=[n_clusters]
-    for k in tqdm(n_clusters):
-        if(k<2):
-            continue
+    cls_iter=layer_dir.clust( alg_type,
+                              n_clusters)
+    for k,path_k in tqdm(cls_iter):
         assig=alg(precluster,k)
         cls_labels=assig.get_labels(seqs)
-        clust_name=f"{alg_type}/{k}"
-        cls_labels.save(f"{layer_path}/{clust_name}")
+        cls_labels.save(path_k)
 
 def eval_clust( layer_dir,
                 alg_type="kmeans",

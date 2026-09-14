@@ -126,27 +126,6 @@ def hist_fun(arr,n_clusters):
         hist[label_i]+=1
     return hist
 
-@dataclass
-class Preclustering:
-    frames:np.ndarray
-    indexes:np.ndarray
-    cats:np.ndarray
-    order_labeling:LabelingGroup
-    
-    @classmethod
-    def from_feats(cls,feat_seqs):
-        def helper(i,frames_i,desc):
-            return (i,frames_i,desc.cat)
-        tuple_seqs=feat_seqs.map_with_index(helper,
-                                            seq.core.SeqGroup)
-        tuples=tuple_seqs.flatten()
-        indexes,frames,cats=zip(*tuples)
-        return cls( np.array(frames),
-                    np.array(indexes),
-                    np.array(cats),
-                    tuple_seqs.eval(seq.core.Proj(0),
-                                    LabelingGroup))
-
 class BasicMap(object):
     def __init__(self):
         self.letters = list(string.ascii_lowercase)
