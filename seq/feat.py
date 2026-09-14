@@ -30,14 +30,15 @@ class FeatSeqGroup(core.SeqGroup):
 
     def group_info( self, 
                    label_group):
-        frame_dict,info_dict=self.group(label_group)
+        frame_dict,cluster_info=self.group(label_group)
         frame_dict=base.SmartDict(frame_dict)  
         def helper(i,frames_i):
-            info_i=info_dict[i]
-            order,cat,person,names=list(zip(*info_i))
-            cat=np.array(cat,dtype=int)
-            frames_i=np.array(frames_i)
-            return FrameInfo(frames_i,cat,order,person)
+            raw_i=list(zip(*cluster_info[i]))
+            names=["order","cat","person","names"]
+            info_i=dict(zip(names,raw_i))
+            info_i["cat"]=np.array(info_i["cat"],dtype=int)
+            return FrameInfo( np.array(frames_i),
+                              info_i)
         return frame_dict.map(helper)
 
 class FeatSeq(core.Seq):
@@ -58,16 +59,19 @@ class FeatSeq(core.Seq):
         return [ np.linalg.norm(self[i+1]-self[i],ord=2) 
                   for i in range(n)]
 
-@dataclass
 class FrameInfo:
-    frames:np.ndarray
-    cat: list
-    order:list
-    person: list
+    def __init__( self,
+                  frames,
+                  info_dict):
+        self.frames=frames
+        self.info_dict=info_dict
 
     def __getitem__(self,item):
-        return getattr(self,item)
+        return self.info_dict[item]#getattr(self,item)
     
+    def __setitem__(self, item, value):
+        self.info_dict[item]=value
+
     def unique(self,item):
         return list(set(self[item]))
     
@@ -79,7 +83,7 @@ class FrameInfo:
         return Info(data,unique,index)
 
     def discretize(self,n=10):
-        self.order=n*np.array(self.order)
-        self.order=np.floor(self.order)
-        self.order=self.order.astype(int)
+        self["order"]=n*np.array(self["order"])
+        self["order"]=np.floor(self["order"])
+        self["order"]=self["order"].astype(int)
 
