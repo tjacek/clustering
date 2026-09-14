@@ -60,7 +60,8 @@ def make_clust( layer_dir,
     else:
          train,test=seqs.split()
     alg=clusters.get_cluster_alg(alg_type)
-    precluster=train.as_precluster()
+    precluster=train.info()
+    raise Exception(len(precluster))
     if( type(n_clusters)==int):
         n_clusters=[n_clusters]
     for k in tqdm(n_clusters):

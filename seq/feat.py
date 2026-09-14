@@ -22,8 +22,13 @@ class FeatSeqGroup(core.SeqGroup):
                                   new_type=FeatSeqGroup,
                                   old_type=core.Action)
 
-    def as_precluster(self):
-        return Preclustering.from_feats(self)
+    def info(self):
+        frames,info=[],[]
+        for seq_i in self:
+            info_i=seq_i.as_info(relative=False)
+            info+=info_i
+            frames+=list(seq_i)
+        return FrameInfo.make(frames,info)
 
     def dim(self):
         return self[0][0].shape
@@ -34,11 +39,7 @@ class FeatSeqGroup(core.SeqGroup):
         frame_dict=base.SmartDict(frame_dict)  
         def helper(i,frames_i):
             raw_i=list(zip(*cluster_info[i]))
-            names=["order","cat","person","names"]
-            info_i=dict(zip(names,raw_i))
-            info_i["cat"]=np.array(info_i["cat"],dtype=int)
-            return FrameInfo( np.array(frames_i),
-                              info_i)
+            return FrameInfo.make(frames_i,raw_i)
         return frame_dict.map(helper)
 
 class FeatSeq(core.Seq):
@@ -60,11 +61,15 @@ class FeatSeq(core.Seq):
                   for i in range(n)]
 
 class FrameInfo:
+    NAMES=["order","cat","person","names"]
     def __init__( self,
                   frames,
                   info_dict):
         self.frames=frames
         self.info_dict=info_dict
+    
+    def __len__(self):
+        return len(self.frames)
 
     def __getitem__(self,item):
         return self.info_dict[item]#getattr(self,item)
@@ -87,3 +92,9 @@ class FrameInfo:
         self["order"]=np.floor(self["order"])
         self["order"]=self["order"].astype(int)
 
+    @classmethod
+    def make(cls,frames,raw_info):
+        info=dict(zip(cls.NAMES,raw_info))
+        info["cat"]=np.array(info["cat"],dtype=int)
+        return cls( np.array(frames),
+                    info)
