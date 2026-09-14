@@ -7,7 +7,10 @@ import plot
 import utils
 
 class LayerDir(utils.DirProxy):
-    
+    def __init__(self,path):
+        super().__init__(path)
+        self.frame_info=None
+
     def labelings(self,alg_type):
         return utils.top_files(self[alg_type])
 #        return utils.find_paths(self.dir_path,regex)
@@ -15,10 +18,14 @@ class LayerDir(utils.DirProxy):
     @classmethod
     def make(cls,nn_path,layer):
         return cls(f"{nn_path}/layer_{layer}")
-
-    def seqs(self):
-        feat_group=seq.get_group("feat")
-        return feat_group.read(self["seqs"])
+    
+    @property
+    def info(self):
+        if(self.frame_info is None):
+            feat_group=seq.get_group("feat")
+            seqs=feat_group.read(self["seqs"])
+            self.frame_info=seqs.info()
+        return self.frame_info
 
     def clust( self,
                alg_type,
@@ -29,38 +36,6 @@ class LayerDir(utils.DirProxy):
                 continue
             path_k=f"{clust_path}/{k}"
             yield k,path_k
-
-class _LayerDir(object):
-    def __init__(self,path):
-        self.path=path
-        self._seqs=None
-        self._frames=None
-        self._cats=None
-
-    def labelings(self,alg_type):
-        return utils.top_files(self[alg_type])
-#        regex= rf"{alg_type}_\d+"
-#        return utils.find_paths(layer_path,regex )
-
-    @property
-    def seqs(self):
-        if(self._seqs is None):
-            label_group=seq.get_group("feat")
-            self._seqs=label_group.read(f"{self.path}/seqs")
-        return self._seqs
-    
-    @property
-    def frames(self):
-        if(self._frames is None):
-            self._frames=np.array(self.seqs.flatten())
-        return self._frames
-
-    @property
-    def cats(self): 
-        if(self._cats is None):
-            fun= lambda seq_i:seq_i.desc.cat
-            self._cats= self.seqs.cats()
-        return self._cats
 
 def make_clust( layer_dir,
                 n_clusters=None,
@@ -89,9 +64,8 @@ def eval_clust( layer_dir,
     scores,sizes=[],[]
     for path_i in tqdm(layer_dir.labelings(alg_type)):
         labeling_i=label_group.read(path_i)
-        labels_i,cats=labeling_i.labels_cats()
-#        labels_i=labeling_i.flatten()
-        score_i=score_fun( cats,
+        labels_i=labeling_i.flatten()
+        score_i=score_fun( layer_dir,
                            labels_i)
         scores.append(score_i)
         sizes.append(len(scores)+1)
