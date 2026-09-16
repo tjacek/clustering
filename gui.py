@@ -14,7 +14,6 @@ class ClusterGui:
         self.root = root
         self.root.title("Frame Clusters")
         self.root.geometry("600x350")
-#        self.root.resizable(False, False)
         self.root.resizable(True, True)
         self.by_labels = by_labels
         self.selected_cluster = None
@@ -144,8 +143,6 @@ class HisogramGui(ClusterGui):
 
     def show_matrix(self):
         clust = self.by_labels[self.selected_cluster]
-        print(self.selected_label)
-        print(self.selected_info)
         x=clust.info(self.selected_label)
         y=clust.info(self.selected_info)
         matrix=np.zeros((len(x.unique),len(y.unique)))
@@ -157,12 +154,11 @@ class HisogramGui(ClusterGui):
                            self.selected_cluster,
                            x_axis=y.unique,
                            y_axis=x.unique)
-#        print(matrix)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--cls_path", type=str,default="MSR/ae/layer_1/spectral_36")
-    parser.add_argument("--seq_path", type=str,default="MSR/ae/layer_1/seqs")
+    parser.add_argument("--cls_path", type=str,default="MSR/sim/layer_1/spectral/36")
+    parser.add_argument("--seq_path", type=str,default="MSR/sim/layer_1/seqs")
     parser.add_argument("--cmd", type=str,default="hist")
     args=parser.parse_args()
     by_labels=snapshot.GroupedClust.make(args.cls_path,
