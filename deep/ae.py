@@ -60,8 +60,9 @@ class ConvAE(deep.core.NeuralModel):
              train,
              test,
              epochs=50):
-        self.fit(train,epochs=epochs)
-        mse=self.eval(test)
+        self.fit(train.as_dataset(),
+                 epochs=epochs)
+        mse=self.eval(test.as_dataset())
         print(f"MSE{mse:.4f}")
 
     def encode(self, data):

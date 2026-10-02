@@ -65,8 +65,9 @@ class ConvNN(deep.core.NeuralModel):
              train,
              test,
              epochs=50):
-        self.fit(train,epochs=epochs)
-        acc=self.eval(test)
+        self.fit(train.as_dataset(),
+                  epochs=epochs)
+        acc=self.eval(test.as_dataset())
         print(f"{acc:.4f}")
 
 class AccCallback(tf.keras.callbacks.Callback):

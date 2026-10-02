@@ -5,23 +5,12 @@ import argparse
 import seq
 import utils
 
-
 class NNDir(utils.DirProxy):
     def __init__( self,
                   dir_path,
                   n_layer=0):
-#        self.dir_path=dir_path
-#        utils.make_dir(self.dir_path)
-#        self.files={}
         super().__init__(dir_path)
         self.n_layer=n_layer
-
-#    def __getitem__(self,item):
-#        if(not item in self.files):
-#            path=f"{self.dir_path}/{item}"
-#            utils.make_dir(path)
-#            self.files[item]=path
-#        return self.files[item]
     
     @property
     def model(self):
@@ -38,7 +27,7 @@ class NNDir(utils.DirProxy):
 def train( in_path,
            out_path,
            nn_type="ae",
-           epochs=5):
+           epochs=200):
     action_group=seq.get_group("actions")
     actions=action_group.read(in_path)
     train,test=actions.split()
@@ -48,7 +37,7 @@ def train( in_path,
                test.as_dataset(),
                epochs=epochs)
     nn_dir=NNDir(f"{out_path}/{nn_type}")
-    model.save(nn_dir.model)
+#    model.save(nn_dir.model)
 
 def reconstruct( frame_path,
                  dir_path,
@@ -99,7 +88,7 @@ if __name__ == '__main__':
     parser.add_argument("--frame_path", type=str,default="MSR/scaled")
     parser.add_argument("--dir_path", type=str,default="MSR")
     parser.add_argument("--nn_type", type=str,default="sim")
-    parser.add_argument("--cmd", type=str,default="extract")
+    parser.add_argument("--cmd", type=str,default="train")
     parser.add_argument("--layer", type=int,default=1)
     args=parser.parse_args()
     if(args.cmd=="train"):
