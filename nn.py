@@ -33,11 +33,11 @@ def train( in_path,
     train,test=actions.split()
     model=deep.make_model(nn_type)
     model.encoder.summary()
-    model.exp( train.as_dataset(),
-               test.as_dataset(),
+    model.exp( train,   #.as_dataset(),
+               test,  #.as_dataset(),
                epochs=epochs)
     nn_dir=NNDir(f"{out_path}/{nn_type}")
-#    model.save(nn_dir.model)
+    model.save(nn_dir.model)
 
 def reconstruct( frame_path,
                  dir_path,

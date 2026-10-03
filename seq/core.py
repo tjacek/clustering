@@ -157,6 +157,9 @@ class Seq(list):
             index=[ i/len(self) for i in index]
         return [ tuple([i]+info) for i in index]
 
+    def midpoint(self):
+        return self[int(len(self)/2)]
+
 def lazy_convert( in_path,
                   fun,
                   new_type,
@@ -164,7 +167,6 @@ def lazy_convert( in_path,
     seqs = new_type([])
     seq_type=new_type.dtype()
     for path_i in tqdm(utils.top_files(in_path)):
-        print(path_i)
         old_seq=old_type.read(path_i)
         new_seq=seq_type( frames=fun(old_seq),
                           desc=old_seq.desc)

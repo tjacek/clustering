@@ -38,7 +38,8 @@ class ContrastiveLoss(tf.keras.losses.Loss):
         config.update({"margin": self.margin})
         return config
 
-def make_pairs(X, y):
+def _make_pairs(X, y):
+    raise Exception(X[0].shape)
     rng = np.random.default_rng()
     classes = np.unique(y)
     idx_by_class = {c: np.where(y == c)[0] for c in classes}
@@ -46,7 +47,7 @@ def make_pairs(X, y):
     pairs_a, pairs_b, labels = [], [], []
  
     for i in range(len(X)):
-        cls = y[i]
+        cls_i = y[i]
  
         j = rng.choice(idx_by_class[cls])
         pairs_a.append(X[i])
@@ -108,20 +109,25 @@ class SiameseNN(core.NeuralModel):
                  classes=list(self.prototypes.keys()),
                  embeddings=np.stack(embd))
 
-    def fit(self, data, epochs=50, batch_size=64, margin=1.0):
+    def fit( self, 
+             data, 
+             epochs=50, 
+             batch_size=64, 
+             margin=1.0):
         self.model.compile(
-            optimizer=tf.keras.optimizers.Adam(1e-3),
+            optimizer=tf.keras.optimizers.Adam(1e-6),
             loss=ContrastiveLoss(margin=margin),
         )
  
         callbacks = [DistCallback()]
- 
-        X = np.expand_dims(data.X.astype("float32") / 255.0, -1)
-        X_a, X_b, pair_y = make_pairs(X, data.y)
- 
+         
+        (x,y),labels=data
+        x= x.astype("float32")/255.0
+        y= y.astype("float32")/255.0
+
         self.model.fit(
-            [X_a, X_b],
-            pair_y,
+            [x, y],
+            labels,
             batch_size=batch_size,
             epochs=epochs,
             validation_split=0.1,
@@ -130,7 +136,7 @@ class SiameseNN(core.NeuralModel):
         )
         self.nn_meta.n_epochs += epochs
  
-        self.make_prototypes(X, data.y)
+        self.make_prototypes([x,y], labels)
  
     def make_prototypes(self, X, y):
         emb = self.encoder.predict(X, batch_size=256, verbose=0)
@@ -151,7 +157,8 @@ class SiameseNN(core.NeuralModel):
         return classes[np.argmin(dists, axis=1)]
  
     def eval(self, data):
-        y_pred = self.predict(data.X)
+        pairs,labels=data
+        y_pred = self.predict(pairs)
         return accuracy_score(data.y, y_pred)
  
     def extract(self, data, n_layer=1):
@@ -173,9 +180,28 @@ class SiameseNN(core.NeuralModel):
         return Model(inputs=self.encoder.inputs, outputs=layer_output)
  
     def exp(self, train, test, epochs=50):
-        self.fit(train, epochs=epochs)
-        acc = self.eval(test)
+        train_pairs=make_pairs(train)
+        self.fit(train_pairs, epochs=epochs)
+        test_pairs=make_pairs(train)
+        acc = self.eval(test_pairs)
         print(f"{acc:.4f}")
+
+def make_pairs(actions):
+    import itertools
+    n_actions=range(len(actions))
+    pairs=itertools.combinations(n_actions, r=2)
+    x,y,labels=[],[],[]
+    for i,j in pairs:
+        if( ((i+j) %2)==0 ):
+            continue
+        action_i=actions[i]
+        action_j=actions[j]
+        x.append(action_i.midpoint())
+        y.append(action_j.midpoint())
+        cat_i=action_i.desc.cat
+        cat_j=action_j.desc.cat
+        labels.append(int(cat_i==cat_j))
+    return (np.array(x),np.array(y)),np.array(labels)
 
 class SiameseFactory(core.NNFactory):
  
