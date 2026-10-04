@@ -12,6 +12,8 @@ from sklearn.metrics import accuracy_score
 from tensorflow.keras.models import load_model 
 import keras
 import deep.core as core
+from dataclasses import dataclass
+import itertools
 import base
 
 @keras.saving.register_keras_serializable(package="deep.sim")
@@ -120,14 +122,11 @@ class SiameseNN(core.NeuralModel):
         )
  
         callbacks = [DistCallback()]
-         
-        (x,y),labels=data
-        x= x.astype("float32")/255.0
-        y= y.astype("float32")/255.0
+        data.rescale()
 
         self.model.fit(
-            [x, y],
-            labels,
+            data.pairs,
+            data.labels,
             batch_size=batch_size,
             epochs=epochs,
             validation_split=0.1,
@@ -136,7 +135,7 @@ class SiameseNN(core.NeuralModel):
         )
         self.nn_meta.n_epochs += epochs
  
-        self.make_prototypes([x,y], labels)
+        self.make_prototypes(data.pairs,data.labels)
  
     def make_prototypes(self, X, y):
         emb = self.encoder.predict(X, batch_size=256, verbose=0)
@@ -145,7 +144,7 @@ class SiameseNN(core.NeuralModel):
         }
  
     def predict(self, X):
-        X = X.astype("float32") / 255.0
+#        X = X.astype("float32") / 255.0
         if X.ndim == 3:
             X = np.expand_dims(X, -1)
         emb = self.encoder.predict(X, batch_size=256, verbose=0)
@@ -157,9 +156,10 @@ class SiameseNN(core.NeuralModel):
         return classes[np.argmin(dists, axis=1)]
  
     def eval(self, data):
-        pairs,labels=data
-        y_pred = self.predict(pairs)
-        return accuracy_score(data.y, y_pred)
+#        pairs,labels=data
+        data.rescale()
+        y_pred = self.predict(data.pairs)
+        return accuracy_score(data.labels, y_pred)
  
     def extract(self, data, n_layer=1):
         old_X = data.X if isinstance(data, base.Dataset) else data
@@ -187,7 +187,6 @@ class SiameseNN(core.NeuralModel):
         print(f"{acc:.4f}")
 
 def make_pairs(actions):
-    import itertools
     n_actions=range(len(actions))
     pairs=itertools.combinations(n_actions, r=2)
     x,y,labels=[],[],[]
@@ -201,7 +200,18 @@ def make_pairs(actions):
         cat_i=action_i.desc.cat
         cat_j=action_j.desc.cat
         labels.append(int(cat_i==cat_j))
-    return (np.array(x),np.array(y)),np.array(labels)
+    pairs=(np.array(x),np.array(y))
+    return PairsData(pairs,np.array(labels))
+
+@dataclass
+class PairsData:
+    pairs:tuple
+    labels:np.ndarray
+
+    def rescale(self):
+        x= self.pairs[0].astype("float32")/255.0
+        y= self.pairs[1].astype("float32")/255.0
+        self.pairs=(x,y)
 
 class SiameseFactory(core.NNFactory):
  
