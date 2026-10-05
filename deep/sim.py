@@ -8,7 +8,7 @@ from tensorflow.keras.layers import (
     Dense,
     Dropout,
 )
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score,classification_report
 from tensorflow.keras.models import load_model 
 import keras
 import deep.core as core
@@ -144,22 +144,20 @@ class SiameseNN(core.NeuralModel):
         }
  
     def predict(self, X):
-#        X = X.astype("float32") / 255.0
+        X = X.astype("float32") / 255.0
         if X.ndim == 3:
             X = np.expand_dims(X, -1)
         emb = self.encoder.predict(X, batch_size=256, verbose=0)
- 
         classes = np.array(list(self.prototypes.keys()))
         protos = np.stack(list(self.prototypes.values()))
- 
+#        raise Exception((emb.shape,protos.shape)) 
         dists = np.linalg.norm(emb[:, None, :] - protos[None, :, :], axis=2)
         return classes[np.argmin(dists, axis=1)]
  
     def eval(self, data):
-#        pairs,labels=data
-        data.rescale()
-        y_pred = self.predict(data.pairs)
-        return accuracy_score(data.labels, y_pred)
+        y_pred = self.predict(data.X)
+        print(classification_report(data.y,y_pred))
+        return accuracy_score(data.y, y_pred)
  
     def extract(self, data, n_layer=1):
         old_X = data.X if isinstance(data, base.Dataset) else data
@@ -182,8 +180,7 @@ class SiameseNN(core.NeuralModel):
     def exp(self, train, test, epochs=50):
         train_pairs=make_pairs(train)
         self.fit(train_pairs, epochs=epochs)
-        test_pairs=make_pairs(train)
-        acc = self.eval(test_pairs)
+        acc = self.eval(test.as_dataset())
         print(f"{acc:.4f}")
 
 def make_pairs(actions):
@@ -191,7 +188,7 @@ def make_pairs(actions):
     pairs=itertools.combinations(n_actions, r=2)
     x,y,labels=[],[],[]
     for i,j in pairs:
-        if( ((i+j) %2)==0 ):
+        if( (i%2)==0 or (j%2)==0 ):
             continue
         action_i=actions[i]
         action_j=actions[j]
