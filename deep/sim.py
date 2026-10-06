@@ -112,7 +112,7 @@ class SiameseNN(core.NeuralModel):
                  embeddings=np.stack(embd))
 
     def fit( self, 
-             data, 
+             actions, 
              epochs=50, 
              batch_size=64, 
              margin=1.0):
@@ -122,11 +122,12 @@ class SiameseNN(core.NeuralModel):
         )
  
         callbacks = [DistCallback()]
-        data.rescale()
+        data_pairs=make_pairs(actions)
+        data_pairs.rescale()
 
         self.model.fit(
-            data.pairs,
-            data.labels,
+            data_pairs.pairs,
+            data_pairs.labels,
             batch_size=batch_size,
             epochs=epochs,
             validation_split=0.1,
@@ -134,8 +135,8 @@ class SiameseNN(core.NeuralModel):
             verbose=1,
         )
         self.nn_meta.n_epochs += epochs
- 
-        self.make_prototypes(data.pairs,data.labels)
+        data=actions.as_dataset() 
+        self.make_prototypes(data.X,data.y)
  
     def make_prototypes(self, X, y):
         emb = self.encoder.predict(X, batch_size=256, verbose=0)
@@ -148,11 +149,19 @@ class SiameseNN(core.NeuralModel):
         if X.ndim == 3:
             X = np.expand_dims(X, -1)
         emb = self.encoder.predict(X, batch_size=256, verbose=0)
-        classes = np.array(list(self.prototypes.keys()))
-        protos = np.stack(list(self.prototypes.values()))
+        classes = list(self.prototypes.keys())
+        prot= np.array([self.prototypes[c] for c in classes])
+        y_pred=[]
+        for emb_i in emb:
+            dist_i = np.linalg.norm(prot - emb_i, axis=1)
+            print(dist_i)
+            y_pred.append(np.argmin(dist_i))
+        return y_pred
+#        classes = np.array(list(self.prototypes.keys()))
+#        protos = np.stack(list(self.prototypes.values()))
 #        raise Exception((emb.shape,protos.shape)) 
-        dists = np.linalg.norm(emb[:, None, :] - protos[None, :, :], axis=2)
-        return classes[np.argmin(dists, axis=1)]
+#        dists = np.linalg.norm(emb[:, None, :] - protos[None, :, :], axis=2)
+#        return classes[np.argmin(dists, axis=1)]
  
     def eval(self, data):
         y_pred = self.predict(data.X)
@@ -178,8 +187,7 @@ class SiameseNN(core.NeuralModel):
         return Model(inputs=self.encoder.inputs, outputs=layer_output)
  
     def exp(self, train, test, epochs=50):
-        train_pairs=make_pairs(train)
-        self.fit(train_pairs, epochs=epochs)
+        self.fit(train, epochs=epochs)
         acc = self.eval(test.as_dataset())
         print(f"{acc:.4f}")
 
