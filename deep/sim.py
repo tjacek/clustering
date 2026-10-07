@@ -135,7 +135,8 @@ class SiameseNN(core.NeuralModel):
             verbose=1,
         )
         self.nn_meta.n_epochs += epochs
-        data=actions.as_dataset() 
+        data=actions.as_dataset()
+        data.X= data.X.astype("float32")/255.0 
         self.make_prototypes(data.X,data.y)
  
     def make_prototypes(self, X, y):
@@ -146,23 +147,17 @@ class SiameseNN(core.NeuralModel):
  
     def predict(self, X):
         X = X.astype("float32") / 255.0
-        if X.ndim == 3:
-            X = np.expand_dims(X, -1)
+#        if X.ndim == 3:
+#            X = np.expand_dims(X, -1)
         emb = self.encoder.predict(X, batch_size=256, verbose=0)
         classes = list(self.prototypes.keys())
         prot= np.array([self.prototypes[c] for c in classes])
         y_pred=[]
         for emb_i in emb:
             dist_i = np.linalg.norm(prot - emb_i, axis=1)
-            print(dist_i)
             y_pred.append(np.argmin(dist_i))
         return y_pred
-#        classes = np.array(list(self.prototypes.keys()))
-#        protos = np.stack(list(self.prototypes.values()))
-#        raise Exception((emb.shape,protos.shape)) 
-#        dists = np.linalg.norm(emb[:, None, :] - protos[None, :, :], axis=2)
-#        return classes[np.argmin(dists, axis=1)]
- 
+
     def eval(self, data):
         y_pred = self.predict(data.X)
         print(classification_report(data.y,y_pred))
