@@ -112,7 +112,7 @@ class SiameseNN(core.NeuralModel):
                  embeddings=np.stack(embd))
 
     def fit( self, 
-             actions, 
+             data_pairs, 
              epochs=50, 
              batch_size=64, 
              margin=1.0):
@@ -122,8 +122,6 @@ class SiameseNN(core.NeuralModel):
         )
  
         callbacks = [DistCallback()]
-        data_pairs=make_pairs(actions)
-        data_pairs.rescale()
 
         self.model.fit(
             data_pairs.pairs,
@@ -135,20 +133,15 @@ class SiameseNN(core.NeuralModel):
             verbose=1,
         )
         self.nn_meta.n_epochs += epochs
-        data=actions.as_dataset()
-        data.X= data.X.astype("float32")/255.0 
-        self.make_prototypes(data.X,data.y)
  
-    def make_prototypes(self, X, y):
+    def make_prototypes(self,data):
+        X,y=data.X,data.y
         emb = self.encoder.predict(X, batch_size=256, verbose=0)
         self.prototypes = {
             cls_i: emb[y == cls_i].mean(axis=0) for cls_i in np.unique(y)
         }
  
     def predict(self, X):
-        X = X.astype("float32") / 255.0
-#        if X.ndim == 3:
-#            X = np.expand_dims(X, -1)
         emb = self.encoder.predict(X, batch_size=256, verbose=0)
         classes = list(self.prototypes.keys())
         prot= np.array([self.prototypes[c] for c in classes])
@@ -182,8 +175,15 @@ class SiameseNN(core.NeuralModel):
         return Model(inputs=self.encoder.inputs, outputs=layer_output)
  
     def exp(self, train, test, epochs=50):
-        self.fit(train, epochs=epochs)
-        acc = self.eval(test.as_dataset())
+        data_pairs=make_pairs(train)
+        data_pairs.rescale()
+        self.fit(data_pairs, epochs=epochs)
+        data_train=train.as_dataset()
+        data_train.rescale()
+        self.make_prototypes(data_train)
+        data_test=test.as_dataset()
+        data_test.rescale()
+        acc = self.eval(data_test)
         print(f"{acc:.4f}")
 
 def make_pairs(actions):

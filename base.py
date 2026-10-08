@@ -55,6 +55,10 @@ class Dataset(object):
             out_ij=f"{out_path}/{i}.png"
             cv2.imwrite(out_ij,x_i)
 
+    def rescale(self,max_value=255.0):
+        self.X=self.X.astype("float32") / max_value
+        return self
+
 class DataPair(object):
     def __init__( self,
                   train,
