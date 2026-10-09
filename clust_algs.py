@@ -22,10 +22,14 @@ class LayerDir(utils.DirProxy):
     @property
     def info(self):
         if(self.frame_info is None):
-            feat_group=seq.get_group("feat")
-            seqs=feat_group.read(self["seqs"])
-            self.frame_info=seqs.info()
+#            feat_group=seq.get_group("feat")
+#            seqs=feat_group.read(self["seqs"])
+            self.frame_info=self.seqs().info()
         return self.frame_info
+    
+    def seqs(self):
+        feat_group=seq.get_group("feat")
+        return feat_group.read(self["seqs"])
 
     def clust( self,
                alg_type,
@@ -84,7 +88,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--nn_path", type=str,default="MSR/sim")
     parser.add_argument("--alg", type=str,default="spectral")
-    parser.add_argument("--cmd", type=str,default="eval")
+    parser.add_argument("--cmd", type=str,default="make")
     parser.add_argument("--layer", type=int,default=1)
     args=parser.parse_args()
     layer_dir= LayerDir.make(args.nn_path,args.layer)
